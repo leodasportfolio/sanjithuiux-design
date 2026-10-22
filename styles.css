@@ -131,13 +131,12 @@ button { font: inherit; }
 }
 
 .hero {
-  min-height: 720px;
-  padding: 190px 32px 80px;
+  padding: 160px 32px 56px;
   display: grid;
   place-items: start center;
 }
 
-.hero-copy { max-width: 850px; text-align: center; }
+.hero-copy { width: 100%; max-width: 850px; text-align: center; }
 
 .hero h1 {
   margin: 0;
@@ -166,33 +165,17 @@ button { font: inherit; }
 
 .hero-copy > p {
   max-width: 760px;
-  margin: 6px auto 30px;
+  margin: 24px auto 0;
   color: var(--copy);
   font-size: 20px;
   line-height: 1.8;
+  text-align: left;
 }
-
-.hero-extra { display: block; }
-
-.down-link {
-  width: 48px;
-  height: 48px;
-  margin-inline: auto;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  font-family: Arial, sans-serif;
-  font-size: 42px;
-  line-height: 1;
-  transition: transform .25s ease, background-color .25s ease;
-}
-
-.down-link:hover, .down-link:focus-visible { background: #efefef; transform: translateY(4px); }
 
 .case-studies {
   width: min(calc(100% - 88px), var(--content));
   margin: 0 auto;
-  padding: 102px 0 144px;
+  padding: 64px 0 144px;
 }
 
 .section-title {
@@ -475,8 +458,7 @@ button { font: inherit; }
   .page-panel { width: calc(100% - 40px); }
 
   .hero {
-    min-height: 708px;
-    padding: 256px 6px 42px;
+    padding: 144px 6px 48px;
     display: block;
   }
 
@@ -495,18 +477,16 @@ button { font: inherit; }
   }
 
   .hero-copy > p {
-    margin: 17px auto 18px;
+    margin: 24px auto 0;
     max-width: 338px;
     text-align: left;
     font-size: 20px;
     line-height: 1.8;
   }
 
-  .down-link { display: none; }
-
   .case-studies {
     width: 100%;
-    padding: 86px 0 132px;
+    padding: 48px 0 132px;
   }
 
   .section-title { margin-bottom: 60px; font-size: 32px; line-height: 1.15; }

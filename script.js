@@ -1,6 +1,17 @@
 const menuButton = document.querySelector('.menu-button');
 const siteNav = document.querySelector('.site-nav');
 
+// A fresh opening starts with the introduction, not a restored section position.
+// In-page navigation still works normally after the page has opened.
+window.addEventListener('pageshow', () => {
+  const sectionHashes = ['', '#home', '#case-studies', '#about-me'];
+  if (!sectionHashes.includes(window.location.hash)) return;
+  if (window.location.hash) {
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+});
+
 function closeMenu() {
   menuButton.setAttribute('aria-expanded', 'false');
   siteNav.classList.remove('is-open');
