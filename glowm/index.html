@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="A research assistant's case study exploring clearer medical records for midwives through literature research and comparisons of GLOWM, OpenEMR, and OpenMRS.">
+  <title>GLOWM — A clearer record of care</title>
+  <link rel="canonical" href="https://sanjithuiux.design/glowm/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/open-runde-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/open-runde-bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=portfolio-links">
+  <script src="app.js?v=simple-references" defer></script>
+</head>
+<body id="top">
+  <a class="skip" href="#main">Skip to case study</a>
+  <main id="main">
+    <section class="masthead wrap" aria-labelledby="project-title">
+      <ul class="project-tags" aria-label="Project focus">
+        <li>UX Research</li><li>Platform Comparison</li><li>Mobile App</li><li>Research Assistant</li>
+      </ul>
+      <div class="brand-title"><svg class="brand-logo" viewBox="0 0 96 130" role="img" aria-label="GLOWM Safer Motherhood logo"><image href="assets/glowm-official-logo.png" width="300" height="130"/></svg><h1 id="project-title">GLOWM</h1></div>
+      <p class="subtitle">A clearer record of care.<br>Exploring a better workflow for midwives.</p>
+      <figure class="hero-visual" aria-label="Original GLOWM app screens">
+        <div class="hero-phones">
+          <div class="hero-phone"><img src="assets/glowm-patient-list-original.jpg" width="390" height="844" alt="Original GLOWM patient list."></div>
+          <div class="hero-phone hero-phone-main"><img src="assets/glowm-patient-overview-original.jpg" width="390" height="844" alt="Original GLOWM patient record contents."></div>
+          <div class="hero-phone"><img src="assets/glowm-original.jpg" width="390" height="844" alt="Original GLOWM antenatal visit form."></div>
+        </div>
+      </figure>
+      <dl class="metadata"><div><dt>My role</dt><dd>Research assistant</dd></div><div><dt>My work</dt><dd>Literature research & platform comparison</dd></div><div><dt>Project with</dt><dd>My professor</dd></div></dl>
+    </section>
+    <section class="intro narrow case-part story-intention" id="problem" aria-labelledby="intention-heading">
+      <h2 id="intention-heading">Problem</h2>
+      <p>We wanted to understand how GLOWM’s medical records could better support midwives: finding a patient, reviewing earlier visits, and recording care with less effort.</p>
+      <p class="context-note">GLOWM brings clinical guidance and record keeping into a mobile app. Our focus was the record-keeping experience and how it could better fit the flow of a visit.</p>
+    </section>
+    <section class="narrow case-story case-part" id="approach" aria-labelledby="approach-heading">
+      <h2 id="approach-heading">Approach</h2>
+      <div class="story-block" id="research">
+      <h3 id="research-heading">My part in the research.</h3>
+      <p>As a research assistant, I worked with my professor on the literature review and platform comparison. I helped organise the papers by topic, bring together recurring concerns, and identify areas of GLOWM to explore further.</p>
+      <ol class="research-process">
+        <li><strong>Review the literature.</strong><span>We grouped papers around record usability, maternity care, mobile tools, and birth outcomes. This helped connect the interface questions to midwives’ wider work.</span></li>
+        <li><strong>Compare record workflows.</strong><span>We looked at how GLOWM, OpenEMR, and OpenMRS organise patient information, visits, and data entry.</span></li>
+        <li><strong>Turn gaps into suggestions.</strong><span>We brought the reading and platform review together to identify practical changes to explore for GLOWM.</span></li>
+      </ol>
+      <p class="method-note">This was literature research and platform comparison. We did not interview or observe midwives.</p>
+      </div>
+      <div class="story-block">
+      <h3 id="comparison-why-heading">Why OpenEMR and OpenMRS?</h3>
+      <p>Both are open-source systems built around patient records. They gave us examples of how other tools organise clinical information and visits, helping us question what GLOWM could make clearer.</p>
+      <dl class="platform-reasons">
+        <div><dt><a href="https://www.open-emr.org/wiki/index.php/OpenEMR_Features" target="_blank" rel="noopener noreferrer">OpenEMR ↗</a></dt><dd>Its patient records, encounters, and clinical forms offered a reference for keeping information together across visits.</dd></div>
+        <div><dt><a href="https://openmrs.org/product/" target="_blank" rel="noopener noreferrer">OpenMRS ↗</a></dt><dd>Its configurable records and forms offered another way to think about organising information around different care needs.</dd></div>
+      </dl>
+      <p>Our aim was to find useful ideas for GLOWM. Any idea would need to suit midwives and a small phone screen.</p>
+      </div>
+      <div class="story-block">
+      <h3 id="literature-heading">What the reading added.</h3>
+      <p><a class="evidence-link" href="https://link.springer.com/article/10.1186/s12911-016-0406-0" target="_blank" rel="noopener noreferrer">Scantlebury and colleagues</a> described extra work when paper and electronic records ran alongside each other. <a class="evidence-link" href="https://humanfactors.jmir.org/2019/3/e13812/" target="_blank" rel="noopener noreferrer">Helou and colleagues</a> showed that midwives and doctors can have different needs from the same record system.</p>
+      <p>These studies helped us ask whether information was easy to find and whether entering it fitted the work. The birth-outcome papers gave wider context for supporting midwives.</p>
+      </div>
+      <div class="story-block">
+      <h3 id="results-heading">What we found in GLOWM.</h3>
+      <p>The review pointed to three parts of the record-keeping experience that needed closer attention.</p>
+      <div class="finding-details">
+        <article id="finding-patient-lookup"><h4>Patient lookup is split between the app and paper.</h4><p>Before opening a record, a midwife needs to confirm the right patient. GLOWM’s list shows IDs and dates of birth, with no visible search or visit status. The app asks users to keep a separate handwritten name-to-ID list. This made patient lookup an area where we wanted to explore a clearer experience.</p><figure class="finding-evidence">
+      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-patient-list-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM patient list screenshot"><img src="assets/glowm-patient-list-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM patient list showing four rows with patient IDs and dates of birth."></a></div>
+      <figcaption><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app.2017-03-31/patients.list.html" target="_blank" rel="noopener noreferrer">Original GLOWM · Patient list ↗</a><a href="assets/glowm-patient-list-original.jpg" target="_blank" rel="noopener noreferrer">View full size ↗</a></figcaption>
+    </figure></article>
+        <article id="finding-past-care"><h4>Earlier care sits inside separate record sections.</h4><p>A midwife may need to check previous care before continuing a visit. GLOWM opens a record as a table of contents, with antenatal visits listed by number. Recent readings and visit dates are not brought together in the first view, so reviewing the history involves opening the relevant sections.</p><figure class="finding-evidence">
+      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-patient-overview-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM record contents screenshot"><img src="assets/glowm-patient-overview-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM patient record showing the table of contents for patient details, antenatal visits, delivery and baby records."></a></div>
+      <figcaption><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app.2017-03-31/patient.html?id=10005" target="_blank" rel="noopener noreferrer">Original GLOWM · Record contents ↗</a><a href="assets/glowm-patient-overview-original.jpg" target="_blank" rel="noopener noreferrer">View full size ↗</a></figcaption>
+    </figure></article>
+        <article id="finding-visit-entry"><h4>Recording a visit means working through a long form.</h4><p>A single antenatal visit includes measurements, checks, and notes. GLOWM puts these into a long form with a mix of number fields, sliders, and yes/no choices. Some labels are repeated. We wanted to explore a clearer way to move through the visit and record exact readings.</p><figure class="finding-evidence">
+      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM antenatal visit screenshot"><img src="assets/glowm-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM antenatal examination form with number fields, blood-pressure sliders and yes or no choices."></a></div>
+      <figcaption><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app.2017-03-31/patient-antenatal.html?id=10005&amp;visit=1" target="_blank" rel="noopener noreferrer">Original GLOWM · Antenatal visit ↗</a><a href="assets/glowm-original.jpg" target="_blank" rel="noopener noreferrer">View full size ↗</a></figcaption>
+    </figure></article>
+      </div>
+      </div>
+    </section>
+    <section class="narrow case-story case-part" id="solution" aria-labelledby="improvements-heading">
+      <h2 id="improvements-heading">Solution</h2>
+      <p>Our review led to three ideas to test.</p>
+      <ul class="findings proposed-changes">
+        <li><strong>Find the right record.</strong><span>Add patient-ID search and visit details, and review how to confirm identity while protecting privacy.</span></li>
+        <li><strong>Review care at a glance.</strong><span>Bring key details, dated visits, and previous readings together, with unfinished work clearly marked.</span></li>
+        <li><strong>Make visit entry clearer.</strong><span>Use short form sections, consistent number fields with units, and clear draft or completed status.</span></li>
+      </ul>
+    </section>
+    <section class="narrow case-story case-part" id="impact" aria-labelledby="outcome-heading">
+      <h2 id="outcome-heading">Impact</h2>
+      <p>We developed a clearer set of workflow gaps and suggestions for GLOWM. My contribution was helping connect the literature and platform review to those priorities.</p>
+      <p class="outcome-note">So far, our work has produced research findings and suggestions. User testing has not started yet.</p>
+      <div class="story-block" id="future-work">
+      <h3 id="future-heading">Future work.</h3>
+      <p>We want to redesign GLOWM using feedback from nurses. We are currently waiting for Institutional Review Board (IRB) approval to conduct research with people.</p>
+      <p>Once we receive approval, we plan to work with nurses at Drexel and other campuses in three stages:</p>
+      <ol class="research-process">
+        <li><strong>Test the current app.</strong><span>Ask nurses to use GLOWM and share their experience. We want to understand what feels clear, where they get stuck, and what could be easier.</span></li>
+        <li><strong>Redesign with their feedback.</strong><span>Use what we learn to improve the app’s navigation, record organisation, and data-entry flow.</span></li>
+        <li><strong>Test the redesign again.</strong><span>Ask nurses to try the updated version and check whether the changes make the tasks clearer and easier to complete.</span></li>
+      </ol>
+      </div>
+    </section>
+    <div class="narrow"><details class="references" id="references"><summary><span class="summary-label">References</span><span class="plus" aria-hidden="true">+</span></summary><div class="references-body"><label class="search-wrap"><span>Search references</span><input type="search" id="reference-search" placeholder="Search by title…" autocomplete="off"></label><p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    <div class="ref-group references-list"><ul>
+<li class="ref-item"><a href="https://journals.sagepub.com/doi/full/10.1258/jrsm.2011.110153" target="_blank" rel="noopener noreferrer"><span>Data re-entry overload: time for a paradigm shift in maternity IT?</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12911-016-0406-0" target="_blank" rel="noopener noreferrer"><span>Exploring the implementation of an electronic record into a maternity unit: a qualitative study using Normalisation Process Theory</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.researchgate.net/profile/Alison-Craswell/publication/282650943_Midwives&#x27;_concerns_about_a_shift_of_focus_to_computers_in_maternity_settings_technology_invading_birth/links/5615a68608aec6224411cd90/Midwives-concerns-about-a-shift-of-focus-to-computers-in-maternity-settings-technology-invading-birth.pdf" target="_blank" rel="noopener noreferrer"><span>Midwives’ concerns about a shift of focus to computers in maternity settings: technology  invading birth</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://humanfactors.jmir.org/2019/3/e13812/" target="_blank" rel="noopener noreferrer"><span>Understanding the Situated Roles of Electronic Medical Record Systems to Enable Redesign: Mixed Methods Study</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12913-014-0650-x" target="_blank" rel="noopener noreferrer"><span>Sharing of clinical data in a maternity setting: How do paper hand-held records and electronic health records compare for completeness?</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://onlinelibrary.wiley.com/doi/full/10.1111/j.1542-2011.2012.00243.x" target="_blank" rel="noopener noreferrer"><span>mHealth for Midwives: A Call to Action</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1007/s10916-022-01888-y" target="_blank" rel="noopener noreferrer"><span>Implementation of a Regional Standardised Model for Perinatal Electronic Medical Records</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5869442/" target="_blank" rel="noopener noreferrer"><span>Exploring Midwives&#x27; Need and Intention to Adopt Electronic Integrated Antenatal Care</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/science/article/pii/S0266613823001213" target="_blank" rel="noopener noreferrer"><span>Woman-centred care and integrated electronic medical records within Australian maternity settings: Point prevalence audit and observational study</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/science/article/pii/S1871519214000638" target="_blank" rel="noopener noreferrer"><span>“Who&#x27;s afraid?”: Attitudes of midwives to the use of information and communication technologies (ICTs) for delivery of pregnancy-related health information</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12911-016-0299-y" target="_blank" rel="noopener noreferrer"><span>The impact of electronic records on patient safety: a qualitative study</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://onlinelibrary.wiley.com/doi/full/10.1111/birt.12109" target="_blank" rel="noopener noreferrer"><span>Use of a Birth Plan within Woman-held Maternity Records: A Qualitative Study with Women and Staff in Northeast Scotland</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/science/article/pii/S1871519215002735" target="_blank" rel="noopener noreferrer"><span>The birth bed: A qualitative study on the views of midwives regarding the use of the bed in the birth space</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://journals.sagepub.com/doi/full/10.1177/1460458214556372" target="_blank" rel="noopener noreferrer"><span>Does use of computer technology for perinatal data collection influence data quality?</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://ro.uow.edu.au/theses/4118/" target="_blank" rel="noopener noreferrer"><span>A Grounded Theory examination of the factors that influence midwives when entering perinatal data: the theory of beneficial engagement</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.theseus.fi/handle/10024/746626" target="_blank" rel="noopener noreferrer"><span>Midwives´s View of the iPana Maternity´s Digital Solutions Usability</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://journals.sagepub.com/doi/abs/10.1177/183335831504400101" target="_blank" rel="noopener noreferrer"><span>Maternity Patients&#x27; Access to Their Electronic Medical Records: Use and Perspectives of a Patient Portal</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://journals.lww.com/cinjournal/fulltext/2016/10000/Midwives_and_the_Computerization_of_Perinatal_Data.10.aspx" target="_blank" rel="noopener noreferrer"><span>Midwives and the Computerization of Perinatal Data Entry The Theory of Beneficial Engagement</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.publish.csiro.au/PY/PY14170" target="_blank" rel="noopener noreferrer"><span>From maternity paper hand-held records to electronic health records: what do women tell us about their use?</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12884-020-03517-3" target="_blank" rel="noopener noreferrer"><span>Barriers and enablers to routine register data collection for newborns and mothers: EN-BIRTH multi-country validation study</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12912-022-00951-w" target="_blank" rel="noopener noreferrer"><span>A mixed-method study exploring experiences, perceptions, and acceptability of using a safe delivery mHealth application in two district hospitals in Rwanda</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3563489" target="_blank" rel="noopener noreferrer"><span>Antenatal Care (ANC) Medical Record as an Effort to Reduce Maternal and Infant Mortality Rates</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1007/s00192-020-04450-x" target="_blank" rel="noopener noreferrer"><span>Accuracy of obstetric laceration diagnoses in the electronic medical record</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/j.1681-4835.2014.tb00446.x" target="_blank" rel="noopener noreferrer"><span>Balancing Work Practices and Protocols in the Design of EMR Systems: The Case of Developing an EMR System for Antenatal Care Services in Malawi</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://ieeexplore.ieee.org/abstract/document/7047616" target="_blank" rel="noopener noreferrer"><span>Review and design of a midwife prenatal kit for examinations in developing regions</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/science/article/pii/S0266613818303048" target="_blank" rel="noopener noreferrer"><span>Autonomous and dependent–The dichotomy of birth: A feminist analysis of birth plans in Sweden</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://mbmjpress.com/index.php/ijms/article/view/619" target="_blank" rel="noopener noreferrer"><span>Using the Diffusion-of-Innovation Theory to Examine Factors Influencing the Implementation of an Electronic Medical Record in Obstetrics</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/science/article/pii/S0266613822000936" target="_blank" rel="noopener noreferrer"><span>Association between one-to-one midwifery care in the active phase of labour and use of pain relief and birth outcomes: A cohort of nulliparous women</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12884-022-05264-z" target="_blank" rel="noopener noreferrer"><span>Classifying caesarean section to understand rising rates among Palestinian refugees: results from 290,047 electronic medical records across five settings</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.tandfonline.com/doi/full/10.1080/03091902.2016.1223196" target="_blank" rel="noopener noreferrer"><span>An mHealth monitoring system for traditional birth attendant-led antenatal risk assessment in rural Guatemala</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0192523" target="_blank" rel="noopener noreferrer"><span>Mapping integration of midwives across the United States: Impact on access, equity, and outcomes</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.commonwealthfund.org/publications/issue-briefs/2023/may/expanding-role-midwives-address-maternal-health-crisis" target="_blank" rel="noopener noreferrer"><span>How Expanding the Role of Midwives in U.S. Health Care Could Help Address the Maternal Health Crisis</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.cdc.gov/media/releases/2022/p0919-pregnancy-related-deaths.html" target="_blank" rel="noopener noreferrer"><span>Four in 5 pregnancy-related deaths in the U.S. are preventable</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.who.int/news/item/15-12-2020-monitoring-childbirth-in-a-new-era-for-maternal-health" target="_blank" rel="noopener noreferrer"><span>Monitoring childbirth in a new era for maternal health</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.cdc.gov/environmental-health-tracking/about/index.html" target="_blank" rel="noopener noreferrer"><span>About Environmental Public Health Tracking</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/science/article/abs/pii/S1471595312001916" target="_blank" rel="noopener noreferrer"><span>A survey of student nurses&#x27; and midwives&#x27; experiences of learning to use electronic health record systems in practice</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.statnews.com/2023/09/18/midwife-training-expand-racial-diversity-maternal-health/" target="_blank" rel="noopener noreferrer"><span>Why doesn’t the U.S. have more Black midwives?</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app/phone-contents.html" target="_blank" rel="noopener noreferrer"><span>GLOWM / MOTHER — original phone app</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.open-emr.org/wiki/index.php/OpenEMR_Features" target="_blank" rel="noopener noreferrer"><span>OpenEMR — official features</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://openmrs.org/product/" target="_blank" rel="noopener noreferrer"><span>OpenMRS — official product and features</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11129737/" target="_blank" rel="noopener noreferrer"><span>EHR adoption and financial performance in nursing homes</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3631931/" target="_blank" rel="noopener noreferrer"><span>EHR adoption and geographic variation in Alabama</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://medicaid.alabama.gov/documents/2.0_Newsroom/2.7_Special_Initiatives/2.7.2_Patient_Access/2.7.2_SMHP_2021_3-4-22.pdf" target="_blank" rel="noopener noreferrer"><span>Alabama State Medicaid Health Information Technology Plan</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://data.cms.gov/provider-data/dataset/xubh-q36u" target="_blank" rel="noopener noreferrer"><span>CMS provider data — dataset xubh-q36u</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.peer.ms.gov/sites/default/files/peer_publications/rpt587.pdf" target="_blank" rel="noopener noreferrer"><span>Mississippi PEER — report 587</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://dashboard.healthit.gov/quickstats/widget/state-summaries/MS.pdf" target="_blank" rel="noopener noreferrer"><span>HealthIT.gov — Mississippi state summary</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://wonder.cdc.gov/natality-current.html" target="_blank" rel="noopener noreferrer"><span>CDC WONDER — natality data</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="http://wonder.cdc.gov/wonder/help/natality.html" target="_blank" rel="noopener noreferrer"><span>CDC WONDER — natality documentation</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://birthplacelab.org/maps/" target="_blank" rel="noopener noreferrer"><span>Birth Place Lab — maternity care maps</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://dx.doi.org/10.14288/1.0363296" target="_blank" rel="noopener noreferrer"><span>Midwifery Integration Scoring System — data archive</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+<li class="ref-item"><a href="https://www.sciencedirect.com/topics/psychology/misdiagnosis" target="_blank" rel="noopener noreferrer"><span>Misdiagnosis — background topic linked in the literature review</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
+</ul></div>
+    </div></details></div>
+    <section class="closing narrow" aria-labelledby="closing-heading" id="closing">
+      <h2 id="closing-heading">Thanks for reading!</h2>
+      <div class="closing-actions">
+        <a class="closing-button closing-primary" id="next-case-study" href="/drexel-works/" aria-label="View my next case study">View my next case study <span aria-hidden="true">→</span></a>
+        <a class="closing-button closing-secondary" id="portfolio-website" href="/" aria-label="Back to my website">Back to my website <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+  <footer class="footer narrow"><span>GLOWM case study · Research assistant</span><a href="#top">Back to top ↑</a></footer>
+  
+</body>
+</html>

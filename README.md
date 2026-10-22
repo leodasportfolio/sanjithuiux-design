@@ -9,6 +9,21 @@ This is a dependency-free HTML, CSS, and JavaScript portfolio based on the suppl
 - Mobile menu and reveal behavior: `script.js`
 - Images and fonts: `assets/`
 
+## Custom-domain pages
+
+- Home: `https://sanjithuiux.design/` → `index.html`
+- Drexel Works: `https://sanjithuiux.design/drexel-works/` → `drexel-works/index.html`
+- GLOWM: `https://sanjithuiux.design/glowm/` → `glowm/index.html`
+
+Each case study includes its own styles, scripts, and assets. Internal project and
+home links stay on this domain. The case studies were copied from their published
+repositories on October 22, 2026; unpublished local revisions were not included.
+
+GitHub Pages publishes `main` from the repository root. Preserve `CNAME` and
+`.nojekyll` when updating. This repository is independent of the original Vercel
+portfolio and the original case-study repositories; publishing here does not
+update those sites.
+
 ## Preview locally
 
 From this folder, run:

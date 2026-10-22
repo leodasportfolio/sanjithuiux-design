@@ -1,0 +1,131 @@
+/* Local review: compact, text-led findings in Approach and Impact only. */
+.case-study-page .study-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 24px;
+  margin: 24px 0 0;
+  padding: 18px 0;
+  border-block: 1px solid var(--line);
+  text-align: left;
+}
+
+.case-study-page .study-facts > div {
+  min-width: 0;
+}
+
+.case-study-page .study-facts dt {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.case-study-page .study-facts dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.case-study-page .findings-evidence {
+  width: 100%;
+  margin: 24px 0 0;
+  gap: 24px;
+}
+
+.case-study-page .findings-evidence--approach {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.case-study-page .findings-evidence--approach .findings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.case-study-page .findings-evidence--impact {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.case-study-page .findings-evidence--impact .findings-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.case-study-page .findings-evidence .findings-grid {
+  gap: 16px;
+}
+
+.case-study-page .findings-evidence .finding {
+  min-height: 0;
+  height: auto;
+  padding: 20px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.case-study-page .findings-evidence .finding-value {
+  flex: 0 0 auto;
+  align-self: stretch;
+  order: 0;
+  margin: 0 0 8px;
+  gap: 0;
+}
+
+.case-study-page .findings-evidence .finding-value strong {
+  font-size: clamp(60px, 5.25vw, 72px);
+  line-height: 1;
+  letter-spacing: -.04em;
+}
+
+.case-study-page .findings-evidence .finding h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.case-study-page .findings-evidence .finding > p {
+  margin: 6px 0 0;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.case-study-page .findings-evidence--impact .evidence-photos {
+  align-self: start;
+  width: 100%;
+  justify-self: stretch;
+}
+
+.case-study-page .findings-evidence--impact .evidence-photo--testing-two {
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+}
+
+@media (min-width: 601px) and (max-width: 800px) {
+  .case-study-page .findings-evidence--impact .finding {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .case-study-page .study-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .case-study-page .findings-evidence {
+    gap: 20px;
+  }
+
+  .case-study-page .findings-evidence .findings-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .case-study-page .findings-evidence .finding {
+    padding: 18px;
+  }
+}

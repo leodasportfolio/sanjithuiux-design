@@ -1,0 +1,824 @@
+/* Main case study only. Keep case-study.css and the ideation page unchanged. */
+.case-study-page .section {
+  padding: 0 clamp(24px, 8.3333vw, 120px);
+}
+
+.case-study-page .section + .section > .inner {
+  padding-top: 32px;
+}
+
+.case-study-page .eyebrow {
+  margin-left: -18px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.case-study-page .eyebrow::before {
+  flex: 0 0 18px;
+}
+
+.case-study-page .body-copy,
+.case-study-page .results-summary p,
+.case-study-page .learning p,
+.case-study-page .process-link p {
+  font-size: clamp(19px, 1.65vw, 23.76px);
+  line-height: 1.55;
+}
+
+/* Restore the translucent rectangular backdrop removed from the Figma frame. */
+.case-study-page .site-header {
+  min-height: 88px;
+  gap: 68px;
+  border-radius: 28px;
+  background: linear-gradient(120deg, rgba(218, 224, 234, .93), rgba(232, 238, 251, .93));
+  transition: opacity .28s cubic-bezier(.22, 1, .36, 1), transform .28s cubic-bezier(.22, 1, .36, 1);
+}
+
+.case-study-page .site-header.is-nav-hidden {
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  pointer-events: none;
+}
+
+.case-study-page .site-header:focus-within {
+  opacity: 1;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.case-study-page .section-nav a {
+  padding-block: 11px;
+  line-height: 20px;
+}
+
+.case-study-page .section-nav a[aria-current] {
+  color: var(--navy);
+}
+
+.case-study-page .hero {
+  padding-top: 126px;
+}
+
+.case-study-page .project-copy {
+  right: 6.5%;
+}
+
+.case-study-page .project-kicker {
+  color: rgba(255, 255, 255, .75);
+  font-weight: 800;
+  letter-spacing: .055em;
+  line-height: 20px;
+}
+
+.case-study-page .project-copy .lede {
+  color: #fff;
+  font-size: 21px;
+  line-height: 1.5;
+}
+
+.case-study-page .project-status {
+  margin-top: 26px;
+  padding-left: 0;
+  border-left: 0;
+  color: #fff;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.case-study-page .facts span {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.case-study-page .facts b {
+  display: block;
+  font-weight: 700;
+  line-height: 27px;
+}
+
+.case-study-page .scroll-prompt {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.case-study-page .scroll-prompt span {
+  color: inherit;
+  font-size: 16px;
+  line-height: inherit;
+}
+
+.case-study-page .problem-section {
+  padding-top: 25px;
+  padding-bottom: clamp(32px, 3.0556vw, 44px);
+}
+
+.case-study-page .hero + .problem-section > .inner {
+  padding-top: 0;
+}
+
+.case-study-page .reading-guide {
+  margin-bottom: clamp(28px, 2.5vw, 36px);
+}
+
+.case-study-page .reading-guide-title {
+  margin: 0;
+  color: var(--navy);
+  letter-spacing: normal;
+  padding-block: clamp(18px, 1.5278vw, 22px);
+  font-size: clamp(23px, 2.5vw, 36px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.case-study-page .reading-guide-column {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  row-gap: inherit;
+}
+
+.case-study-page .guide-chevron {
+  display: block;
+  flex: 0 0 29px;
+  width: 29px;
+  height: auto;
+  transition: transform .2s ease;
+}
+
+.case-study-page .reading-guide[open] .guide-chevron {
+  transform: rotate(180deg);
+}
+
+.case-study-page .problem-section > .inner > .eyebrow {
+  margin-bottom: 22px;
+}
+
+.case-study-page .problem-section > .inner > .body-copy {
+  margin-top: clamp(22px, 1.9444vw, 28px);
+}
+
+.case-study-page .approach-section {
+  padding-top: 0;
+  padding-bottom: 36px;
+}
+
+.case-study-page .problem-section + .approach-section > .inner {
+  padding-top: clamp(32px, 3.0556vw, 44px);
+}
+
+.case-study-page .approach-section > .inner > .eyebrow {
+  margin-bottom: 20px;
+}
+
+.case-study-page .approach-section > .inner > .body-copy {
+  margin-top: 28px;
+}
+
+/* Four findings beside two stacked photographs. */
+.case-study-page .findings-evidence {
+  display: grid;
+  grid-template-columns: minmax(0, 417fr) minmax(0, 679fr);
+  align-items: start;
+  gap: 30px;
+  width: calc(100% - 74px);
+  margin: 36px 44px 0 30px;
+}
+
+.case-study-page .findings-evidence .findings-grid {
+  grid-template-columns: minmax(0, 1fr);
+  align-self: start;
+  width: 100%;
+  margin: 0;
+  gap: 21px;
+}
+
+.case-study-page .findings-evidence .finding {
+  min-height: 228px;
+  padding: 19px;
+  border-radius: 17px;
+  box-shadow: 0 4px 8px rgba(16, 43, 99, .04);
+}
+
+.case-study-page .findings-evidence .finding-value {
+  position: relative;
+  flex: 0 0 96px;
+  min-width: 0;
+  margin: 0 0 4px;
+}
+
+.case-study-page .findings-evidence .finding-value strong {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(60px, 5.2778vw, 76px);
+  line-height: 1.05;
+}
+
+.case-study-page .metric-suffix {
+  font-size: .8333em;
+}
+
+.case-study-page .findings-evidence .finding-emoji {
+  position: absolute;
+  top: -14px;
+  right: 5.84%;
+  width: 39.26%;
+  max-width: 148px;
+  height: auto;
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.case-study-page .findings-evidence .finding--scattered .finding-emoji {
+  top: -29px;
+  right: -.26%;
+  width: 47.48%;
+  max-width: 179px;
+}
+
+.case-study-page .findings-evidence .finding--manage .finding-emoji {
+  top: -9px;
+  right: 6.9%;
+  width: 36.87%;
+  max-width: 139px;
+}
+
+.case-study-page .findings-evidence .finding--outdated .finding-emoji {
+  top: -9px;
+  right: 7.43%;
+  width: 34.48%;
+  max-width: 130px;
+}
+
+.case-study-page .finding--confidence .finding-emoji {
+  top: -9px;
+  right: 7.43%;
+  width: 34.48%;
+  max-width: 130px;
+}
+
+.case-study-page .finding--clarity .finding-emoji {
+  top: -20px;
+  right: -.26%;
+  width: 47.48%;
+  max-width: 179px;
+  aspect-ratio: 1402 / 1122;
+}
+
+.case-study-page .findings-evidence .finding h3 {
+  position: relative;
+  z-index: 1;
+  font-size: 22px;
+  line-height: 28.5px;
+}
+
+.case-study-page .findings-evidence .finding--eligibility h3,
+.case-study-page .findings-evidence .finding--outdated h3,
+.case-study-page .findings-evidence .finding--clarity h3 {
+  font-size: 24px;
+}
+
+.case-study-page .findings-evidence .finding > p {
+  margin-top: 6px;
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+.case-study-page .findings-evidence--approach .finding > p {
+  line-height: 1.45;
+}
+
+.case-study-page .evidence-photos {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.case-study-page .evidence-photo {
+  position: relative;
+  aspect-ratio: 679 / 473.749;
+  overflow: hidden;
+  border: 1px solid #d9d9d2;
+  border-radius: 19px;
+  background: #efefeb;
+}
+
+.case-study-page .evidence-photo:nth-child(2) {
+  aspect-ratio: 679 / 469;
+}
+
+.case-study-page .evidence-photo img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+/* Retain each photo's crop from the edited frame, without stretching it. */
+.case-study-page .evidence-photo--research-one img {
+  top: -2.573%;
+  left: -.175%;
+  width: 101.915%;
+}
+
+.case-study-page .evidence-photo--research-two img {
+  top: -9.902%;
+  left: -2.236%;
+  width: 105.891%;
+}
+
+.case-study-page .evidence-photo--testing-one img {
+  top: -50.881%;
+  left: -2.284%;
+  width: 102.109%;
+}
+
+.case-study-page .evidence-photo--testing-two img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 55%;
+}
+
+.case-study-page .voices-summary {
+  margin: 26px auto 0;
+  max-width: 1012px;
+  line-height: 1.45;
+}
+
+.case-study-page .student-voices {
+  margin-top: 20px;
+  padding-top: 32px;
+}
+
+.case-study-page .voices-header .eyebrow {
+  margin-bottom: 0;
+}
+
+.case-study-page .voices-list,
+.case-study-page .impact-voices-list {
+  align-items: stretch;
+}
+
+.case-study-page .voice,
+.case-study-page .impact-voice {
+  display: flex;
+  flex-direction: column;
+}
+
+.case-study-page .voice span,
+.case-study-page .impact-voice span {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.case-study-page .voice span::before,
+.case-study-page .impact-voice span::before {
+  content: "— ";
+}
+
+/* Align research quote tops and keep the names on a shared row beneath them. */
+.case-study-page .voice {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  row-gap: 6px;
+}
+
+.case-study-page .voice p {
+  align-self: start;
+}
+
+.case-study-page .voice span {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+/* One screen at a time, with dots between the phone and its explanation. */
+.case-study-page .solution-section {
+  padding-bottom: 26px;
+}
+
+.case-study-page .solution-section > .inner {
+  padding-top: 35px;
+}
+
+.case-study-page .solution-section .eyebrow {
+  margin-bottom: 10px;
+}
+
+.case-study-page .solution-section .body-copy {
+  margin-top: 0;
+}
+
+.case-study-page .screen-carousel {
+  --screen-height: clamp(300px, calc(100svh - 300px), 568px);
+  --arrow-size: clamp(64px, 5.5556vw, 80px);
+  --arrow-track: clamp(80px, 10.8333vw, 156px);
+  margin-top: 23px;
+}
+
+.case-study-page .screen-carousel-stage {
+  --screen-height: inherit;
+  --arrow-size: inherit;
+  grid-template-columns: var(--arrow-track) minmax(0, 1fr) var(--arrow-track);
+  gap: 0 24px;
+  max-width: 680px;
+}
+
+.case-study-page .screen-slides,
+.case-study-page .screen-slide {
+  display: contents;
+}
+
+.case-study-page .screen-image-stage {
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+}
+
+.case-study-page .screen-image-stage img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.case-study-page .screen-arrow {
+  grid-row: 1;
+  align-self: center;
+  justify-self: center;
+  margin-top: 0;
+  border: 1px solid var(--navy);
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(16, 43, 99, .14);
+  transition: background-color .18s ease, box-shadow .18s ease;
+}
+
+.case-study-page .screen-arrow--prev {
+  grid-column: 1;
+}
+
+.case-study-page .screen-arrow--next {
+  grid-column: 3;
+}
+
+.case-study-page .screen-arrow svg {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+.case-study-page .screen-arrow:hover:not(:disabled) {
+  border-color: #1b3f7b;
+  background: #1b3f7b;
+  box-shadow: 0 6px 16px rgba(16, 43, 99, .2);
+}
+
+.case-study-page .screen-arrow:disabled {
+  opacity: 1;
+  border-color: #e6ebf3;
+  background: #e6ebf3;
+  color: #8290a8;
+  box-shadow: none;
+}
+
+.case-study-page .screen-caption {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  width: 100%;
+  min-height: 92px;
+  margin: 0;
+}
+
+.case-study-page .screen-caption h3 {
+  margin-bottom: 0;
+  font-size: 23px;
+  line-height: 29px;
+}
+
+.case-study-page .screen-dots {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 10px 0 20px;
+}
+
+.case-study-page .screen-dot {
+  width: 26px;
+  height: 24px;
+}
+
+.case-study-page .screen-dot::before {
+  width: 6px;
+  height: 6px;
+  border-color: #d7dfed;
+  background: #d7dfed;
+}
+
+.case-study-page .screen-dot:hover::before {
+  border-color: #8c9dba;
+  background: #8c9dba;
+}
+
+.case-study-page .screen-dot[aria-current="true"]::before {
+  border-color: var(--navy);
+  background: var(--navy);
+}
+
+.case-study-page .impact-section > .inner > .eyebrow {
+  margin-bottom: 9px;
+}
+
+.case-study-page .impact-section > .inner > .body-copy {
+  margin-top: 27px;
+}
+
+.case-study-page .impact-voices {
+  margin-top: 44px;
+}
+
+.case-study-page .results-summary {
+  display: block;
+}
+
+.case-study-page .results-summary-copy {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+.case-study-page .results-summary-badge {
+  width: 52px;
+  height: auto;
+  justify-self: center;
+}
+
+.case-study-page .results-summary-copy p {
+  margin-top: 0;
+}
+
+.case-study-page .learning {
+  margin-top: 26px;
+}
+
+.case-study-page .learning p {
+  margin-bottom: 0;
+}
+
+.case-study-page .process-link {
+  padding-bottom: 32px;
+}
+
+.case-study-page .process-link a {
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -.3px;
+}
+
+@media (max-width: 1200px) {
+  .case-study-page .findings-evidence {
+    grid-template-columns: minmax(0, 360fr) minmax(0, 570fr);
+    width: 100%;
+    margin-inline: 0;
+    gap: 24px;
+  }
+
+  .case-study-page .findings-evidence .finding-value strong {
+    font-size: 68px;
+  }
+
+  .case-study-page .findings-evidence .finding-emoji {
+    right: 0;
+    width: 128px;
+    height: 128px;
+  }
+
+  .case-study-page .findings-evidence .finding--scattered .finding-emoji {
+    top: -20px;
+    right: -8px;
+    width: 148px;
+    height: 148px;
+  }
+
+  .case-study-page .findings-evidence .finding h3 {
+    font-size: 21px;
+  }
+
+  .case-study-page .findings-evidence .finding > p {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .case-study-page .site-header {
+    gap: 24px;
+  }
+
+  .case-study-page .findings-evidence {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  }
+
+  .case-study-page .findings-evidence .finding {
+    padding: 16px;
+    min-height: 216px;
+  }
+
+  .case-study-page .findings-evidence .finding-value strong {
+    font-size: 60px;
+  }
+
+  .case-study-page .findings-evidence .finding-emoji {
+    right: -8px;
+    width: 112px;
+    height: 112px;
+  }
+
+  .case-study-page .findings-evidence .finding--scattered .finding-emoji {
+    width: 132px;
+    height: 132px;
+  }
+
+  .case-study-page .evidence-photos {
+    align-self: stretch;
+  }
+
+  .case-study-page .evidence-photo,
+  .case-study-page .evidence-photo:nth-child(2) {
+    aspect-ratio: auto;
+    min-height: 300px;
+  }
+
+  .case-study-page .evidence-photo img {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .case-study-page .evidence-photo--testing-one img {
+    object-position: center 40%;
+  }
+
+  .case-study-page .evidence-photo--testing-two img {
+    object-position: center 55%;
+  }
+}
+
+@media (max-width: 760px) {
+  .case-study-page .section {
+    padding-inline: 22px;
+  }
+
+  .case-study-page .site-header {
+    min-height: 0;
+    gap: 8px 16px;
+    border-radius: 22px;
+  }
+
+  .case-study-page .section-nav a {
+    padding-block: 8px;
+    line-height: normal;
+  }
+
+  .case-study-page .hero {
+    padding-top: 132px;
+  }
+
+  .case-study-page .project-copy {
+    right: 24px;
+  }
+
+  .case-study-page .project-copy .lede {
+    font-size: 18px;
+  }
+
+  .case-study-page .eyebrow {
+    margin-left: 0;
+    font-size: 13px;
+  }
+
+  .case-study-page .reading-guide-title {
+    font-size: 23px;
+    line-height: 1.3;
+  }
+
+  .case-study-page .guide-chevron {
+    flex-basis: 22px;
+    width: 22px;
+  }
+
+  .case-study-page .findings-evidence,
+  .case-study-page .findings-evidence--impact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 28px;
+  }
+
+  .case-study-page .findings-evidence .findings-grid {
+    gap: 16px;
+  }
+
+  .case-study-page .findings-evidence .finding {
+    min-height: 218px;
+    padding: 18px;
+  }
+
+  .case-study-page .findings-evidence .finding-value strong {
+    font-size: 68px;
+  }
+
+  .case-study-page .findings-evidence .finding-emoji {
+    top: -8px;
+    right: 10px;
+    width: 128px;
+    height: 128px;
+  }
+
+  .case-study-page .findings-evidence .finding--scattered .finding-emoji {
+    top: -20px;
+    right: 0;
+    width: 148px;
+    height: 148px;
+  }
+
+  .case-study-page .evidence-photos {
+    gap: 18px;
+  }
+
+  .case-study-page .evidence-photo,
+  .case-study-page .evidence-photo:nth-child(2) {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+
+  .case-study-page .voices-summary {
+    margin-top: 24px;
+    font-size: 17px;
+  }
+
+  .case-study-page .student-voices,
+  .case-study-page .impact-voices {
+    margin-top: 28px;
+    padding-top: 24px;
+  }
+
+  .case-study-page .screen-carousel {
+    --screen-height: clamp(260px, calc(100svh - 350px), 400px);
+    --arrow-size: 52px;
+    --arrow-track: 52px;
+    margin-top: 20px;
+  }
+
+  .case-study-page .screen-carousel-stage {
+    gap: 0 8px;
+  }
+
+  .case-study-page .screen-caption {
+    min-height: 115px;
+  }
+
+  .case-study-page .screen-caption h3 {
+    font-size: 21px;
+  }
+
+  .case-study-page .screen-caption p {
+    font-size: 18px;
+  }
+
+  .case-study-page .results-summary-copy {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .case-study-page .results-summary-badge {
+    width: 40px;
+  }
+
+  .case-study-page .process-link a {
+    font-size: 21px;
+  }
+}
+
+@media (max-width: 400px) {
+  .case-study-page .findings-evidence .finding-value strong {
+    font-size: 60px;
+  }
+
+  .case-study-page .findings-evidence .finding-emoji {
+    right: 0;
+    width: 112px;
+    height: 112px;
+  }
+
+  .case-study-page .findings-evidence .finding--scattered .finding-emoji {
+    right: -8px;
+    width: 132px;
+    height: 132px;
+  }
+}

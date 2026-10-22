@@ -1,0 +1,80 @@
+/* Main-page cover: actual app screens, with the introduction above the card. */
+.case-study-page .cover-gallery {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: 7 / 3;
+  overflow: hidden;
+  border-radius: clamp(12px, 2.2vw, 24px);
+  background: #eef0f3;
+}
+
+.case-study-page .cover-phone {
+  position: absolute;
+  width: 25.2%;
+  margin: 0;
+  filter: drop-shadow(0 8px 16px rgba(16, 43, 99, .12));
+}
+
+.case-study-page .cover-phone--welcome {
+  top: 15%;
+  left: 5.5%;
+}
+
+.case-study-page .cover-phone--eligibility {
+  width: 28.35%;
+  top: 8%;
+  left: 35.825%;
+}
+
+.case-study-page .cover-phone--success {
+  top: 15%;
+  left: 69.3%;
+}
+
+.case-study-page .cover-phone img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.case-study-page .cover-intro {
+  margin: 0 0 28px;
+  color: var(--ink);
+  text-align: left;
+}
+
+.case-study-page .cover-kicker {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.case-study-page .cover-intro h1 {
+  margin: 0;
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 750;
+  line-height: 1.16;
+  letter-spacing: -.035em;
+}
+
+.case-study-page .cover-lede {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.55;
+}
+
+@media (max-width: 600px) {
+  .case-study-page .cover-intro {
+    margin-bottom: 22px;
+  }
+
+  .case-study-page .cover-kicker {
+    font-size: 11px;
+  }
+}
