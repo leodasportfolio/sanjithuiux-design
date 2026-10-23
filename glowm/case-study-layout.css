@@ -1,0 +1,461 @@
+/* Shared portfolio presentation: match the approved Drexel Works reading layout.
+ * GLOWM's original screens, references and research-only scope stay intact. */
+:root {
+  --paper: #f7f6f3;
+  --ink: #151515;
+  --muted: #62625d;
+  --body: var(--muted);
+  --navy: #102b63;
+  --blue: var(--navy);
+  --line: #d9d9d2;
+  --chapter-gap: 112px;
+  --subsection-gap: 64px;
+  --content-gap: 40px;
+  --sans: "Nunito Sans", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 18px; line-height: 1.55; }
+button, input, a { font: inherit; }
+h1, h2, h3, h4, p, figure { margin: 0; }
+h1, h2, h3, h4 { color: var(--ink); letter-spacing: -.035em; }
+h2 { font-size: clamp(28px, 2.8vw, 40px); font-weight: 800; line-height: 1.2; }
+h3 { font-size: 22px; font-weight: 800; line-height: 1.25; }
+h4 { font-size: 20px; font-weight: 800; line-height: 1.3; }
+p { color: var(--muted); }
+p + p { margin-top: 18px; }
+a { color: var(--navy); }
+a:focus-visible, input:focus-visible, summary:focus-visible { outline-color: #315bb4; }
+
+.inner { width: min(100%, 1200px); margin-inline: auto; text-align: left; }
+.section { padding: 0 clamp(24px, 8.3333vw, 120px) calc(var(--chapter-gap) / 2); }
+.section + .section > .inner { padding-top: calc(var(--chapter-gap) / 2); border-top: 1px solid var(--line); }
+.section > .inner > h2 + p { margin-top: 18px; }
+.approach-section > .inner > #research { margin-top: 18px; }
+.eyebrow { display: flex; align-items: center; gap: 10px; margin: 0 0 18px -18px; color: var(--muted); font-size: 16px; font-weight: 700; line-height: 22px; letter-spacing: .065em; text-transform: uppercase; }
+.eyebrow::before { content: ""; flex: 0 0 18px; height: 1px; background: currentColor; }
+.skip { position: fixed; z-index: 30; color: var(--navy); }
+
+/* A common cover rhythm: title above the card; a larger centre phone. */
+.case-study-page .hero { padding-bottom: 0; }
+.cover-intro { margin-bottom: var(--content-gap); }
+.case-study-page .desktop-back-link { display: none; }
+@media (min-width: 701px) {
+  .case-study-page .desktop-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    margin: 0 0 16px;
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+  .case-study-page .desktop-back-link:hover { text-decoration: underline; }
+}
+.cover-kicker { margin: 0 0 10px; color: var(--navy); font-size: 13px; font-weight: 800; line-height: 1.5; letter-spacing: .055em; text-transform: uppercase; }
+.cover-intro h1 { font-size: clamp(28px, 3.2vw, 42px); font-weight: 750; line-height: 1.16; letter-spacing: -.035em; }
+.cover-intro .brand-title h1 { font-size: clamp(28px, 5.25vw, 59px); line-height: 1.15; letter-spacing: -.03em; }
+.cover-lede { margin-top: 12px; font-size: clamp(16px, 1.4vw, 20px); line-height: 1.55; }
+.cover-intro .project-tags { display: flex; flex-wrap: wrap; margin: 18px 0 0; }
+.hero-visual { position: relative; width: 100%; height: auto; aspect-ratio: 7 / 3; margin: 0; overflow: hidden; border-radius: clamp(12px, 2.2vw, 24px); background: #eef0f3; }
+.hero-phones { display: contents; }
+.hero-phone { position: absolute; top: 15%; left: 5.5%; width: 25.2%; padding: 4px; border: 1px solid #565b60; border-radius: clamp(12px, 2vw, 26px); background: #181a1e; box-shadow: 0 8px 16px rgba(16, 43, 99, .12); }
+.hero-phone-main { top: 8%; left: 35.825%; width: 28.35%; }
+.hero-phone:last-child { left: 69.3%; }
+.hero-phone img { display: block; width: 100%; height: auto; border-radius: clamp(8px, 1.5vw, 20px); }
+.metadata { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr) minmax(0, 1.15fr); column-gap: clamp(32px, 4vw, 56px); row-gap: 24px; margin: var(--content-gap) 0 0; padding-block: 24px; border-top: 1px solid var(--line); border-bottom: 0; }
+.metadata > div { display: block; min-width: 0; margin: 0; }
+.metadata dt { margin: 0 0 6px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.metadata dd { margin: 0; color: var(--ink); font-size: 20px; font-weight: 750; line-height: 1.4; overflow-wrap: anywhere; }
+.metadata dd a { color: inherit; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.hero + .problem-section > .inner { padding-top: 32px; }
+
+/* Preserve the research story, with the same chapter and subsection hierarchy. */
+.story-block { margin-top: var(--subsection-gap); }
+.story-block h3 + p, .finding-details h4 + p { margin-top: 14px; }
+.research-process { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 24px 0; padding-block: 24px; border-block: 1px solid var(--line); }
+.research-process li { margin: 0; padding: 0; }
+.research-process strong { color: var(--navy); font-size: 16.5px; font-weight: 800; line-height: 1.35; }
+.research-process span { margin-top: 8px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+#future-work .research-process { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.method-note, .outcome-note { margin-top: 24px; font-size: 14px; }
+/* Match Drexel's compact white evidence cards, without implying measured data. */
+.research-process.research-cards { width: 90%; margin: 40px auto 0; padding: 0; border: 0; gap: 12px; align-items: stretch; }
+.research-cards li { display: flex; flex-direction: column; min-width: 0; padding: 15px; border: .75px solid #e1e3e8; border-radius: 9px; background: #fff; box-shadow: 0 3px 6px rgba(16, 43, 99, .04); }
+.research-cards strong { margin: 0; font-size: 16.5px; line-height: 1.25; }
+.research-cards span { margin-top: 8px; font-size: 13.5px; line-height: 1.45; }
+.research-cards + .method-note { width: 90%; margin: 20px auto 0; text-align: center; }
+.platform-reasons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 90%; gap: 12px; margin: 40px auto 0; align-items: stretch; }
+.platform-reasons > div { min-width: 0; margin: 0; padding: 15px; border: .75px solid #e1e3e8; border-radius: 9px; background: #fff; box-shadow: 0 3px 6px rgba(16, 43, 99, .04); }
+.platform-reasons dt { color: var(--navy); font-size: 16.5px; font-weight: 800; line-height: 1.25; }
+.platform-reasons dd { margin-top: 8px; font-size: 13.5px; line-height: 1.45; }
+.platform-rationale { width: 90%; margin: 20px auto 0; }
+.finding-details { margin-top: var(--content-gap); }
+.finding-details article + article { margin-top: var(--subsection-gap); }
+.finding-points { margin: 14px 0 0; padding-inline-start: 1.25em; color: var(--muted); list-style: disc; }
+.finding-points li + li { margin-top: 8px; }
+.finding-evidence { margin: 24px 0 0; }
+.evidence-panel { min-height: 0; padding: 24px; background: #eef0f3; border-radius: 18px; }
+.evidence-phone { width: 210px; }
+.evidence-panel--patient-list { align-items: flex-start; padding-bottom: 0; overflow: hidden; }
+.evidence-panel--patient-list .evidence-phone { width: 390px; aspect-ratio: 390 / 330; overflow: hidden; border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.finding-evidence figcaption { margin-top: 12px; font-size: 13px; }
+.proposed-changes { display: grid; gap: 32px; margin: var(--content-gap) 0 0; padding: 0; list-style: none; }
+.proposed-changes > li { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: start; column-gap: 24px; margin: 0; padding: 0; border: 0; }
+.proposed-changes .solution-step-number { color: var(--navy); font-size: 72px; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+.proposed-changes .recommendation-copy { min-width: 0; }
+.proposed-changes strong { margin-bottom: 10px; color: var(--navy); font-size: 22px; font-weight: 800; line-height: 1.25; }
+.proposed-changes .recommendation-copy > span { color: var(--muted); font-size: inherit; line-height: inherit; }
+
+/* References remain searchable, but sit within the Impact chapter's rhythm. */
+.section + .references-section > .inner { padding-top: 0; border-top: 0; }
+.solution-section + .references-section > .inner { position: relative; }
+.solution-section + .references-section > .inner::before { content: ""; position: absolute; inset-inline: 0; top: calc(var(--chapter-gap) / -4); height: 1px; background: var(--line); }
+.references { margin: 0; border-top: 0; }
+.references > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0;
+  min-height: 72px;
+  align-items: center;
+  /* The upper divider sits a quarter-chapter above this row. Balance the
+   * contents around the midpoint of both dividers, without moving either line. */
+  padding-block: calc(16px - var(--chapter-gap) / 8) calc(16px + var(--chapter-gap) / 8);
+}
+.references > summary .summary-label { grid-column: 2; align-self: center; line-height: 1.25; text-align: center; }
+.references > summary .plus {
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 24px;
+  font-size: 0;
+  line-height: 0;
+  transform-origin: center;
+}
+.references > summary .plus::before,
+.references > summary .plus::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+.references > summary .plus::after { transform: translate(-50%, -50%) rotate(90deg); }
+@media (min-width: 701px) {
+  .references > summary { grid-template-columns: minmax(0, 1fr) auto; }
+  .references > summary .summary-label { grid-column: 1; justify-self: start; text-align: left; }
+  .references > summary .plus { grid-column: 2; }
+}
+.summary-label { color: var(--navy); font-size: 20px; font-weight: 800; }
+.references-body { padding-bottom: 24px; }
+.ref-item a { font-size: 14px; }
+
+/* Same closing navigation as Drexel Works, with real same-tab destinations. */
+.case-study-page .references-section { padding-bottom: calc(var(--chapter-gap) / 4); }
+.case-study-footer { padding: calc(var(--chapter-gap) / 4) clamp(22px, 8.3333vw, 120px) 40px; }
+.closing-card { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; padding: clamp(24px, 2.5vw, 36px); border-radius: 22px; background: var(--navy); color: #fff; }
+.closing-copy { flex: 1 1 280px; min-width: 0; }
+.closing-card h2 { color: #fff; font-size: clamp(25px, 2.22vw, 32px); line-height: 1.2; }
+.closing-navigation { flex: 1 1 430px; min-width: 0; }
+.closing-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.closing-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; max-width: 100%; min-height: 52px; margin: 0; padding: 14px 18px; border: 1px solid #fff; border-radius: 12px; font-size: 17px; font-weight: 800; line-height: 1.35; text-align: center; text-decoration: none; }
+.closing-button--primary { background: #fff; color: var(--navy); }
+.closing-button--secondary { background: transparent; color: #fff; }
+.closing-button--primary:hover { background: #eef0f3; color: var(--navy); }
+.closing-button--secondary:hover { background: #ffffff14; color: #fff; }
+.closing-button:focus-visible { outline: 3px solid #ffcc58; outline-offset: 4px; }
+
+@media (min-width: 1000px) {
+  .inner { width: min(85%, 918px); }
+  body { font-size: clamp(14.4px, 1.1169vw, 16.065px); }
+  h2 { font-size: clamp(19.125px, 1.9125vw, 27.54px); }
+  h3 { font-size: clamp(17.595px, 1.43442vw, 20.655px); }
+  h4 { font-size: 18px; }
+  .eyebrow { gap: 7.65px; margin-bottom: 13.6px; font-size: 10.71px; line-height: 17px; }
+  .closing-card { gap: 23.8px; padding: clamp(20.4px, 2.125vw, 30.6px); border-radius: 18.7px; }
+  .closing-copy { flex-basis: 238px; }
+  .closing-card h2 { font-size: clamp(19.125px, 1.6983vw, 24.48px); }
+  .closing-navigation { flex-basis: 365.5px; }
+  .closing-actions { gap: 10.2px; }
+  .closing-button { gap: 8.5px; min-height: 44.2px; padding: 11.9px 15.3px; border-width: .85px; border-radius: 10.2px; font-size: 13.005px; }
+  .case-study-footer { padding-bottom: 34px; }
+}
+
+@media (max-width: 900px) {
+  :root { --chapter-gap: 88px; --subsection-gap: 56px; --content-gap: 32px; }
+  .research-process { grid-template-columns: 1fr; }
+  .research-process.research-cards, .research-cards + .method-note, .platform-reasons, .platform-rationale { width: 100%; }
+}
+
+@media (max-width: 800px) {
+  .metadata { grid-template-columns: 1fr; gap: 24px; }
+}
+
+@media (max-width: 600px) {
+  :root { --chapter-gap: 64px; --subsection-gap: 40px; --content-gap: 24px; }
+  .eyebrow { margin-left: 0; font-size: 12px; line-height: 1.5; }
+  .cover-kicker { font-size: 11px; }
+  .metadata, .research-process, .platform-reasons { grid-template-columns: 1fr; }
+  .metadata { gap: 24px; }
+  .hero-phone { padding: 2px; }
+  .proposed-changes { gap: 24px; }
+  .proposed-changes > li { grid-template-columns: 40px minmax(0, 1fr); column-gap: 16px; }
+  .proposed-changes .solution-step-number { font-size: 48px; }
+  .finding-evidence figcaption { font-size: 12px; }
+  .evidence-panel { padding: 20px 12px; }
+  .evidence-panel--patient-list { padding-bottom: 0; }
+  .closing-card { padding: 24px 20px; }
+  .closing-actions { width: 100%; flex-direction: column; }
+  .closing-button { width: 100%; justify-content: space-between; }
+}
+
+.mobile-menu-toggle, .mobile-home-link { display: none; }
+
+/* Phone draft: a compact disclosure menu instead of a floating chapter bar. */
+@media (max-width: 700px) {
+  :root { --mobile-body-size: clamp(14px, 3.85vw, 18px); }
+  body { font-size: var(--mobile-body-size); }
+  /* Match section headings to the approved visit-form title on phones. */
+  .section h2,
+  .section h3,
+  .section h4 { font-size: 18px; }
+  .research-process strong,
+  .research-cards strong,
+  .platform-reasons dt { font-size: 16px; }
+  .proposed-changes strong { font-size: 18px; }
+  .summary-label { font-size: 18px; }
+  .closing-card h2 { font-size: 18px; }
+  /* Use the visit-form heading's full reading width for mobile paragraphs too. */
+  .section h2,
+  .section h3,
+  .section h4,
+  .section p:not(.eyebrow) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+  .research-cards + .method-note,
+  .platform-rationale { width: 100%; margin-inline: 0; }
+  .research-cards + .method-note { text-align: left; }
+  .section p:not(.eyebrow),
+  .finding-points,
+  .metadata dd,
+  .research-process span,
+  .platform-reasons dd,
+  .proposed-changes .recommendation-copy > span,
+  .ref-item a {
+    font-size: var(--mobile-body-size);
+  }
+  html { scroll-padding-top: 80px; }
+  .case-study-page .section { scroll-margin-top: 16px; }
+  .case-study-page .chapter-rail {
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    width: calc(100% - 32px);
+    max-height: none;
+    margin: 12px 16px 0;
+    padding: 12px 4px;
+    border-radius: 18px;
+    background: var(--paper);
+    overflow-y: auto;
+  }
+  .chapter-menu-ready .case-study-page .chapter-rail {
+    position: fixed;
+    top: 12px;
+    right: 72px;
+    left: 16px;
+    width: auto;
+    max-height: calc(100svh - 24px);
+    margin: 0;
+    transform: translateY(-6px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(16, 43, 99, .08);
+    transition: transform 500ms cubic-bezier(.45, 0, .55, 1), opacity 500ms cubic-bezier(.45, 0, .55, 1), visibility 0s 500ms;
+  }
+  .chapter-menu-ready .case-study-page .chapter-rail[data-menu-open] {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+  .case-study-page .chapter-rail::before,
+  .case-study-page .chapter-rail::after {
+    top: 23px;
+    bottom: auto;
+    left: calc(12.5% + 3px);
+    right: calc(12.5% + 3px);
+    width: auto;
+    height: 3px;
+  }
+  .case-study-page .chapter-rail::after {
+    transform: scaleX(var(--chapter-progress));
+    transform-origin: left;
+  }
+  .case-study-page .chapter-link {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 22px 30px;
+    gap: 2px;
+    height: 54px;
+  }
+  .case-study-page .chapter-dot {
+    grid-row: 1;
+    grid-column: 1;
+    width: 10px;
+    height: 10px;
+  }
+  .case-study-page .chapter-label,
+  .case-study-page .chapter-link--combined .chapter-label {
+    grid-row: 2;
+    grid-column: 1;
+    justify-self: center;
+    font-size: clamp(10px, 2.8vw, 12px);
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+  .chapter-menu-ready .case-study-page .mobile-menu-toggle {
+    position: fixed;
+    z-index: 40;
+    top: 28px;
+    right: 16px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid #d1d5dc;
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--navy);
+    box-shadow: 0 3px 12px rgba(16, 43, 99, .08);
+    cursor: pointer;
+  }
+  .mobile-menu-toggle span {
+    position: absolute;
+    width: 19px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 200ms ease, opacity 160ms ease;
+  }
+  .mobile-menu-toggle span:first-child { transform: translateY(-6px); }
+  .mobile-menu-toggle span:last-child { transform: translateY(6px); }
+  .mobile-menu-toggle[aria-expanded="true"] span:first-child { transform: rotate(45deg); }
+  .mobile-menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .mobile-menu-toggle[aria-expanded="true"] span:last-child { transform: rotate(-45deg); }
+  .mobile-home-link {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #d1d5dc;
+    border-radius: 50%;
+    color: var(--navy);
+    text-decoration: none;
+  }
+  .mobile-menu-toggle:focus-visible,
+  .mobile-home-link:focus-visible { outline: 3px solid #315bb4; outline-offset: 3px; }
+  .case-study-page .section,
+  .case-study-page .hero,
+  .case-study-page .case-study-footer { padding-inline: 16px; }
+  .case-study-page .hero { padding-top: 24px; }
+  .brand-title { gap: 6px; padding-right: 52px; }
+  .cover-intro .brand-logo { width: 38px; height: 52px; }
+  .cover-intro .brand-title h1 { font-size: 36px; }
+  /* Give the subtitle room to read; keep all three badges on one row. */
+  .cover-lede {
+    margin-top: 6px;
+    font-size: var(--mobile-body-size);
+    line-height: 1.45;
+    white-space: normal;
+    letter-spacing: 0;
+  }
+  .cover-intro .project-tags {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .cover-intro .project-tags li {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    font-size: clamp(8px, 2.55vw, 12px);
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .hero-visual { aspect-ratio: 3 / 2; }
+  .hero-phone { top: 12%; }
+  .hero-phone-main { top: 6%; }
+
+  /* Mobile-only even text edges; let the browser choose English hyphenation. */
+  .section h2,
+  .section h3,
+  .section h4,
+  .section p:not(.eyebrow),
+  .research-cards + .method-note,
+  .finding-points li,
+  .research-process strong,
+  .research-process span,
+  .platform-reasons dt,
+  .platform-reasons dd,
+  .proposed-changes .recommendation-copy strong,
+  .proposed-changes .recommendation-copy > span,
+  .ref-item a > span:first-child,
+  .closing-card h2 {
+    text-align: justify;
+    text-align-last: left;
+    text-justify: inter-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  .ref-item a > span:first-child { flex: 1; min-width: 0; }
+}
+
+/* Compact the desktop closing bar without changing its buttons or mobile layout. */
+@media (min-width: 701px) {
+  .case-study-page .closing-card {
+    gap: 16px 20px;
+    padding: 16px 24px;
+  }
+  .case-study-page .closing-navigation {
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .case-study-page .chapter-rail,
+  .mobile-menu-toggle span { transition: none !important; }
+}
+
+@media print {
+  body { background: #fff; font-size: 12px; }
+  .chapter-rail, .skip, .case-study-footer,
+  .mobile-menu-toggle, .mobile-home-link { display: none !important; }
+  .case-study-page .section { padding: 0 0 32px; }
+  .inner { width: 100%; }
+  .case-study-page .hero { padding-top: 0; }
+}

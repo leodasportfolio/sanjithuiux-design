@@ -1,4 +1,21 @@
 /* Main-page cover: actual app screens, with the introduction above the card. */
+.case-study-page .desktop-back-link { display: none; }
+@media (min-width: 701px) {
+  .case-study-page .desktop-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    margin: 0 0 16px;
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+  .case-study-page .desktop-back-link:hover { text-decoration: underline; }
+}
+
 .case-study-page .cover-gallery {
   position: relative;
   isolation: isolate;
@@ -69,6 +86,33 @@
   line-height: 1.55;
 }
 
+.case-study-page .project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.case-study-page .project-tags li {
+  max-width: 100%;
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 100px;
+  background: #8545bf;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: .015em;
+  text-transform: uppercase;
+}
+
+.case-study-page .project-tags li:nth-child(2) { background: #7950cf; }
+.case-study-page .project-tags li:nth-child(3) { background: #6550dc; }
+.case-study-page .project-tags li:nth-child(4) { background: #5945cd; }
+
 @media (max-width: 600px) {
   .case-study-page .cover-intro {
     margin-bottom: 22px;
@@ -77,4 +121,7 @@
   .case-study-page .cover-kicker {
     font-size: 11px;
   }
+
+  .case-study-page .project-tags { gap: 8px; }
+  .case-study-page .project-tags li { padding: 6px 12px; font-size: 10px; }
 }

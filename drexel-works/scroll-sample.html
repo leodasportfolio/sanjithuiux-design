@@ -4,6 +4,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f6f3">
 <title>Drexel Works | UX/UI case study</title>
 <link rel="canonical" href="https://sanjithuiux.design/drexel-works/">
+<script>document.documentElement.classList.add('chapter-menu-pending');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="case-study.css">
 <link rel="stylesheet" href="case-study-main.css">
@@ -11,14 +12,16 @@
 <link rel="stylesheet" href="case-study-reading.css">
 <link rel="stylesheet" href="case-study-cards.css">
 <link rel="stylesheet" href="case-study-solution.css">
-<link rel="stylesheet" href="case-study-cover.css">
+<link rel="stylesheet" href="case-study-cover.css?v=20261022-desktop-review">
 <link rel="stylesheet" href="case-study-rail.css">
 <link rel="stylesheet" href="case-study-spacing.css">
-<link rel="stylesheet" href="case-study-refinements.css">
+<link rel="stylesheet" href="case-study-refinements.css?v=20261022-compact-footer">
+<link rel="stylesheet" href="case-study-mobile.css?v=20261022-centered-stats">
 </head>
 <body class="case-study-page">
 <a class="skip-link" href="#the-problem">Skip to the case study</a>
-<nav class="chapter-rail" aria-label="Case study sections">
+<button class="mobile-menu-toggle" type="button" aria-label="Open section menu" aria-expanded="false" aria-controls="chapter-menu"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
+<nav class="chapter-rail" id="chapter-menu" aria-label="Case study sections">
   <a class="chapter-link" href="#overview" aria-label="Overview section"><span class="chapter-label" aria-hidden="true">Overview</span><span class="chapter-dot" aria-hidden="true"></span></a>
   <a class="chapter-link" href="#the-problem" aria-label="Problem section"><span class="chapter-label" aria-hidden="true">Problem</span><span class="chapter-dot" aria-hidden="true"></span></a>
   <a class="chapter-link" href="#approach" aria-label="Approach section"><span class="chapter-label" aria-hidden="true">Approach</span><span class="chapter-dot" aria-hidden="true"></span></a>
@@ -28,9 +31,13 @@
 <main id="top">
   <section class="hero section" id="overview" aria-label="Drexel Works project overview"><div class="inner">
           <div class="cover-intro">
-            <p class="cover-kicker">Drexel Works</p>
+            <a class="desktop-back-link" href="/"><span aria-hidden="true">←</span>Back to website</a>
+            <div class="mobile-brand-row"><a class="mobile-home-link" href="/" aria-label="Return to portfolio homepage"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg></a><p class="cover-kicker">Drexel Works</p></div>
             <h1>Designing a Better Way to Find Campus Jobs</h1>
             <p class="cover-lede">Helping Drexel students find relevant part-time jobs without guessing eligibility.</p>
+            <ul class="project-tags" aria-label="Project focus">
+              <li>UX Research</li><li>Product Design</li><li>Usability Testing</li><li>Mobile App</li>
+            </ul>
           </div>
           <div class="cover-gallery" role="group" aria-label="Drexel Works preview: Welcome, eligibility selection, and application success">
             <figure class="cover-phone cover-phone--welcome"><img src="assets/drexel-works-frame-welcome.png" alt="Drexel Works welcome screen with the Drexel logo and sign-in button" width="483" height="974" fetchpriority="high" decoding="async"></figure>
@@ -59,15 +66,15 @@
     <p class="eyebrow">Approach</p><h2 id="survey-title">I wanted to know if other students felt the same.</h2>
     <p class="body-copy">To find out, I surveyed and interviewed students about their campus job search. They shared the same uncertainty: which jobs they could apply for, where to find openings, and whether listing details were still current.</p>
     <dl class="study-facts" aria-label="Research participation">
-      <div><dt>Students surveyed</dt><dd>84 students</dd></div>
-      <div><dt>Students interviewed</dt><dd>10 students</dd></div>
-      <div><dt>Interview sample</dt><dd>5 graduate, 5 undergrad</dd></div>
+      <div><dt>Students<span class="study-label-second"> surveyed</span></dt><dd>84 students</dd></div>
+      <div><dt>Students<span class="study-label-second"> interviewed</span></dt><dd>10 students</dd></div>
+      <div><dt>Interview<span class="study-label-second"> sample</span></dt><dd><span class="study-sample-desktop">5 graduate, 5 undergrad</span><span class="study-sample-mobile"><span>5 graduate</span><span>5 undergraduate</span></span></dd></div>
     </dl>
     <div class="findings-evidence findings-evidence--approach">
       <div class="findings-grid" aria-label="Survey findings from 84 Drexel students">
-        <article class="finding finding--scattered"><div class="finding-value"><strong>68%</strong></div><h3>Scattered job search</h3><p>said it was hard to tell which jobs they were eligible for.</p></article>
-        <article class="finding finding--eligibility"><div class="finding-value"><strong>72%</strong></div><h3>Visa eligibility</h3><p>said it was hard to tell which jobs they were eligible for.</p></article>
-        <article class="finding finding--manage"><div class="finding-value"><strong>81%</strong></div><h3>One place to manage</h3><p>said it was hard to tell which jobs they were eligible for.</p></article>
+        <article class="finding finding--scattered"><div class="finding-value"><strong>68%</strong></div><h3>Scattered job search</h3><p>checked several sources before finding a campus job listing.</p></article>
+        <article class="finding finding--eligibility"><div class="finding-value"><strong>72%</strong></div><h3>Visa eligibility</h3><p>were unsure which jobs their visa status allowed them to apply for.</p></article>
+        <article class="finding finding--manage"><div class="finding-value"><strong>81%</strong></div><h3>One place to manage</h3><p>wanted one place to find jobs, save listings, and track applications.</p></article>
         <article class="finding finding--outdated"><div class="finding-value"><strong>59%</strong></div><h3>Outdated listings</h3><p>found listings with missing details or outdated information.</p></article>
       </div>
     </div>
@@ -152,5 +159,6 @@
 </footer>
 <script src="assets/gsap-3.13.0.min.js" defer></script>
 <script src="case-study.js" defer></script>
+<script src="case-study-mobile.js?v=20261022-hidden-on-arrival" defer></script>
 </body>
 </html>

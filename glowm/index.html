@@ -3,25 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="A research assistant's case study exploring clearer medical records for midwives through literature research and comparisons of GLOWM, OpenEMR, and OpenMRS.">
+  <meta name="theme-color" content="#f7f6f3">
+  <meta name="description" content="A case study exploring clearer medical records for midwives through literature research and comparisons of GLOWM, OpenEMR, and OpenMRS.">
   <title>GLOWM — A clearer record of care</title>
-  <link rel="canonical" href="https://sanjithuiux.design/glowm/">
+<link rel="canonical" href="https://sanjithuiux.design/glowm/">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="assets/open-runde-regular.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/open-runde-bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=portfolio-links">
+  <link rel="stylesheet" href="case-study-rail.css">
+  <link rel="stylesheet" href="case-study-layout.css?v=20261022-compact-footer">
   <script src="app.js?v=simple-references" defer></script>
+  <script src="case-study-rail.js?v=20261022-smooth-menu" defer></script>
 </head>
-<body id="top">
+<body class="case-study-page glowm-page" id="top">
   <a class="skip" href="#main">Skip to case study</a>
+  <button class="mobile-menu-toggle" type="button" aria-label="Open section menu" aria-expanded="false" aria-controls="chapter-menu"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
+  <nav class="chapter-rail" id="chapter-menu" aria-label="Case study sections">
+    <a class="chapter-link" href="#overview" aria-label="Overview section"><span class="chapter-label" aria-hidden="true">Overview</span><span class="chapter-dot" aria-hidden="true"></span></a>
+    <a class="chapter-link" href="#problem" aria-label="Problem section"><span class="chapter-label" aria-hidden="true">Problem</span><span class="chapter-dot" aria-hidden="true"></span></a>
+    <a class="chapter-link" href="#approach" aria-label="Approach section"><span class="chapter-label" aria-hidden="true">Approach</span><span class="chapter-dot" aria-hidden="true"></span></a>
+    <a class="chapter-link chapter-link--combined" href="#solution" aria-label="Solution and impact section"><span class="chapter-label" aria-hidden="true">Solution &amp; impact</span><span class="chapter-dot" aria-hidden="true"></span></a>
+  </nav>
   <main id="main">
-    <section class="masthead wrap" aria-labelledby="project-title">
-      <ul class="project-tags" aria-label="Project focus">
-        <li>UX Research</li><li>Platform Comparison</li><li>Mobile App</li><li>Research Assistant</li>
-      </ul>
-      <div class="brand-title"><svg class="brand-logo" viewBox="0 0 96 130" role="img" aria-label="GLOWM Safer Motherhood logo"><image href="assets/glowm-official-logo.png" width="300" height="130"/></svg><h1 id="project-title">GLOWM</h1></div>
-      <p class="subtitle">A clearer record of care.<br>Exploring a better workflow for midwives.</p>
+    <section class="hero section" id="overview" aria-labelledby="project-title"><div class="inner">
+      <div class="cover-intro">
+        <a class="desktop-back-link" href="/"><span aria-hidden="true">←</span>Back to website</a>
+        <div class="brand-title"><a class="mobile-home-link" href="/" aria-label="Return to portfolio homepage"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg></a><svg class="brand-logo" viewBox="0 0 96 130" role="img" aria-label="GLOWM Safer Motherhood logo"><image href="assets/glowm-official-logo.png" width="300" height="130"/></svg><h1 id="project-title">GLOWM</h1></div>
+        <p class="cover-lede">A clearer record of care. Exploring a better workflow for midwives.</p>
+        <ul class="project-tags" aria-label="Project focus">
+          <li>UX Research</li><li>Platform Comparison</li><li>Mobile App</li>
+        </ul>
+      </div>
       <figure class="hero-visual" aria-label="Original GLOWM app screens">
         <div class="hero-phones">
           <div class="hero-phone"><img src="assets/glowm-patient-list-original.jpg" width="390" height="844" alt="Original GLOWM patient list."></div>
@@ -29,33 +43,33 @@
           <div class="hero-phone"><img src="assets/glowm-original.jpg" width="390" height="844" alt="Original GLOWM antenatal visit form."></div>
         </div>
       </figure>
-      <dl class="metadata"><div><dt>My role</dt><dd>Research assistant</dd></div><div><dt>My work</dt><dd>Literature research & platform comparison</dd></div><div><dt>Project with</dt><dd>My professor</dd></div></dl>
-    </section>
-    <section class="intro narrow case-part story-intention" id="problem" aria-labelledby="intention-heading">
-      <h2 id="intention-heading">Problem</h2>
-      <p>We wanted to understand how GLOWM’s medical records could better support midwives: finding a patient, reviewing earlier visits, and recording care with less effort.</p>
-      <p class="context-note">GLOWM brings clinical guidance and record keeping into a mobile app. Our focus was the record-keeping experience and how it could better fit the flow of a visit.</p>
-    </section>
-    <section class="narrow case-story case-part" id="approach" aria-labelledby="approach-heading">
-      <h2 id="approach-heading">Approach</h2>
+      <dl class="metadata"><div><dt>Duration</dt><dd>Nov 2024–Jun 2026</dd></div><div><dt>My work</dt><dd>Literature research & platform comparison</dd></div><div><dt>Project with</dt><dd>Professor Dr. <a href="https://www.linkedin.com/in/michellelrogers/"><strong>Michelle Rogers</strong></a></dd></div></dl>
+    </div></section>
+    <section class="section problem-section" id="problem" aria-labelledby="intention-heading"><div class="inner">
+      <p class="eyebrow">Problem</p>
+      <h2 id="intention-heading">Record keeping needed a clearer flow, from finding a patient to recording care.</h2>
+      <p>GLOWM brings clinical guidance and record keeping into a mobile app. Our focus was the record-keeping experience and how it could better fit the flow of a visit. Finding a patient, reviewing earlier visits, and recording care should take less effort.</p>
+    </div></section>
+    <section class="section approach-section" id="approach" aria-labelledby="approach-heading"><div class="inner">
+      <p class="eyebrow">Approach</p>
+      <h2 id="approach-heading">My part in the research.</h2>
       <div class="story-block" id="research">
-      <h3 id="research-heading">My part in the research.</h3>
-      <p>As a research assistant, I worked with my professor on the literature review and platform comparison. I helped organise the papers by topic, bring together recurring concerns, and identify areas of GLOWM to explore further.</p>
-      <ol class="research-process">
-        <li><strong>Review the literature.</strong><span>We grouped papers around record usability, maternity care, mobile tools, and birth outcomes. This helped connect the interface questions to midwives’ wider work.</span></li>
-        <li><strong>Compare record workflows.</strong><span>We looked at how GLOWM, OpenEMR, and OpenMRS organise patient information, visits, and data entry.</span></li>
-        <li><strong>Turn gaps into suggestions.</strong><span>We brought the reading and platform review together to identify practical changes to explore for GLOWM.</span></li>
+      <p>I partnered with my professor on the literature review and platform comparison. I organized the papers by topic, brought together recurring concerns, and identified areas of GLOWM to explore further.</p>
+      <ol class="research-process research-cards" role="list" aria-label="Research activities">
+        <li><strong>Review the literature.</strong><span>We reviewed studies on medical records, maternity care, mobile tools, and birth outcomes. This research guided our review of patient lookup, care history, and visit forms in GLOWM.</span></li>
+        <li><strong>Compare record workflows.</strong><span>We compared how GLOWM and open-source medical record systems organize patient information, visits, and data entry.</span></li>
+        <li><strong>Turn gaps into suggestions.</strong><span>We used the literature and platform findings to suggest clearer ways to find patient records, review previous care, and record visits.</span></li>
       </ol>
       <p class="method-note">This was literature research and platform comparison. We did not interview or observe midwives.</p>
       </div>
       <div class="story-block">
-      <h3 id="comparison-why-heading">Why OpenEMR and OpenMRS?</h3>
-      <p>Both are open-source systems built around patient records. They gave us examples of how other tools organise clinical information and visits, helping us question what GLOWM could make clearer.</p>
+      <h3 id="comparison-why-heading">Open-source record systems</h3>
+      <p>We reviewed two open-source platforms for managing patient records: OpenEMR and OpenMRS.</p>
       <dl class="platform-reasons">
-        <div><dt><a href="https://www.open-emr.org/wiki/index.php/OpenEMR_Features" target="_blank" rel="noopener noreferrer">OpenEMR ↗</a></dt><dd>Its patient records, encounters, and clinical forms offered a reference for keeping information together across visits.</dd></div>
-        <div><dt><a href="https://openmrs.org/product/" target="_blank" rel="noopener noreferrer">OpenMRS ↗</a></dt><dd>Its configurable records and forms offered another way to think about organising information around different care needs.</dd></div>
+        <div><dt><a href="https://www.open-emr.org/wiki/index.php/OpenEMR_Features" target="_blank" rel="noopener noreferrer">OpenEMR ↗</a></dt><dd>An electronic health record system that brings patient information, clinical visits, and forms together.</dd></div>
+        <div><dt><a href="https://openmrs.org/product/" target="_blank" rel="noopener noreferrer">OpenMRS ↗</a></dt><dd>A flexible medical record platform with customizable records and forms for different care needs.</dd></div>
       </dl>
-      <p>Our aim was to find useful ideas for GLOWM. Any idea would need to suit midwives and a small phone screen.</p>
+      <p class="platform-rationale">We chose them to compare how records, visits, and data entry are organized, then identify ideas that could fit midwives’ work on a small phone screen.</p>
       </div>
       <div class="story-block">
       <h3 id="literature-heading">What the reading added.</h3>
@@ -66,46 +80,58 @@
       <h3 id="results-heading">What we found in GLOWM.</h3>
       <p>The review pointed to three parts of the record-keeping experience that needed closer attention.</p>
       <div class="finding-details">
-        <article id="finding-patient-lookup"><h4>Patient lookup is split between the app and paper.</h4><p>Before opening a record, a midwife needs to confirm the right patient. GLOWM’s list shows IDs and dates of birth, with no visible search or visit status. The app asks users to keep a separate handwritten name-to-ID list. This made patient lookup an area where we wanted to explore a clearer experience.</p><figure class="finding-evidence">
-      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-patient-list-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM patient list screenshot"><img src="assets/glowm-patient-list-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM patient list showing four rows with patient IDs and dates of birth."></a></div>
-      <figcaption><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app.2017-03-31/patients.list.html" target="_blank" rel="noopener noreferrer">Original GLOWM · Patient list ↗</a><a href="assets/glowm-patient-list-original.jpg" target="_blank" rel="noopener noreferrer">View full size ↗</a></figcaption>
-    </figure></article>
-        <article id="finding-past-care"><h4>Earlier care sits inside separate record sections.</h4><p>A midwife may need to check previous care before continuing a visit. GLOWM opens a record as a table of contents, with antenatal visits listed by number. Recent readings and visit dates are not brought together in the first view, so reviewing the history involves opening the relevant sections.</p><figure class="finding-evidence">
-      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-patient-overview-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM record contents screenshot"><img src="assets/glowm-patient-overview-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM patient record showing the table of contents for patient details, antenatal visits, delivery and baby records."></a></div>
-      <figcaption><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app.2017-03-31/patient.html?id=10005" target="_blank" rel="noopener noreferrer">Original GLOWM · Record contents ↗</a><a href="assets/glowm-patient-overview-original.jpg" target="_blank" rel="noopener noreferrer">View full size ↗</a></figcaption>
-    </figure></article>
-        <article id="finding-visit-entry"><h4>Recording a visit means working through a long form.</h4><p>A single antenatal visit includes measurements, checks, and notes. GLOWM puts these into a long form with a mix of number fields, sliders, and yes/no choices. Some labels are repeated. We wanted to explore a clearer way to move through the visit and record exact readings.</p><figure class="finding-evidence">
-      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM antenatal visit screenshot"><img src="assets/glowm-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM antenatal examination form with number fields, blood-pressure sliders and yes or no choices."></a></div>
-      <figcaption><a href="https://www.glowm.com/resources/glowm_www/mobile/mother.app.2017-03-31/patient-antenatal.html?id=10005&amp;visit=1" target="_blank" rel="noopener noreferrer">Original GLOWM · Antenatal visit ↗</a><a href="assets/glowm-original.jpg" target="_blank" rel="noopener noreferrer">View full size ↗</a></figcaption>
-    </figure></article>
-      </div>
-      </div>
-    </section>
-    <section class="narrow case-story case-part" id="solution" aria-labelledby="improvements-heading">
-      <h2 id="improvements-heading">Solution</h2>
-      <p>Our review led to three ideas to test.</p>
-      <ul class="findings proposed-changes">
-        <li><strong>Find the right record.</strong><span>Add patient-ID search and visit details, and review how to confirm identity while protecting privacy.</span></li>
-        <li><strong>Review care at a glance.</strong><span>Bring key details, dated visits, and previous readings together, with unfinished work clearly marked.</span></li>
-        <li><strong>Make visit entry clearer.</strong><span>Use short form sections, consistent number fields with units, and clear draft or completed status.</span></li>
+        <article id="finding-patient-lookup"><h4>Finding a patient’s record requires a separate paper list.</h4>
+      <ul class="finding-points">
+        <li>GLOWM lists patient IDs and dates of birth, rather than names.</li>
+        <li>A separate handwritten list connects each patient’s name to their ID.</li>
+        <li>The midwife uses that list to identify which record to open.</li>
+        <li>The app’s patient list has no visible search or visit status.</li>
       </ul>
-    </section>
-    <section class="narrow case-story case-part" id="impact" aria-labelledby="outcome-heading">
-      <h2 id="outcome-heading">Impact</h2>
-      <p>We developed a clearer set of workflow gaps and suggestions for GLOWM. My contribution was helping connect the literature and platform review to those priorities.</p>
-      <p class="outcome-note">So far, our work has produced research findings and suggestions. User testing has not started yet.</p>
+      <figure class="finding-evidence">
+      <div class="evidence-panel evidence-panel--patient-list"><a class="evidence-phone" href="assets/glowm-patient-list-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM patient list screenshot"><img src="assets/glowm-patient-list-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM patient list showing four rows with patient IDs and dates of birth."></a></div>
+    </figure></article>
+        <article id="finding-past-care"><h4>Earlier care sits inside separate record sections.</h4>
+      <ul class="finding-points">
+        <li>Midwives may need to review a patient’s earlier care before continuing the current visit.</li>
+        <li>When a record opens, GLOWM shows a menu of sections, with pregnancy visits listed by number.</li>
+        <li>Recent readings and visit dates aren’t shown together on the record’s first screen. Midwives need to open separate sections to review previous care.</li>
+      </ul>
+      <figure class="finding-evidence">
+      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-patient-overview-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM record contents screenshot"><img src="assets/glowm-patient-overview-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM patient record showing the table of contents for patient details, antenatal visits, delivery and baby records."></a></div>
+    </figure></article>
+        <article id="finding-visit-entry"><h4>Recording a visit means working through a long form.</h4>
+      <ul class="finding-points">
+        <li>During a pregnancy visit, midwives record measurements, checks, and notes.</li>
+        <li>GLOWM combines these in one long form, using number fields, sliders, and yes/no options.</li>
+        <li>Some field labels appear more than once.</li>
+        <li>We wanted to explore a clearer form that helps midwives enter exact readings.</li>
+      </ul>
+      <figure class="finding-evidence">
+      <div class="evidence-panel"><a class="evidence-phone" href="assets/glowm-original.jpg" target="_blank" rel="noopener noreferrer" aria-label="Open the full-size original GLOWM antenatal visit screenshot"><img src="assets/glowm-original.jpg" width="390" height="844" loading="lazy" decoding="async" alt="Original GLOWM antenatal examination form with number fields, blood-pressure sliders and yes or no choices."></a></div>
+    </figure></article>
+      </div>
+      </div>
+    </div></section>
+    <section class="section solution-section" id="solution" aria-labelledby="improvements-heading"><div class="inner" id="impact">
+      <p class="eyebrow">Solution &amp; impact</p>
+      <h2 id="improvements-heading">Three ideas to test.</h2>
+      <p id="outcome-heading">We identified three workflow gaps and recommendations for GLOWM. I connected the literature and platform review to these priorities. User testing has not started.</p>
+      <ol class="findings proposed-changes" role="list" aria-label="Recommendations for GLOWM">
+        <li><span class="solution-step-number" aria-hidden="true">1</span><div class="recommendation-copy"><strong>Find the right record.</strong><span>Add patient-ID search and visit details, and review how to confirm identity while protecting privacy.</span></div></li>
+        <li><span class="solution-step-number" aria-hidden="true">2</span><div class="recommendation-copy"><strong>Review care at a glance.</strong><span>Bring key details, dated visits, and previous readings together, with unfinished work clearly marked.</span></div></li>
+        <li><span class="solution-step-number" aria-hidden="true">3</span><div class="recommendation-copy"><strong>Make visit entry clearer.</strong><span>Use short form sections, consistent number fields with units, and clear draft or completed status.</span></div></li>
+      </ol>
       <div class="story-block" id="future-work">
       <h3 id="future-heading">Future work.</h3>
-      <p>We want to redesign GLOWM using feedback from nurses. We are currently waiting for Institutional Review Board (IRB) approval to conduct research with people.</p>
-      <p>Once we receive approval, we plan to work with nurses at Drexel and other campuses in three stages:</p>
+      <p>We are waiting for Institutional Review Board (IRB) approval to work with nurses at Drexel and other campuses. After approval, we plan to:</p>
       <ol class="research-process">
-        <li><strong>Test the current app.</strong><span>Ask nurses to use GLOWM and share their experience. We want to understand what feels clear, where they get stuck, and what could be easier.</span></li>
-        <li><strong>Redesign with their feedback.</strong><span>Use what we learn to improve the app’s navigation, record organisation, and data-entry flow.</span></li>
-        <li><strong>Test the redesign again.</strong><span>Ask nurses to try the updated version and check whether the changes make the tasks clearer and easier to complete.</span></li>
+        <li><strong>Test the current app.</strong><span>Ask nurses to use GLOWM and share what feels clear, where they get stuck, and what could be easier.</span></li>
+        <li><strong>Redesign with their feedback.</strong><span>Use their feedback to improve navigation, record organization, and data entry.</span></li>
+        <li><strong>Test the redesign again.</strong><span>Ask nurses to try the redesign and check whether tasks are clearer and easier to complete.</span></li>
       </ol>
       </div>
-    </section>
-    <div class="narrow"><details class="references" id="references"><summary><span class="summary-label">References</span><span class="plus" aria-hidden="true">+</span></summary><div class="references-body"><label class="search-wrap"><span>Search references</span><input type="search" id="reference-search" placeholder="Search by title…" autocomplete="off"></label><p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+    </div></section>
+    <section class="section references-section" aria-label="References"><div class="inner"><details class="references" id="references"><summary><span class="summary-label">References</span><span class="plus" aria-hidden="true">+</span></summary><div class="references-body"><label class="search-wrap"><span>Search references</span><input type="search" id="reference-search" placeholder="Search by title…" autocomplete="off"></label><p class="search-status" id="search-status" role="status" aria-live="polite"></p>
     <div class="ref-group references-list"><ul>
 <li class="ref-item"><a href="https://journals.sagepub.com/doi/full/10.1258/jrsm.2011.110153" target="_blank" rel="noopener noreferrer"><span>Data re-entry overload: time for a paradigm shift in maternity IT?</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
 <li class="ref-item"><a href="https://link.springer.com/article/10.1186/s12911-016-0406-0" target="_blank" rel="noopener noreferrer"><span>Exploring the implementation of an electronic record into a maternity unit: a qualitative study using Normalisation Process Theory</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
@@ -159,16 +185,21 @@
 <li class="ref-item"><a href="https://dx.doi.org/10.14288/1.0363296" target="_blank" rel="noopener noreferrer"><span>Midwifery Integration Scoring System — data archive</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
 <li class="ref-item"><a href="https://www.sciencedirect.com/topics/psychology/misdiagnosis" target="_blank" rel="noopener noreferrer"><span>Misdiagnosis — background topic linked in the literature review</span><span class="ref-arrow" aria-hidden="true">↗</span></a></li>
 </ul></div>
-    </div></details></div>
-    <section class="closing narrow" aria-labelledby="closing-heading" id="closing">
+    </div></details></div></section>
+  </main>
+  <footer class="case-study-footer"><div class="inner">
+    <section class="closing-card" aria-labelledby="closing-heading" id="closing">
+      <div class="closing-copy">
       <h2 id="closing-heading">Thanks for reading!</h2>
+      </div>
+      <div class="closing-navigation">
       <div class="closing-actions">
-        <a class="closing-button closing-primary" id="next-case-study" href="/drexel-works/" aria-label="View my next case study">View my next case study <span aria-hidden="true">→</span></a>
-        <a class="closing-button closing-secondary" id="portfolio-website" href="/" aria-label="Back to my website">Back to my website <span aria-hidden="true">↗</span></a>
+        <a class="closing-button closing-button--primary" id="next-case-study" href="/drexel-works/">View my next case study <span aria-hidden="true">→</span></a>
+        <a class="closing-button closing-button--secondary" id="portfolio-website" href="/">Back to my website <span aria-hidden="true">↗</span></a>
+      </div>
       </div>
     </section>
-  </main>
-  <footer class="footer narrow"><span>GLOWM case study · Research assistant</span><a href="#top">Back to top ↑</a></footer>
+  </div></footer>
   
 </body>
 </html>

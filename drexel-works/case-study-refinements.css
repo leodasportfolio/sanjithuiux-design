@@ -124,6 +124,18 @@
   padding-top: calc(var(--chapter-gap) / 4);
 }
 
+/* Compact the desktop closing bar without changing its buttons or mobile layout. */
+@media (min-width: 701px) {
+  .case-study-page .closing-card {
+    gap: 16px 20px;
+    padding: 16px 24px;
+  }
+  .case-study-page .closing-navigation {
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+}
+
 @media (min-width: 601px) and (max-width: 800px) {
   .case-study-page .findings-evidence--impact .finding {
     padding: 12px;
