@@ -331,7 +331,7 @@ button { font: inherit; }
   box-shadow: 0 8px 18px rgba(25,29,33,.14);
 }
 
-.about-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; }
+.about-photo img { width: 100%; height: 100%; object-fit: contain; object-position: center; background: #fff; }
 
 .about-more { margin-top: 28px; }
 .about-more p + p { margin-top: 28px; }
