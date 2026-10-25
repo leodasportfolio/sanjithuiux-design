@@ -188,7 +188,7 @@
   .ds-type-specimen { grid-template-columns: 1fr; gap: 16px; }
   .ds-family { flex-direction: row; align-items: baseline; gap: 20px; }
   .ds-family > strong { font-size: 56px; line-height: 1; }
-  .ds-weight { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
+  .ds-weight { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .ds-weight > div { font-size: 13px; }
   .ds-colors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ds-icon-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 16px 8px; gap: 20px 8px; }
@@ -205,6 +205,7 @@
   .case-study-page .section .design-system p.ds-intro { text-align: left; text-align-last: auto; hyphens: none; }
 }
 @container drexel-system (max-width: 320px) {
+  .ds-weight > div { font-size: 12px; }
   .ds-icon-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ds-job--directory { grid-template-columns: minmax(0, 1fr); }
   .ds-job-action { flex-direction: row; align-items: center; justify-content: space-between; }
