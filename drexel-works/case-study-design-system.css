@@ -219,3 +219,20 @@
   .ds-type-color > section[aria-labelledby="ds-color-title"] { grid-column: 1 / -1; grid-row: 2; }
   .ds-colors { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 }
+/* Fill the desktop typography column without changing its heading or type scale. */
+@container drexel-system (min-width: 741px) {
+  .ds-type-color > section[aria-labelledby="ds-type-title"] {
+    align-self: stretch;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    row-gap: 20px;
+  }
+  .case-study-page .design-system .ds-board .ds-type-color > section[aria-labelledby="ds-type-title"] > h4 { margin-bottom: 0; }
+  .ds-type-color > section[aria-labelledby="ds-type-title"] .ds-type-specimen {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .ds-type-color > section[aria-labelledby="ds-type-title"] .ds-weights { flex: 1; align-content: space-between; }
+  .case-study-page .design-system .ds-board .ds-type-color > section[aria-labelledby="ds-type-title"] > p.ds-caption { margin-top: 0; }
+}
