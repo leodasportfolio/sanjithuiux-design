@@ -174,10 +174,13 @@
   .ds-components { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ds-component-column--feedback { grid-column: auto; grid-template-columns: minmax(0, 1fr); }
 }
+@container drexel-system (max-width: 1100px) {
+  .ds-type-specimen { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .ds-family { flex-direction: row; align-items: baseline; gap: 20px; }
+}
 @container drexel-system (max-width: 740px) {
   .ds-foundations, .ds-components, .ds-component-column--feedback { grid-template-columns: minmax(0, 1fr); }
   .ds-component-column--feedback { grid-column: auto; }
-  .ds-type-specimen { grid-template-columns: 96px minmax(0, 1fr); }
   .ds-weight { grid-template-columns: 76px minmax(0, 1fr); }
 }
 @container drexel-system (max-width: 460px) {
