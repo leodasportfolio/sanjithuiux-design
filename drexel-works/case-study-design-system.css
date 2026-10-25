@@ -210,3 +210,12 @@
   .ds-job--directory { grid-template-columns: minmax(0, 1fr); }
   .ds-job-action { flex-direction: row; align-items: center; justify-content: space-between; }
 }
+/* Desktop-only compaction: identity and type share the first row; all sixteen
+ * color roles use the full width below them. The existing mobile flow is intact. */
+@container drexel-system (min-width: 741px) {
+  .ds-type-color { display: contents; }
+  .ds-foundations > .ds-identity { grid-column: 1; grid-row: 1; }
+  .ds-type-color > section[aria-labelledby="ds-type-title"] { grid-column: 2; grid-row: 1; }
+  .ds-type-color > section[aria-labelledby="ds-color-title"] { grid-column: 1 / -1; grid-row: 2; }
+  .ds-colors { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
