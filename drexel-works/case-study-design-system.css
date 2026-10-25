@@ -146,6 +146,7 @@
 .ds-job-details { display: flex; flex-direction: column; gap: 4px; }
 .ds-job-details > strong { font-size: 16px; font-weight: 700; line-height: 21px; }
 .ds-job-details > span { color: var(--ds-secondary); font-size: 13px; line-height: 17px; }
+.ds-job-details > strong, .ds-job-details > span { overflow-wrap: anywhere; }
 .ds-job-badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .ds-job-badges .ds-badge { min-height: 24px; padding: 3px 7px; font-size: 11px; line-height: 14px; }
 .ds-job-action { display: flex; min-width: 72px; flex-direction: column; align-items: flex-end; gap: 16px; }
@@ -198,5 +199,10 @@
 @media (max-width: 700px) {
   .case-study-page .design-system { margin-top: var(--subsection-gap, 40px); padding-top: 28px; }
   .case-study-page .design-system .ds-title { font-size: 24px; text-align: left; text-align-last: auto; }
-  .case-study-page .design-system .ds-intro { text-align: left; text-align-last: auto; }
+  .case-study-page .section .design-system p.ds-intro { text-align: left; text-align-last: auto; hyphens: none; }
+}
+@container drexel-system (max-width: 320px) {
+  .ds-icon-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ds-job--directory { grid-template-columns: minmax(0, 1fr); }
+  .ds-job-action { flex-direction: row; align-items: center; justify-content: space-between; }
 }
