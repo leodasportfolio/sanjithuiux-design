@@ -44,7 +44,8 @@
   window.clarity('consentv2', { analytics_Storage: 'denied', ad_Storage: 'denied' });
   const page = window.location.pathname.startsWith('/drexel-works/') ? 'Drexel Works'
     : window.location.pathname.startsWith('/glowm/') ? 'GLOWM'
-      : window.location.pathname.startsWith('/privacy/') ? 'Privacy' : 'Home';
+      : window.location.pathname.startsWith('/resume/') ? 'Resume'
+        : window.location.pathname.startsWith('/privacy/') ? 'Privacy' : 'Home';
   window.clarity('set', 'portfolio_page', page);
 
   const trackingScript = document.createElement('script');
@@ -58,7 +59,8 @@
     if (!link) return;
     const url = new URL(link.href, window.location.href);
     let name;
-    if (url.pathname.endsWith('/sanjith-kumaar-resume.pdf')) name = 'resume_open';
+    if (url.pathname.endsWith('/sanjith-kumaar-resume.pdf')) name = 'resume_download';
+    else if (trackedHosts.includes(url.hostname) && url.pathname.startsWith('/resume/')) name = 'resume_open';
     else if (url.protocol === 'mailto:') name = 'contact_email_click';
     else if (url.hostname === 'linkedin.com' || url.hostname.endsWith('.linkedin.com')) name = 'linkedin_open';
     else if (trackedHosts.includes(url.hostname) && url.pathname.startsWith('/drexel-works/')) name = 'drexel_works_open';
