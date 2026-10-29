@@ -1,0 +1,62 @@
+:root { --layer-privacy-banner: 50; }
+.site-privacy-banner {
+  position: fixed;
+  z-index: var(--layer-privacy-banner);
+  inset: auto 20px 20px;
+  width: min(800px, calc(100% - 40px));
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  margin-inline: auto;
+  padding: 22px 24px;
+  border: 1px solid #c7cdd3;
+  border-radius: 12px;
+  background: #fff;
+  color: #191d21;
+  font: 400 15px/1.6 "Inter", "Nunito Sans", Arial, sans-serif;
+  text-align: left;
+}
+.site-privacy-banner[hidden] { display: none !important; }
+.site-privacy-banner h2 {
+  margin: 0 0 7px;
+  color: #191d21;
+  font: 700 19px/1.35 "Bricolage Grotesque", "Nunito Sans", Arial, sans-serif;
+  letter-spacing: 0;
+}
+.site-privacy-banner p { margin: 0; max-width: 72ch; color: #3f444a; font: inherit; }
+.site-privacy-banner a { color: #191d21; text-decoration: underline; text-underline-offset: 3px; }
+.site-privacy-banner .site-privacy-status:empty { display: none; }
+.site-privacy-banner .site-privacy-status:not(:empty) { margin-top: 8px; }
+.site-privacy-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.site-privacy-actions button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #191d21;
+  border-radius: 7px;
+  background: #fff;
+  color: #191d21;
+  font: 600 15px/1.4 "Inter", "Nunito Sans", Arial, sans-serif;
+  cursor: pointer;
+}
+.site-privacy-actions button:hover { background: #f0f1f1; }
+.site-privacy-actions button:disabled { color: #59616a; border-color: #abb2ba; cursor: not-allowed; }
+.site-privacy-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 24px; padding: 20px; color: #3f444a; }
+.site-privacy-links a, .site-privacy-links button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: 400 14px/1.5 "Inter", "Nunito Sans", Arial, sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.site-privacy-banner :focus-visible, .site-privacy-links :focus-visible { outline: 3px solid #315bb4; outline-offset: 4px; }
+@media (max-width: 520px) {
+  .site-privacy-banner { inset: auto 12px 12px; width: calc(100% - 24px); max-height: calc(100dvh - 24px); padding: 20px; }
+  .site-privacy-actions { justify-content: stretch; }
+  .site-privacy-actions button { flex: 1 1 120px; }
+}
