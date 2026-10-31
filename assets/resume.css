@@ -15,6 +15,7 @@ a:focus-visible { outline: 3px solid #193d7d; outline-offset: 5px; border-radius
 h1, h2, h3, p { margin: 0; }
 .resume-heading { text-align: center; margin-bottom: 24px; }
 h1 { font-size: 40px; line-height: 1.2; font-weight: 400; }
+.tagline { margin-top: 10px; font-style: italic; }
 .contact-details { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 0; margin-top: 18px; font-size: 15px; font-style: normal; }
 .contact-details a { color: #004fc4; overflow-wrap: anywhere; }
 .contact-details a + a { border-left: 1px solid #444; padding-left: 8px; margin-left: 8px; }
@@ -31,8 +32,8 @@ strong { font-weight: 700; }
 .experience + .experience { margin-top: 24px; }
 .education { margin-top: 24px; }
 .education-row + .education-row { margin-top: 18px; }
-.additional-experience { margin-top: 56px; }
-.additional-experience p + p { margin-top: 20px; }
+.additional-experience, .skills { margin-top: 56px; }
+.additional-experience p + p, .skills p + p { margin-top: 20px; }
 .resume-footer { max-width: 1020px; margin: 0 auto; padding: 4px 24px 24px; }
 @media (max-width: 1050px) {
   .section-heading { flex-wrap: wrap; gap: 8px 16px; }
@@ -53,7 +54,7 @@ strong { font-weight: 700; }
   .project-points { padding-left: 22px; }
   .project-points li { padding-left: 2px; margin-top: 12px; }
   .experience + .experience { margin-top: 28px; }
-  .education, .additional-experience { margin-top: 32px; }
+  .education, .additional-experience, .skills { margin-top: 32px; }
   .education-row + .education-row { margin-top: 20px; }
 }
 @media print {
@@ -72,6 +73,6 @@ strong { font-weight: 700; }
   .project-points li { padding-left: 3pt; margin-top: 0; }
   .experience + .experience, .education { margin-top: 14pt; }
   .education-row + .education-row { margin-top: 10pt; }
-  .additional-experience { margin-top: 28pt; }
-  .additional-experience p + p { margin-top: 12pt; }
+  .additional-experience, .skills { margin-top: 28pt; }
+  .additional-experience p + p, .skills p + p { margin-top: 12pt; }
 }
