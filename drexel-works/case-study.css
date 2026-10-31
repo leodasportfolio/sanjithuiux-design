@@ -37,7 +37,7 @@ h2 { font-size: clamp(28px, 2.8vw, 40px); line-height: 1.2; font-weight: 800; }
 .section-nav a:hover { background: rgba(255,255,255,.4); }
 .section-nav a[aria-current] { background: var(--gold); color: #151515; border-bottom-color: #c79428; }
 .hero { padding-top: 126px; padding-bottom: 24px; }
-.project-hero { position: relative; min-height: 675px; overflow: hidden; border-radius: var(--radius-large); background: #030608 url("assets/drexel-works-header-art-v2.png") left center / cover no-repeat; }
+.project-hero { position: relative; min-height: 675px; overflow: hidden; border-radius: var(--radius-large); background: #030608 url("assets/drexel-works-header-art-v2.jpg") left center / cover no-repeat; }
 .project-hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(1,4,6,0) 25%, rgba(2,6,10,.08) 43%, rgba(2,5,10,.9) 100%); }
 .project-copy { position: absolute; z-index: 1; top: 50%; right: clamp(34px, 5.5vw, 78px); left: 53%; transform: translateY(-50%); color: white; }
 .project-kicker { margin-bottom: 20px; color: #b9c2d7; font-size: 15px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
