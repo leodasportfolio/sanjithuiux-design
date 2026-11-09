@@ -514,6 +514,11 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     right: max(20px, calc((100vw - 1030px) / 2));
   }
   html[data-mode="fun"] .site-nav a { white-space: nowrap; }
+  /* The last screen: "Let's Connect" has the whole window to itself, in the middle, once
+     About Me has scrolled up and away. */
+  html[data-mode="fun"] .contact { min-height: 100vh; padding-top: 32px; }
+  /* (The copyright line keeps to the bottom of the screen; the rest sits in the middle of what is left.) */
+  html[data-mode="fun"] .contact-eyebrow { margin-top: auto; }
   /* The hero's frame sits a little lower, clear of the top edge of the window. */
   html[data-mode="fun"] .hero { margin-top: 26px; }
 
