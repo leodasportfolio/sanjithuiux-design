@@ -1847,9 +1847,53 @@
       cell.rect.setAttribute('height', (high * size).toFixed(5));
     }
     const open = build >= 1;
+    // "Case Studies" bows out while this card builds, and returns on the way back up.
+    if (caseTitle) caseTitle.style.setProperty('--out', Math.min(1, build * 1.6).toFixed(3));
     reel.classList.toggle('is-out', progress > 0.001);
     reel.classList.toggle('is-open', open);
     if (open) decodeReelTitle(); else if (build < 0.94) scrambleReelTitle();
+  };
+
+  // Case Studies arrives with the scroll: the heading fades and rises in first, then each
+  // folder as it comes up from the bottom of the screen. Each piece is fully in by the
+  // time it is well into view, and the same happens in reverse on the way back up.
+  const caseTitle = document.querySelector('.case-studies .section-title');
+  const caseFolders = [...document.querySelectorAll('.project-grid .project-card')];
+  const ARRIVE_RISE = 70; // matches the 70px in hero-play.css
+  const paintArrivals = () => {
+    const pieces = [];
+    if (caseTitle) pieces.push([caseTitle, 0.96, 0.72, 0]);
+    // A folder is measured from the top of its tab, and starts once the heading is in.
+    for (const folder of caseFolders) pieces.push([folder, 0.85, 0.48, 56]);
+    if (!playing()) {
+      for (const [piece] of pieces) piece.style.removeProperty('--in');
+      if (caseTitle) { caseTitle.style.removeProperty('--sc'); caseTitle.style.removeProperty('--out'); }
+      return;
+    }
+    const tall = window.innerHeight;
+    let gate = 0; // how far the page must have scrolled before this piece may begin
+    for (const [piece, from, to, lead] of pieces) {
+      const was = parseFloat(piece.style.getPropertyValue('--in'));
+      const risen = Number.isFinite(was) ? (1 - was) * ARRIVE_RISE : 0;
+      // Where it would be without the rise it is currently given.
+      const top = piece.getBoundingClientRect().top - risen - lead;
+      // On a tall window a piece can already be on screen before any scrolling. It still
+      // waits: the heading begins only once the page has started to move, and the first
+      // folder only once the heading is fully in. (Later folders are a whole folder further
+      // down, so they are never on screen that early.)
+      const span = (from - to) * tall;
+      const place = top + window.scrollY;
+      const begin = Math.min(from * tall, place - gate - 24);
+      const arrived = Math.max(0, Math.min(1, (begin - top) / span));
+      gate = piece === caseTitle ? place - begin + span : 0;
+      if (piece === caseTitle) {
+        // The title shrinks a little as it settles into the place where it stays.
+        const rest = parseFloat(window.getComputedStyle(piece).top) || 0;
+        const settled = Math.max(0, Math.min(1, 1 - (top - rest) / 180));
+        piece.style.setProperty('--sc', (1 - 0.28 * settled).toFixed(3));
+      }
+      piece.style.setProperty('--in', arrived.toFixed(3));
+    }
   };
 
   let pageFrame = 0;
@@ -1857,6 +1901,7 @@
   let pointerY = -999;
   const paintPage = () => {
     pageFrame = 0;
+    paintArrivals();
     paintReel();
     if (glow) {
       glow.style.setProperty('--mx', pointerX + 'px');
@@ -1867,6 +1912,11 @@
   const queuePage = () => { if (!pageFrame) pageFrame = window.requestAnimationFrame(paintPage); };
   window.addEventListener('scroll', queuePage, { passive: true });
   window.addEventListener('resize', queuePage);
+  // The first measure can happen before fonts and images have set the final positions,
+  // so measure again whenever the page finishes loading or its layout changes size.
+  window.addEventListener('load', queuePage);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(queuePage);
+  if ('ResizeObserver' in window) new ResizeObserver(queuePage).observe(document.body);
   modeSwitch.addEventListener('click', queuePage);
   if (glow) {
     window.addEventListener('pointermove', (event) => {
