@@ -1670,7 +1670,7 @@
   window.addEventListener('scroll', () => {
     const moved = window.scrollY - sloshY;
     sloshY = window.scrollY;
-    if (!playing() || !moved) return;
+    if (!playing() || Math.abs(moved) < 2) return; // (a pixel of settling is not a shake)
     const kick = Math.max(-520, Math.min(520, moved * 7));
     let any = false;
     for (const body of bodies) { if (body.state === 'free' && !body.held) { body.vy -= kick * (0.6 + Math.random() * 0.6); body.vx += (Math.random() - 0.5) * Math.abs(kick) * 0.3; any = true; } }
@@ -2738,7 +2738,9 @@
     const dt = Math.min(50, now - wheel.last) / 1000;
     wheel.last = now;
     const left = wheel.target - wheel.at;
-    if (Math.abs(left) < 0.5) { wheel.target = null; return; }
+    // Arrived: rest exactly on the spot (a whole pixel), so the page never sits between two
+    // positions and trembles.
+    if (Math.abs(left) < 0.75) { window.scrollTo({ top: wheel.target, behavior: 'instant' }); wheel.target = null; return; }
     // Ease towards where the hand has asked for, never faster than the limit.
     // (A short catch-up, so it follows the hand closely and never feels heavy.)
     const want = left * (1 - Math.exp(-dt / 0.032));
@@ -2753,10 +2755,16 @@
     event.preventDefault();
     const line = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? window.innerHeight : 1;
     const end = document.documentElement.scrollHeight - window.innerHeight;
+    // Already at the very top and still scrolling up (or at the very bottom, scrolling
+    // down): there is nowhere to go, so nothing at all happens.
+    if (wheel.target === null && ((event.deltaY < 0 && window.scrollY <= 0.5) || (event.deltaY > 0 && window.scrollY >= end - 0.5))) {
+      if (window.scrollY > 0 && window.scrollY <= 0.5) window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
     if (wheel.target === null) wheel.at = wheel.target = window.scrollY;
     // No backlog: at most half a second of travel is ever queued, so it stops when the hand stops.
     const reach = MAX_SCROLL * 0.5;
-    wheel.target = Math.max(0, Math.min(end, Math.max(wheel.at - reach, Math.min(wheel.at + reach, wheel.target + event.deltaY * line))));
+    wheel.target = Math.round(Math.max(0, Math.min(end, Math.max(wheel.at - reach, Math.min(wheel.at + reach, wheel.target + event.deltaY * line)))));
     if (!wheel.frame) { wheel.last = performance.now(); wheel.frame = window.requestAnimationFrame(wheelStep); }
   }, { passive: false });
   window.addEventListener('resize', queuePage);
