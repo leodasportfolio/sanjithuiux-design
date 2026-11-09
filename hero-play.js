@@ -1818,6 +1818,7 @@
     if (now - reelScrambledAt > 70) { reelScrambledAt = now; writeReelTitle(); }
   };
 
+  let reelBuild = 0;
   const paintReel = () => {
     if (!reel) return;
     if (!playing()) {
@@ -1863,6 +1864,7 @@
     const open = build >= 1;
     // "Case Studies" bows out while this card builds, and returns on the way back up.
     if (caseTitle) caseTitle.style.setProperty('--out', Math.min(1, build * 1.6).toFixed(3));
+    reelBuild = build; // (the card starts moving to the middle the moment that fade has finished: paintReelHeading)
     reel.classList.toggle('is-out', progress > 0.001 && turn > 0);
     reel.classList.toggle('is-open', open);
     if (open) decodeReelTitle(); else if (build < 0.94) scrambleReelTitle();
@@ -1947,6 +1949,12 @@
     }
     // The first folder does not fade or rise in: it pours out of the Dock (paintDock).
     if (caseFolders[0]) caseFolders[0].style.setProperty('--in', '1');
+    // Stacked behind the Motion Graphics card, the folders move up to the middle with it.
+    // (The later folders' own value was set afresh just above; the first has none of its own.)
+    caseFolders.forEach((folder, i) => {
+      if (i === 0) { if (reelCentre) folder.style.setProperty('--late', reelCentre.toFixed(1) + 'px'); else folder.style.removeProperty('--late'); }
+      else if (reelCentre) folder.style.setProperty('--late', ((parseFloat(folder.style.getPropertyValue('--late')) || 0) + reelCentre).toFixed(1) + 'px');
+    });
   };
 
   // About Me arrives the way something opens on a Mac. A notification slides in at the top
@@ -2101,18 +2109,11 @@
       return;
     }
     aboutWindow.classList.add('is-moving');
-    // While the Motion Graphics card is still shrinking away to its tile, About Me shows
-    // only what lies to the right of it, a small gap away: the two change size side by
-    // side and the window never opens out over the card.
-    // (Its picture is never hidden: that is what it grows out of, and it starts on the card as the notification did.)
-    const pictureLeft = photo ? photo.offsetLeft : 0;
-    const clear = (edgeX, size, least) => (stage.right === null || stage.k >= 1 ? least : Math.min(pictureLeft, Math.max(least, (stage.right + STAGE_GAP - edgeX) / size)));
-    if (pop.k >= 1 || !photo) {
+    // Opening beside the Motion Graphics card (see paintStage): one continuous growth.
+    const growing = pop.on && stage.on && stage.k < 1 && photo && stage.right !== null;
+    if (!growing && (pop.k >= 1 || !photo)) {
       // Open and floating.
       style.transform = 'translate3d(' + (restX - homeX).toFixed(2) + 'px, ' + (restY - homeY).toFixed(2) + 'px, 0) scale(' + restScale.toFixed(5) + ')';
-      const cut = clear(restX, restScale, 0);
-      style.clipPath = cut > 0.5 ? 'inset(0 0 0 ' + cut.toFixed(2) + 'px round ' + (16 / restScale).toFixed(2) + 'px)' : '';
-      aboutEdge.now = restX + cut * restScale;
       return;
     }
     // Unfolding. It starts as nothing but its photo, sitting exactly on the notification's
@@ -2127,6 +2128,30 @@
     const startScale = iconSize / photoSize;
     const startX = iconX - photoX * startScale;
     const startY = iconY - photoY * startScale;
+    if (growing) {
+      // The whole window grows as one piece, at the same pace as the card shrinks, from
+      // the size at which its picture sits exactly on the notification's picture up to
+      // full size. Its right side follows that steady growth; its left side is always the
+      // small gap to the right of the card, so the two change size together, side by side,
+      // with no stage where one part opens before another.
+      const grown = 1 - (1 - stage.k) ** 3; // (the card's own pace)
+      const size = startScale + (restScale - startScale) * grown;
+      const far = startX + (restX - startX) * grown + wide * size;           // its right edge
+      const near = Math.max(startX + (restX - startX) * grown, stage.right + STAGE_GAP); // its left edge
+      const scaleNow = Math.max(startScale, (far - near) / wide);
+      const xNow = far - wide * scaleNow;
+      const yNow = startY + (restY - startY) * grown;
+      style.transform = 'translate3d(' + (xNow - homeX).toFixed(2) + 'px, ' + (yNow - homeY).toFixed(2) + 'px, 0) scale(' + scaleNow.toFixed(5) + ')';
+      // It comes out of the picture: in the first moment, while still that small, the
+      // window opens around its photo. After that there is no cover at all.
+      const out = smooth(unit(grown / 0.16));
+      const hid = 1 - out;
+      style.clipPath = hid > 0.001 ? 'inset(' + (photoY * hid).toFixed(2) + 'px ' + ((wide - photoX - photoSize) * hid).toFixed(2) + 'px ' + ((tall - photoY - photoSize) * hid).toFixed(2) + 'px ' + (photoX * hid).toFixed(2) + 'px round ' + ((12 + 4 * out) / scaleNow).toFixed(2) + 'px)' : '';
+      style.setProperty('--photo-r', ((12 + (18 * scaleNow - 12) * grown) / Math.max(scaleNow, 0.05)).toFixed(2) + 'px');
+      style.setProperty('--photo-tilt', (-3 * smooth(grown)).toFixed(3) + 'deg');
+      aboutEdge.now = xNow + photoX * hid * scaleNow;
+      return;
+    }
     const opened = backOut(pop.k);
     const scale = startScale + (restScale - startScale) * opened;
     const x = startX + (restX - startX) * opened;
@@ -2135,11 +2160,10 @@
     // The window opening out around the photo: from the photo's own outline to the full window.
     const reveal = smooth(unit(pop.k / 0.72));
     const keep = 1 - reveal;
-    const cutLeft = clear(x, scale, photoX * keep);
-    aboutEdge.now = x + cutLeft * scale;
+    aboutEdge.now = x + photoX * keep * scale;
     const settle = unit(pop.k);
     const corner = (12 + 4 * reveal) / scale; // on screen: the picture's 12px corners easing to the window's 16px
-    style.clipPath = 'inset(' + (photoY * keep).toFixed(2) + 'px ' + ((wide - photoX - photoSize) * keep).toFixed(2) + 'px ' + ((tall - photoY - photoSize) * keep).toFixed(2) + 'px ' + cutLeft.toFixed(2) + 'px round ' + corner.toFixed(2) + 'px)';
+    style.clipPath = 'inset(' + (photoY * keep).toFixed(2) + 'px ' + ((wide - photoX - photoSize) * keep).toFixed(2) + 'px ' + ((tall - photoY - photoSize) * keep).toFixed(2) + 'px ' + (photoX * keep).toFixed(2) + 'px round ' + corner.toFixed(2) + 'px)';
     // The photo's corners, measured on screen: the picture's 12px at first, easing to the
     // photo's usual 18px (in the window's own units) by the time it is open.
     const cornerOnScreen = 12 + (18 * scale - 12) * settle;
@@ -2162,45 +2186,22 @@
   }
   let reelHeadingAt = null;
   let reelTitleSpot = { x: 44, y: 30 }; // where the heading sits inside the card
+  // The card's name stays inside the card. What happens instead: as soon as "Case Studies"
+  // has faded out, while the card is still building, the card (and the folders stacked
+  // behind it) moves up from under the now empty title spot to the middle of the screen.
+  // Everything after it keeps its timing.
+  let reelCentre = 0; // how far up the card has been moved, in px (0 or negative)
   const paintReelHeading = () => {
-    if (!reelHeading) return;
-    const hide = () => { reelHeading.style.visibility = 'hidden'; reelTitle.style.visibility = ''; reelHeadingAt = null; };
-    if (!playing() || !aboutWindow) { hide(); return; }
-    const section = aboutWindow.parentElement.getBoundingClientRect();
-    const until = section.top + aboutWindow.offsetTop - window.innerHeight; // scrolling left before About Me reaches the fold
-    const lift = reel.classList.contains('is-open') ? smooth(Math.max(0, Math.min(1, (1000 - until) / 330))) : 0; // (a slow rise: 330px of scrolling, done before the notification)
-    if (lift <= 0) { hide(); return; }
-    // A fast scroll can get here while the heading is still decoding: finish it at once so
-    // the heading that lifts off is always the finished words.
-    if (reelTimer || reelDecoded < reelWords.length) {
-      window.clearInterval(reelTimer);
-      reelTimer = 0;
-      reelDecoded = reelWords.length;
-      writeReelTitle();
-    }
-    // (Read where the card really is on the page, undoing the Stage Manager pile if it is in it.)
-    const cardBox = reelCard.getBoundingClientRect();
-    const piled = stage.done.get(reelCard);
-    if (!piled) { const titleBox = reelTitle.getBoundingClientRect(); reelTitleSpot = { x: titleBox.left - cardBox.left, y: titleBox.top - cardBox.top }; }
-    const card = { left: cardBox.left - (piled ? piled.x : 0), top: cardBox.top - (piled ? piled.y : 0) };
-    card.bottom = card.top + reelCard.offsetHeight;
-    const from = { left: card.left + reelTitleSpot.x, top: card.top + reelTitleSpot.y };
-    if (card.bottom < 0 && !stage.on) { hide(); return; }
-    const size = parseFloat(window.getComputedStyle(reelTitle).fontSize) || 48;
-    reelHeading.style.fontSize = size + 'px';
-    // Where "Case Studies" sat: centred, 54px above the card, at 0.72 of a 48px title.
-    const endScale = 48 * 0.72 / size;
-    const endX = window.innerWidth / 2 - reelHeading.offsetWidth * endScale / 2;
-    const endY = card.top - 54;
-    const scale = 1 + (endScale - 1) * lift;
-    const x = from.left + (endX - from.left) * lift;
-    const y = from.top + (endY - from.top) * lift;
-    reelTitle.style.visibility = 'hidden';
-    reelHeading.style.visibility = 'visible';
-    reelHeading.style.transform = 'translate3d(' + x.toFixed(2) + 'px, ' + y.toFixed(2) + 'px, 0) scale(' + scale.toFixed(5) + ')';
-    reelHeadingAt = { x, y, s: scale };
-    // Ink above the card's top edge, white below it.
-    reelHeading.style.setProperty('--edge', ((card.top - y) / scale).toFixed(2) + 'px');
+    if (!reelCard) return;
+    if (reelHeading) { reelHeading.style.visibility = 'hidden'; reelHeadingAt = null; }
+    if (reelTitle) reelTitle.style.visibility = '';
+    // "Case Studies" has fully faded when the build is five eighths done (see paintReel).
+    // The card starts moving at that moment and is in the middle as the build completes.
+    const lift = playing() && aboutWindow ? smooth(Math.max(0, Math.min(1, (reelBuild - 0.625) / 0.375))) : 0;
+    const stick = parseFloat(window.getComputedStyle(reelCard).top) || 134;
+    const middle = Math.max(24, (window.innerHeight - reelCard.offsetHeight) / 2);
+    reelCentre = Math.min(0, middle - stick) * lift;
+    if (!stage.on) reelCard.style.translate = reelCentre ? '0 ' + reelCentre.toFixed(2) + 'px' : '';
   };
 
   // The first folder's entrance. As the page scrolls, a Mac Dock pops up from the bottom,
@@ -2348,7 +2349,7 @@
     const tabTall = parseFloat(gridStyle.getPropertyValue('--tab-h')) || 56;
     const stackTop = parseFloat(gridStyle.getPropertyValue('--stack-top')) || 134;
     const card = firstFolder.getBoundingClientRect();
-    const top = card.top - tabTall;       // the top of the folder's tab
+    const top = card.top - tabTall - (parseFloat(firstFolder.style.getPropertyValue('--late')) || 0); // the top of the folder's tab, where the page has it
     const left = card.left;
     const wide = card.width;
     const tall = card.height + tabTall;
@@ -2585,7 +2586,8 @@
   const stageClear = () => {
     if (!stage.on) return;
     stage.on = false;
-    reelCard.style.translate = reelCard.style.scale = reelCard.style.transform = reelCard.style.transformOrigin = reelCard.style.pointerEvents = '';
+    reelCard.style.scale = reelCard.style.transform = reelCard.style.transformOrigin = reelCard.style.pointerEvents = '';
+    reelCard.style.translate = reelCentre ? '0 ' + reelCentre.toFixed(2) + 'px' : '';
     for (const folder of caseFolders) folder.style.opacity = '';
     if (reelHeading) reelHeading.style.translate = reelHeading.style.scale = reelHeading.style.opacity = '';
     stage.done.clear();
@@ -2612,7 +2614,9 @@
     if (!reelCard || !aboutWindow) return;
     if (!playing()) { stage.k = 0; stageClear(); return; }
     if (stage.k !== (pop.on ? 1 : 0)) runStage();
-    const eased = stage.k < 0.5 ? 2 * stage.k * stage.k : 1 - (2 - 2 * stage.k) ** 2 / 2; // gentle start, gentle stop
+    // Setting it aside, it starts briskly and settles gently: that clears the way at once,
+    // so About Me can start growing beside it straight away. Coming back, a gentle start and stop.
+    const eased = pop.on ? 1 - (1 - stage.k) ** 3 : (stage.k < 0.5 ? 2 * stage.k * stage.k : 1 - (2 - 2 * stage.k) ** 2 / 2);
     if (eased <= 0) { stageClear(); return; }
     stage.on = true;
     const viewTall = window.innerHeight;
@@ -2621,7 +2625,7 @@
     const lapse = Math.min(100, now - (stage.seen || now));
     stage.seen = now;
     const box = reelCard.getBoundingClientRect();
-    const was = stage.done.get(reelCard) || { x: 0, y: 0 };
+    const was = stage.done.get(reelCard) || { x: 0, y: reelCentre };
     const card = { left: box.left - was.x, top: box.top - was.y, width: reelCard.offsetWidth, height: reelCard.offsetHeight };
     // It shrinks from the spot on the screen where it was when it was set aside. (Not from
     // wherever the page then carries it: that made it drift up off the top and come back.)
@@ -2631,7 +2635,7 @@
       if (!pop.on) { const pull = 1 - Math.exp(-lapse / 110); from.x += (x - from.x) * pull; from.y += (y - from.y) * pull; }
       return from;
     };
-    stage.from = home(stage.from, card.left, card.top);
+    stage.from = home(stage.from, card.left, card.top + reelCentre); // (where it is shown: moved up to the middle)
     // Turned about its left edge, the card looks narrower: this is how wide it shows on
     // screen at a given size and turn.
     const FAR = 2600;
