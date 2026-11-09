@@ -1914,9 +1914,10 @@
         const stick = (parseFloat(window.getComputedStyle(piece).top) || 0) - lead; // where its tab rests in the stack
         if (top > stick + 2) laterHome[turn] = place;                              // its own place on the page
         const home = (laterHome[turn] === undefined ? place : laterHome[turn]) - window.scrollY;
-        const free = turn === 1 ? performance.now() >= dockPop.doneAt + SETTLE : laterStacked[turn - 1] === true;
+        const free = dockPop.skip || (turn === 1 ? performance.now() >= dockPop.doneAt + SETTLE : laterStacked[turn - 1] === true);
         const start = from * tall; // a folder starts its rise here, near the bottom of the screen
-        if (!free) laterShift[turn] = null;
+        if (dockPop.skip) laterShift[turn] = 0; // (carried here by the nav bar: simply in place)
+        else if (!free) laterShift[turn] = null;
         else if (home >= start) laterShift[turn] = 0;                               // not due yet: nothing to make up
         else if (laterShift[turn] === null || laterShift[turn] === undefined) laterShift[turn] = start - home; // late: it starts from the bottom
         else if (home + laterShift[turn] <= stick) laterShift[turn] = 0;            // it has arrived in the stack: nothing left to make up
@@ -2142,9 +2143,11 @@
     reelHeading.textContent = reelWords;
     document.body.append(reelHeading);
   }
+  let reelHeadingAt = null;
+  let reelTitleSpot = { x: 44, y: 30 }; // where the heading sits inside the card
   const paintReelHeading = () => {
     if (!reelHeading) return;
-    const hide = () => { reelHeading.style.visibility = 'hidden'; reelTitle.style.visibility = ''; };
+    const hide = () => { reelHeading.style.visibility = 'hidden'; reelTitle.style.visibility = ''; reelHeadingAt = null; };
     if (!playing() || !aboutWindow) { hide(); return; }
     const section = aboutWindow.parentElement.getBoundingClientRect();
     const until = section.top + aboutWindow.offsetTop - window.innerHeight; // scrolling left before About Me reaches the fold
@@ -2158,9 +2161,14 @@
       reelDecoded = reelWords.length;
       writeReelTitle();
     }
-    const from = reelTitle.getBoundingClientRect();
-    const card = reelCard.getBoundingClientRect();
-    if (card.bottom < 0) { hide(); return; }
+    // (Read where the card really is on the page, undoing the Stage Manager pile if it is in it.)
+    const cardBox = reelCard.getBoundingClientRect();
+    const piled = stage.done.get(reelCard);
+    if (!piled) { const titleBox = reelTitle.getBoundingClientRect(); reelTitleSpot = { x: titleBox.left - cardBox.left, y: titleBox.top - cardBox.top }; }
+    const card = { left: cardBox.left - (piled ? piled.x : 0), top: cardBox.top - (piled ? piled.y : 0) };
+    card.bottom = card.top + reelCard.offsetHeight;
+    const from = { left: card.left + reelTitleSpot.x, top: card.top + reelTitleSpot.y };
+    if (card.bottom < 0 && !stage.on) { hide(); return; }
     const size = parseFloat(window.getComputedStyle(reelTitle).fontSize) || 48;
     reelHeading.style.fontSize = size + 'px';
     // Where "Case Studies" sat: centred, 54px above the card, at 0.72 of a 48px title.
@@ -2173,6 +2181,7 @@
     reelTitle.style.visibility = 'hidden';
     reelHeading.style.visibility = 'visible';
     reelHeading.style.transform = 'translate3d(' + x.toFixed(2) + 'px, ' + y.toFixed(2) + 'px, 0) scale(' + scale.toFixed(5) + ')';
+    reelHeadingAt = { x, y };
     // Ink above the card's top edge, white below it.
     reelHeading.style.setProperty('--edge', ((card.top - y) / scale).toFixed(2) + 'px');
   };
@@ -2241,7 +2250,7 @@
   // in-between shape. Scrolling down, the click comes when the folder reaches its place.
   // Scrolling back up, the folder stays open until it starts to leave that place (the hero
   // is coming back); then the Dock pops up and the folder minimises into it.
-  const dockPop = { open: false, seen: false, back: false, wantBack: false, pressed: false, liftAt: -1e9, reelShift: null, reelAt: -1e9, allStacked: false, away: 1, awayWant: 1, returning: false, speed: 0, movedAt: 0, far: 0, doneAt: Infinity, nextDue: 0, lastY: 0, upRun: 0, downRun: 0, titleTop: 0, titleRest: 80, k: 0, up: 0, want: 0, pressAt: -1e9, frame: 0, last: 0 };
+  const dockPop = { skip: false, open: false, seen: false, back: false, wantBack: false, pressed: false, liftAt: -1e9, reelShift: null, reelAt: -1e9, allStacked: false, away: 1, awayWant: 1, returning: false, speed: 0, movedAt: 0, far: 0, doneAt: Infinity, nextDue: 0, lastY: 0, upRun: 0, downRun: 0, titleTop: 0, titleRest: 80, k: 0, up: 0, want: 0, pressAt: -1e9, frame: 0, last: 0 };
   if (window.__probe) window.__probe.dock = dockPop; // temporary, for testing: remove with the other debug hooks
   // Motion rules for this piece. The Dock and the pointer are positions on the scroll: move
   // the page and they move with it at once, both ways, and stop when it stops. Only the
@@ -2351,7 +2360,15 @@
       dockPop.movedAt = now;
     } else if (now - dockPop.movedAt > 140) dockPop.speed = 0;
 
-    if (!dockPop.open) {
+    if (dockPop.skip) {
+      // Carried here by the nav bar: the folder is simply out, with no Dock and no pointer,
+      // until the page has come to rest past the click point.
+      dockPop.open = true;
+      dockPop.back = dockPop.returning = false;
+      dockPop.k = dockPop.away = dockPop.awayWant = 1;
+      dockPop.doneAt = -1e9;
+      dockPop.downRun = dockPop.upRun = 0;
+    } else if (!dockPop.open) {
       // The click. On the first way down it comes at a fixed point. After the folder has
       // been minimised, it comes when the page is scrolled down to that point again.
       if (past >= CLICK_PAST && (!dockPop.back || dockPop.downRun >= TURN_DOWN)) { dockPop.open = true; dockPop.pressed = false; dockPop.away = 0; dockPop.returning = false; }
@@ -2410,7 +2427,8 @@
     const drop = easeIn(unit((past - CLICK_PAST - 110) / 130));
     // Up whenever the folder is coming out or going in. Otherwise: on the first way down it
     // follows the scroll; once the folder has been minimised it stays away until wanted.
-    dockPop.want = (dockPop.open && k < 1) || closing ? 1 : dockPop.open ? 1 - drop : dockPop.back ? (dockPop.wantBack ? 1 : 0) : rise;
+    dockPop.want = dockPop.skip ? 0 : (dockPop.open && k < 1) || closing ? 1 : dockPop.open ? 1 - drop : dockPop.back ? (dockPop.wantBack ? 1 : 0) : rise;
+    if (dockPop.skip) dockPop.up = 0;
 
     const busy = dockPop.want !== dockPop.up || now < dockPop.pressAt + PRESS || (dockPop.open ? k < 1 : k > 0) || dockPop.away !== dockPop.awayWant;
     if (busy) runDock();
@@ -2531,6 +2549,120 @@
     }
   }
 
+  // Stage Manager. When the pointer clicks the About Me notification, the Motion Graphics
+  // card is set aside the way a Mac's Stage Manager does it: it shrinks to a small
+  // thumbnail at the left edge, turned a little in perspective, while About Me opens. Only
+  // the card is shown there (the folders behind it are simply not shown while it is aside).
+  // Scrolling on down through About Me, the thumbnail slides out to the left, off the
+  // screen. Scrolling back above the click sets everything back in place.
+  // It runs on its own clock (triggered by the same click as the About Me window), eased in
+  // and out, and only moves, scales and turns the card; nothing here feeds into any of the
+  // scroll-driven motion.
+  const STAGE_IN_MS = 780;
+  const STAGE_OUT_MS = 660;
+  const STAGE_WIDE = 360;  // the thumbnail's width before it is turned (about 265px wide on screen once turned)
+  const STAGE_TURN = 26;   // degrees
+  const STAGE_LEAVE = 380; // scrolling through About Me over which the thumbnail slides away
+  const STAGE_LABEL = 0.5; // the heading's size as the thumbnail's name (about 17px)
+  const stage = { k: 0, frame: 0, last: 0, done: new Map(), on: false };
+  const stageClear = () => {
+    if (!stage.on) return;
+    stage.on = false;
+    reelCard.style.translate = reelCard.style.scale = reelCard.style.transform = reelCard.style.transformOrigin = reelCard.style.pointerEvents = '';
+    for (const folder of caseFolders) folder.style.opacity = '';
+    if (reelHeading) reelHeading.style.translate = reelHeading.style.scale = '';
+    stage.done.clear();
+    stage.from = stage.headFrom = null;
+    stage.seen = 0;
+  };
+  const runStage = () => {
+    if (stage.frame) return;
+    stage.last = performance.now();
+    const step = (now) => {
+      stage.frame = 0;
+      const dt = Math.min(100, now - stage.last);
+      stage.last = now;
+      stage.k = pop.on ? Math.min(1, stage.k + dt / STAGE_IN_MS) : Math.max(0, stage.k - dt / STAGE_OUT_MS);
+      paintStage();
+      if (stage.k !== (pop.on ? 1 : 0) && !stage.frame) stage.frame = window.requestAnimationFrame(step);
+    };
+    stage.frame = window.requestAnimationFrame(step);
+  };
+  function paintStage() {
+    if (!reelCard || !aboutWindow) return;
+    if (!playing()) { stage.k = 0; stageClear(); return; }
+    if (stage.k !== (pop.on ? 1 : 0)) runStage();
+    const eased = stage.k < 0.5 ? 2 * stage.k * stage.k : 1 - (2 - 2 * stage.k) ** 2 / 2; // gentle start, gentle stop
+    if (eased <= 0) { stageClear(); return; }
+    stage.on = true;
+    const viewTall = window.innerHeight;
+    // Where the page has the card right now (what was last applied to it undone).
+    const now = performance.now();
+    const lapse = Math.min(100, now - (stage.seen || now));
+    stage.seen = now;
+    const box = reelCard.getBoundingClientRect();
+    const was = stage.done.get(reelCard) || { x: 0, y: 0 };
+    const card = { left: box.left - was.x, top: box.top - was.y, width: reelCard.offsetWidth, height: reelCard.offsetHeight };
+    // It shrinks from the spot on the screen where it was when it was set aside. (Not from
+    // wherever the page then carries it: that made it drift up off the top and come back.)
+    // On the way back it homes in on wherever the page has it by then.
+    const home = (from, x, y) => {
+      if (!from) return { x, y };
+      if (!pop.on) { const pull = 1 - Math.exp(-lapse / 110); from.x += (x - from.x) * pull; from.y += (y - from.y) * pull; }
+      return from;
+    };
+    stage.from = home(stage.from, card.left, card.top);
+    const small = STAGE_WIDE / card.width;
+    // Scrolling on through About Me, the thumbnail slides away to the left.
+    const aboutTop = aboutWindow.parentElement.getBoundingClientRect().top + aboutWindow.offsetTop;
+    const leaving = smooth(unit((100 - aboutTop) / STAGE_LEAVE));
+    const endX = 34 - leaving * (STAGE_WIDE + 120);
+    const endY = viewTall / 2 - card.height * small / 2 + 14;
+    const x = stage.from.x + (endX - stage.from.x) * eased - card.left;
+    const y = stage.from.y + (endY - stage.from.y) * eased - card.top;
+    const size = 1 + (small - 1) * eased;
+    reelCard.style.transformOrigin = '0 0';
+    reelCard.style.translate = x.toFixed(2) + 'px ' + y.toFixed(2) + 'px';
+    reelCard.style.scale = size.toFixed(5);
+    // Turned about its left edge, like a Stage Manager thumbnail (far edge further away).
+    const half = (card.height / 2).toFixed(1);
+    reelCard.style.transform = 'translate3d(0, ' + half + 'px, 0) perspective(2600px) rotateY(' + (STAGE_TURN * eased).toFixed(2) + 'deg) translate3d(0, -' + half + 'px, 0)';
+    reelCard.style.pointerEvents = 'none';
+    stage.done.set(reelCard, { x, y, s: size });
+    // The folders are directly behind the card, hidden by it; they stay out of sight while it is aside.
+    for (const folder of caseFolders) folder.style.opacity = '0';
+    // Its name goes with it: the "Motion Graphics" heading shrinks to a label that sits
+    // just above the thumbnail.
+    if (reelHeading && reelHeadingAt) {
+      stage.headFrom = home(stage.headFrom, reelHeadingAt.x, reelHeadingAt.y);
+      const label = 1 + (STAGE_LABEL - 1) * eased;
+      const px = stage.headFrom.x + (endX + 2 - stage.headFrom.x) * eased;
+      const py = stage.headFrom.y + (endY - 30 - stage.headFrom.y) * eased;
+      reelHeading.style.translate = (px - label * reelHeadingAt.x).toFixed(2) + 'px ' + (py - label * reelHeadingAt.y).toFixed(2) + 'px';
+      reelHeading.style.scale = label.toFixed(5);
+    }
+  }
+
+  // "Motion Graphics" in the nav bar goes straight to the finished card. The page is
+  // carried there in one go, so the things on the way (the Dock, the folders) are simply
+  // in place when it arrives instead of each playing its entrance.
+  const reelLink = document.querySelector('.site-nav a[href="#motion-graphics"]');
+  if (reelLink && reel && reelCard) {
+    reelLink.addEventListener('click', (event) => {
+      if (!playing()) return;
+      event.preventDefault();
+      dockPop.skip = true;
+      // Back to normal as soon as the page has arrived (or the visitor scrolls for themselves).
+      const arrived = () => { if (!dockPop.skip) return; dockPop.skip = false; queuePage(); };
+      window.addEventListener('scrollend', arrived, { once: true });
+      window.addEventListener('wheel', arrived, { once: true, passive: true });
+      window.setTimeout(arrived, 3200);
+      const stick = parseFloat(window.getComputedStyle(reelCard).top) || 134;
+      window.scrollTo({ top: reel.getBoundingClientRect().top + window.scrollY - stick + 0.64 * window.innerHeight + 170, behavior: 'smooth' });
+      queuePage();
+    });
+  }
+
   let pageFrame = 0;
   let pointerX = -999;
   let pointerY = -999;
@@ -2541,6 +2673,7 @@
     paintReel();
     paintReelHeading();
     paintAbout();
+    paintStage();
     if (glow) {
       glow.style.setProperty('--mx', pointerX + 'px');
       glow.style.setProperty('--my', pointerY + 'px');
