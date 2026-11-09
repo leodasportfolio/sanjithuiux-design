@@ -1828,11 +1828,24 @@
     const tall = reelCard.offsetHeight;
     const runway = Math.max(1, reel.offsetHeight - tall);
     const stick = parseFloat(window.getComputedStyle(reelCard).top) || 0;
-    const progress = Math.max(0, Math.min(1, (stick - reel.getBoundingClientRect().top) / runway));
+    // This card takes its turn after the last folder (see paintArrivals). If the scroll has
+    // already run past where it would have started, it starts from there (up to 120px
+    // late; any more than that and it simply picks up part-built).
+    const passed = stick - reel.getBoundingClientRect().top;
+    if (dock) {
+      if (!dockPop.allStacked) dockPop.reelShift = null;
+      else if (passed <= 0) dockPop.reelShift = 0;
+      else if (dockPop.reelShift === null) { dockPop.reelShift = Math.min(120, passed + 120); /* a short pause after the last folder */ dockPop.reelAt = performance.now(); runDock(); }
+    }
+    const waiting = dock && dockPop.reelShift === null;
+    const progress = waiting ? 0 : Math.max(0, Math.min(1, (passed - (dock ? dockPop.reelShift : 0)) / runway));
     // The build takes the first 64vh of the scroll. For the rest the finished card simply
     // rests there (its heading rises into the title spot, then the About Me notification
     // and pointer arrive over it) before it and the folders scroll away together.
-    const build = Math.min(1, progress * runway / (0.64 * window.innerHeight));
+    let build = Math.min(1, progress * runway / (0.64 * window.innerHeight));
+    // (Picking up part-built, it builds to there at a steady pace rather than all at once.)
+    const turn = dock ? Math.max(0, Math.min(1, (performance.now() - dockPop.reelAt) / REEL_CATCH)) : 1;
+    build = Math.min(build, turn);
     const wide = 1 / REEL_COLS;
     const high = 1 / REEL_ROWS;
     for (const cell of reelCells) {
@@ -1850,7 +1863,7 @@
     const open = build >= 1;
     // "Case Studies" bows out while this card builds, and returns on the way back up.
     if (caseTitle) caseTitle.style.setProperty('--out', Math.min(1, build * 1.6).toFixed(3));
-    reel.classList.toggle('is-out', progress > 0.001);
+    reel.classList.toggle('is-out', progress > 0.001 && turn > 0);
     reel.classList.toggle('is-open', open);
     if (open) decodeReelTitle(); else if (build < 0.94) scrambleReelTitle();
   };
@@ -1862,13 +1875,16 @@
   const caseFolders = [...document.querySelectorAll('.project-grid .project-card')];
   const aboutWindow = document.querySelector('.about-inner');
   const ARRIVE_RISE = 70; // matches the 70px in hero-play.css
+  const laterHome = [];
+  const laterShift = [];   // how much later, in scrolling, each later folder is running
+  const laterStacked = []; // whether each has reached the stack
   const paintArrivals = () => {
     const pieces = [];
     if (caseTitle) pieces.push([caseTitle, 0.96, 0.72, 0]);
     // A folder is measured from the top of its tab, and starts once the heading is in.
     for (const folder of caseFolders) pieces.push([folder, 0.85, 0.48, 56]);
     if (!playing()) {
-      for (const [piece] of pieces) piece.style.removeProperty('--in');
+      for (const [piece] of pieces) { piece.style.removeProperty('--in'); piece.style.removeProperty('--late'); }
       if (caseTitle) { caseTitle.style.removeProperty('--sc'); caseTitle.style.removeProperty('--out'); }
       return;
     }
@@ -1876,7 +1892,7 @@
     let gate = 0; // how far the page must have scrolled before this piece may begin
     for (const [piece, from, to, lead, anchor] of pieces) {
       const was = parseFloat(piece.style.getPropertyValue('--in'));
-      const risen = !anchor && Number.isFinite(was) ? (1 - was) * ARRIVE_RISE : 0;
+      const risen = (!anchor && Number.isFinite(was) ? (1 - was) * ARRIVE_RISE : 0) + (parseFloat(piece.style.getPropertyValue('--late')) || 0);
       // Where it would be without the rise it is currently given.
       const top = (anchor || piece).getBoundingClientRect().top - risen - lead;
       // On a tall window a piece can already be on screen before any scrolling. It still
@@ -1887,16 +1903,43 @@
       const place = top + window.scrollY;
       const begin = Math.min(from * tall, place - gate - 24);
       let arrived = Math.max(0, Math.min(1, (begin - top) / span));
-      // The folders after the first never show while it is still pouring out of the Dock.
-      // If the scroll has already brought them up, they come in one after the other as
-      // soon as it has finished.
+      // Stacking starts only once the first folder is fully out of the Dock and has settled,
+      // and it always follows the scroll: a later folder rises only as the page is scrolled.
+      // They also take turns. Each one may start only when the one before it has reached
+      // the stack. If the scroll has already run past where it would have started, it
+      // starts from the bottom of the screen all the same and rises from there as the page
+      // is scrolled on, so two folders never come in stuck together.
       const turn = caseFolders.indexOf(piece);
-      if (turn > 0 && dock) arrived = Math.min(arrived, Math.max(0, Math.min(1, (performance.now() - dockPop.doneAt - (turn - 1) * FOLLOW * 0.6) / FOLLOW)));
+      if (turn > 0 && dock) {
+        const stick = (parseFloat(window.getComputedStyle(piece).top) || 0) - lead; // where its tab rests in the stack
+        if (top > stick + 2) laterHome[turn] = place;                              // its own place on the page
+        const home = (laterHome[turn] === undefined ? place : laterHome[turn]) - window.scrollY;
+        const free = turn === 1 ? performance.now() >= dockPop.doneAt + SETTLE : laterStacked[turn - 1] === true;
+        const start = from * tall; // a folder starts its rise here, near the bottom of the screen
+        if (!free) laterShift[turn] = null;
+        else if (home >= start) laterShift[turn] = 0;                               // not due yet: nothing to make up
+        else if (laterShift[turn] === null || laterShift[turn] === undefined) laterShift[turn] = start - home; // late: it starts from the bottom
+        else if (home + laterShift[turn] <= stick) laterShift[turn] = 0;            // it has arrived in the stack: nothing left to make up
+        if (!free || top < stick - 1) {
+          // (Waiting its turn, or the whole section is scrolling away.)
+          if (!free) arrived = 0;
+          laterStacked[turn] = free;
+          piece.style.setProperty('--late', '0px');
+        } else {
+          const shown = Math.max(stick, home + laterShift[turn]); // where it is shown: as if the scroll were that much less
+          arrived = Math.max(0, Math.min(1, (start - shown) / span));
+          laterStacked[turn] = shown <= stick + 1;
+          piece.style.setProperty('--late', (shown - top).toFixed(1) + 'px');
+        }
+        if (turn === 1) dockPop.nextDue = arrived; // (is the first folder on its own?)
+        if (turn === caseFolders.length - 1) dockPop.allStacked = laterStacked[turn] === true;
+      }
       gate = piece === caseTitle ? place - begin + span : 0;
       if (piece === caseTitle) {
         // The title shrinks a little as it settles into the place where it stays.
         const rest = parseFloat(window.getComputedStyle(piece).top) || 0;
         const settled = Math.max(0, Math.min(1, 1 - (top - rest) / 180));
+        dockPop.titleTop = top;
         piece.style.setProperty('--sc', (1 - 0.28 * settled).toFixed(3));
       }
       piece.style.setProperty('--in', arrived.toFixed(3));
@@ -2105,7 +2148,7 @@
     if (!playing() || !aboutWindow) { hide(); return; }
     const section = aboutWindow.parentElement.getBoundingClientRect();
     const until = section.top + aboutWindow.offsetTop - window.innerHeight; // scrolling left before About Me reaches the fold
-    const lift = reel.classList.contains('is-open') ? smooth(Math.max(0, Math.min(1, (800 - until) / 130))) : 0;
+    const lift = reel.classList.contains('is-open') ? smooth(Math.max(0, Math.min(1, (1000 - until) / 330))) : 0; // (a slow rise: 330px of scrolling, done before the notification)
     if (lift <= 0) { hide(); return; }
     // A fast scroll can get here while the heading is still decoding: finish it at once so
     // the heading that lifts off is always the finished words.
@@ -2151,6 +2194,7 @@
   let dockPointer = null;
   let genieBox = null;
   let genieStrips = [];
+  let genieShade = null;
   let genieKey = '';
   if (firstFolder && pointer) {
     dock = document.createElement('div');
@@ -2158,6 +2202,7 @@
     dock.setAttribute('aria-hidden', 'true');
     dock.innerHTML = DOCK_ICONS.map((icon) => '<span>' + icon + '</span>').join('');
     dockPointer = pointer.cloneNode(true);
+    dockPointer.style.zIndex = '22';
     document.body.append(dock, dockPointer);
     genieBox = document.createElement('div');
     genieBox.className = 'genie';
@@ -2171,6 +2216,9 @@
     if (key === genieKey) return;
     genieKey = key;
     genieBox.textContent = '';
+    genieShade = document.createElement('div');
+    genieShade.className = 'genie-shade';
+    genieBox.append(genieShade);
     genieStrips = [];
     const slice = (tall + tabTall) / GENIE_STRIPS;
     for (let i = 0; i < GENIE_STRIPS; i += 1) {
@@ -2193,20 +2241,27 @@
   // in-between shape. Scrolling down, the click comes when the folder reaches its place.
   // Scrolling back up, the folder stays open until it starts to leave that place (the hero
   // is coming back); then the Dock pops up and the folder minimises into it.
-  const dockPop = { open: false, seen: false, back: false, far: 0, doneAt: Infinity, k: 0, up: 0, want: 0, pressAt: -1e9, frame: 0, last: 0 };
+  const dockPop = { open: false, seen: false, back: false, wantBack: false, pressed: false, liftAt: -1e9, reelShift: null, reelAt: -1e9, allStacked: false, away: 1, awayWant: 1, returning: false, speed: 0, movedAt: 0, far: 0, doneAt: Infinity, nextDue: 0, lastY: 0, upRun: 0, downRun: 0, titleTop: 0, titleRest: 80, k: 0, up: 0, want: 0, pressAt: -1e9, frame: 0, last: 0 };
   if (window.__probe) window.__probe.dock = dockPop; // temporary, for testing: remove with the other debug hooks
   // Motion rules for this piece. The Dock and the pointer are positions on the scroll: move
   // the page and they move with it at once, both ways, and stop when it stops. Only the
   // folder's warp runs on a clock, and it starts on the very frame the click point is
   // crossed. Entering eases out, leaving eases in, nothing bounces. The warp is a
   // full-screen move, so it gets longer than the usual 300ms (the one stated exception).
-  const POUR_MS = 1100;     // the folder pouring out (a Mac takes 0.4s; slowed so it can be watched)
-  const MINIMISE_MS = 1000; // the folder going back in
-  const FOLLOW = 320;       // a later folder that was kept waiting takes this long to come in
-  const DOCK_CATCH_MS = 200; // the most the Dock may lag behind a very fast scroll
+  const POUR_MS = 880;      // the folder pouring out (a Mac takes 0.4s; slowed so it can be watched)
+  const MINIMISE_MS = 820;  // the folder going back in
+  const CLOSE_PAST = 200;   // scrolling back up, the folder is clicked shut when the page is back to here
+  const SETTLE = 650;       // the first folder rests this long, fully out, before anything stacks on it
+  const REEL_CATCH = 700;   // a Motion Graphics card that was kept waiting takes this long to build
+  const FOLLOW = 1000;       // a later folder that was kept waiting takes this long to slide up into the stack
+  const DOCK_CATCH_MS = 280; // the Dock's own rise or fall, and the most it may lag behind a very fast scroll
   const CLICK_PAST = 300;   // the click comes this far after the folder's place is reached (matches hero-play.css)
   const REOPEN_GAP = 20;    // scrolling back up, the second click comes this much earlier
   const DOCK_HIDE = 260;    // how far below its place the Dock waits, out of sight
+  const TURN_BACK = 24;     // scrolling back up this far, with the folder on its own, minimises it
+  const SWAP_MS = 140;      // the cross-fade between the warp and the real folder
+  const TURN_DOWN = 40;     // after that, scrolling down this far brings the Dock back to reopen it
+  const REACH_MS = 560;     // scrolling back up: the pointer gliding in to the folder icon
   const runDock = () => {
     if (dockPop.frame) return;
     dockPop.last = performance.now();
@@ -2217,19 +2272,27 @@
       if (dockPop.up < dockPop.want) dockPop.up = Math.min(dockPop.want, dockPop.up + dt / DOCK_CATCH_MS);
       else if (dockPop.up > dockPop.want) dockPop.up = Math.max(dockPop.want, dockPop.up - dt / DOCK_CATCH_MS);
       // The warp keeps its own steady pace, however fast or slowly the page is scrolled.
+      // It starts once the Dock is fully up, with the click.
       if (dockPop.open) {
-        if (dockPop.k < 1) {
+        if (dockPop.k < 1 && dockPop.up >= 1) {
+          if (!dockPop.pressed) { dockPop.pressed = true; dockPop.pressAt = now; }
           dockPop.k = Math.min(1, dockPop.k + dt / POUR_MS);
           if (dockPop.k >= 1) dockPop.doneAt = now;
         }
       } else {
         dockPop.doneAt = Infinity;
-        dockPop.k = Math.max(0, dockPop.k - dt / MINIMISE_MS);
+        if (dockPop.k > 0 && now >= dockPop.liftAt + PRESS) {
+          dockPop.k = Math.max(0, dockPop.k - dt / MINIMISE_MS);
+          if (dockPop.k <= 0) dockPop.wantBack = false; // in: the Dock may go
+        }
       }
-      paintArrivals();
-      paintDock();
-      const busy = dockPop.up !== dockPop.want || now < dockPop.pressAt + PRESS
-        || (dockPop.open ? (dockPop.k < 1 || now < dockPop.doneAt + 2 * FOLLOW + 60) : dockPop.k > 0);
+      // The pointer drifts away after the click at its own pace, and comes back with the scroll.
+      if (dockPop.away < dockPop.awayWant) dockPop.away = Math.min(dockPop.awayWant, dockPop.away + dt / 800);
+      else if (dockPop.away > dockPop.awayWant) dockPop.away = Math.max(dockPop.awayWant, dockPop.away - dt / 320);
+      paintPage(); // (everything that waits on this folder is repainted with it)
+      const busy = dockPop.up !== dockPop.want || now < dockPop.pressAt + PRESS 
+        || (dockPop.open ? (dockPop.k < 1 || now < dockPop.doneAt + SETTLE + 60) : dockPop.k > 0) || now < dockPop.reelAt + REEL_CATCH + 60
+        || dockPop.away !== dockPop.awayWant;
       // (paintDock may already have asked for the next frame.)
       if (busy && !dockPop.frame) dockPop.frame = window.requestAnimationFrame(step);
     };
@@ -2245,6 +2308,9 @@
       firstFolder.style.visibility = '';
       dockPop.open = dockPop.seen = dockPop.back = false;
       dockPop.k = dockPop.up = dockPop.want = dockPop.far = 0;
+      dockPop.wantBack = dockPop.pressed = dockPop.returning = false;
+      dockPop.reelShift = null;
+      dockPop.allStacked = false;
       dockPop.doneAt = Infinity;
       return;
     }
@@ -2270,38 +2336,65 @@
     if (!dockPop.seen) {
       // The page opened already past this point: the folder is simply there.
       dockPop.seen = true;
+      dockPop.lastY = window.scrollY;
       if (past >= CLICK_PAST) { dockPop.open = true; dockPop.k = 1; dockPop.doneAt = -1e9; }
     }
-    if (!dockPop.open && past >= CLICK_PAST) {
-      // The click: the folder starts pouring on this same frame.
-      dockPop.open = true;
-      dockPop.pressAt = now;
-    } else if (dockPop.open && past < CLICK_PAST - REOPEN_GAP) {
-      // Scrolling back up: the pointer is back on the folder icon and clicks it again.
+    // Which way the page is being scrolled, and how far in that direction.
+    const moved = window.scrollY - dockPop.lastY;
+    dockPop.lastY = window.scrollY;
+    if (moved > 0) { dockPop.downRun += moved; dockPop.upRun = 0; }
+    else if (moved < 0) { dockPop.upRun -= moved; dockPop.downRun = 0; }
+    // How fast it is being scrolled (px a second, smoothed), to judge how much time is left.
+    if (moved !== 0) {
+      const lapse = Math.max(8, Math.min(120, now - dockPop.movedAt));
+      dockPop.speed += (Math.abs(moved) / lapse * 1000 - dockPop.speed) * 0.35;
+      dockPop.movedAt = now;
+    } else if (now - dockPop.movedAt > 140) dockPop.speed = 0;
+
+    if (!dockPop.open) {
+      // The click. On the first way down it comes at a fixed point. After the folder has
+      // been minimised, it comes when the page is scrolled down to that point again.
+      if (past >= CLICK_PAST && (!dockPop.back || dockPop.downRun >= TURN_DOWN)) { dockPop.open = true; dockPop.pressed = false; dockPop.away = 0; dockPop.returning = false; }
+    } else if (past < CLOSE_PAST || (dockPop.k >= 1 && dockPop.nextDue <= 0 && dockPop.upRun >= TURN_BACK
+        && (past + viewTall - 230 - stackTop) / Math.max(1, dockPop.speed) < (PRESS + MINIMISE_MS) / 1000 + 0.06)) {
+      // (Scrolled up so fast that waiting for that point would leave too little time for the
+      // folder to go in before the page carries it down to the Dock? Then it starts now.)
+      // Scrolling back up, in stages that follow the scroll: first the Dock rises, then the
+      // pointer comes back to the folder icon, and here it clicks and the folder minimises.
       dockPop.open = false;
       dockPop.back = true;
-      dockPop.pressAt = now;
+      dockPop.pressed = false;
+      dockPop.liftAt = dockPop.pressAt = now;
     }
-    // The warp is never hurried or cut short by the scroll. Two things make that safe: the
-    // folders after this one wait until it is fully out (paintArrivals), and the warp is
-    // drawn where the folder sits, so it finishes there even if the page has moved on.
-    // The one exception: flung so far that the Motion Graphics card is already building
-    // over the folders, there is nothing left to watch, so the folder is simply out.
-    if (dockPop.open && dockPop.k < 1 && reel && reel.classList.contains('is-out')) { dockPop.k = 1; dockPop.doneAt = -1e9; }
+    if (dockPop.back && !dockPop.open && dockPop.k <= 0) {
+      // Minimised. The Dock is gone until the page is scrolled down towards the click again.
+      if (dockPop.upRun >= TURN_DOWN) dockPop.wantBack = false;
+      else if (dockPop.downRun >= TURN_DOWN && past >= CLICK_PAST - 260) dockPop.wantBack = true;
+    }
+    // The warp always plays at its own steady pace. Nothing is pinned and nothing waits: the
+    // folder is warped wherever the page has it, so on a fast scroll back up it simply
+    // travels down with the page while it pours into the Dock, and the title and the hero
+    // scroll as they always do. (The folder is below the hero on the page, so it can never
+    // be on top of it.) Once its place has all but reached the Dock there is nothing left
+    // to pour: it is in.
+    // (Flung faster than even that allows, it finishes over the last stretch rather than vanishing.)
+    if (!dockPop.open && dockPop.k > 0) dockPop.k = Math.min(dockPop.k, unit((viewTall - 230 - top) / 300));
+    // The pointer after the click: gone, until the page is scrolled back up towards the click.
+    if (dockPop.open && dockPop.k >= 1) {
+      if (dockPop.upRun >= 8 && past < CLICK_PAST + 140) dockPop.returning = true;
+      else if (dockPop.downRun >= 8) dockPop.returning = false;
+    }
+    dockPop.awayWant = dockPop.open ? (dockPop.returning ? smooth(unit((past - CLOSE_PAST - 10) / 110)) : 1) : 0;
     const k = dockPop.k;
     const press = now < dockPop.pressAt + PRESS ? Math.sin(Math.PI * (now - dockPop.pressAt) / PRESS) : 0;
 
     // Everything waits for the "Case Studies" title: the Dock starts only once the title is
     // fully in. (The folder sits a fixed distance below the title until the title sticks.)
-    if (caseTitle) {
-      const titleIn = parseFloat(caseTitle.style.getPropertyValue('--in'));
-      const titleTop = caseTitle.getBoundingClientRect().top - (Number.isFinite(titleIn) ? (1 - titleIn) * ARRIVE_RISE : 0);
-      if (titleTop > 100) dockGap = gridTop + folderHome - titleTop;
-    }
+    if (caseTitle && dockPop.titleTop > 100) dockGap = gridTop + folderHome - dockPop.titleTop;
     const start = Math.max(260, Math.min(560, 0.72 * viewTall + dockGap - stackTop - 70));
     const along = start - toGo;           // scrolling done since the Dock began
     const whole = start + CLICK_PAST;     // scrolling from the Dock beginning to the click
-    if (along <= 0) { dockPop.back = false; dockPop.far = 0; } // back above it all: the next visit starts fresh
+    if (along <= 0 && dockPop.k <= 0) { dockPop.back = dockPop.wantBack = false; dockPop.far = 0; } // back above it all: the next visit starts fresh
     // The pointer only ever tours the icons going down. Scroll back up part-way and it
     // waits where it had got to; it never walks back across them.
     dockPop.far = Math.max(dockPop.far, along);
@@ -2312,13 +2405,14 @@
     // the page has moved on. Scroll back and the same happens in reverse.
     const easeOut = (t) => 1 - (1 - t) ** 3;
     const easeIn = (t) => t ** 3;
-    // After the folder has been minimised on the way back up, the Dock does not hang about:
-    // it sinks as soon as the page scrolls on (over the next 140px), well before the
-    // "Case Studies" title begins to fade.
-    const rise = dockPop.back ? 1 - easeIn(unit(toGo / 140)) : easeOut(unit(along / 150));
+    const closing = !dockPop.open && k > 0;
+    const rise = easeOut(unit(along / 150));
     const drop = easeIn(unit((past - CLICK_PAST - 110) / 130));
-    dockPop.want = k > 0 && k < 1 ? 1 : rise * (1 - drop);
-    const busy = dockPop.want !== dockPop.up || now < dockPop.pressAt + PRESS || (dockPop.open ? k < 1 : k > 0);
+    // Up whenever the folder is coming out or going in. Otherwise: on the first way down it
+    // follows the scroll; once the folder has been minimised it stays away until wanted.
+    dockPop.want = (dockPop.open && k < 1) || closing ? 1 : dockPop.open ? 1 - drop : dockPop.back ? (dockPop.wantBack ? 1 : 0) : rise;
+
+    const busy = dockPop.want !== dockPop.up || now < dockPop.pressAt + PRESS || (dockPop.open ? k < 1 : k > 0) || dockPop.away !== dockPop.awayWant;
     if (busy) runDock();
     const up = dockPop.up;
     dock.style.visibility = up > 0 ? 'visible' : 'hidden';
@@ -2328,18 +2422,19 @@
     const iconY = viewTall - 88 - 14 - ICON / 2; // (the Dock floats 88px above the bottom edge)
     const iconX = (i) => viewWide / 2 + (i - 1.5) * (ICON + GAP);
 
-    // The pointer, also read straight off the scroll. Going down: in from the lower left,
-    // along the row of icons to the folder, the click, then off to the lower right as the
-    // page moves on. Coming back up it returns the same way to the folder icon and clicks;
-    // after that it simply leaves with the Dock, with no second tour of the icons.
+    // The pointer. Going down it is read straight off the scroll: in from the lower left,
+    // along the row of icons to the folder, then the click. After the click it takes its
+    // time leaving, drifting off to the lower right while the folder comes out. Coming
+    // back up it glides in from the lower right straight to the folder icon (no tour of
+    // the others), clicks, and afterwards leaves with the Dock.
     const arrive = dockPop.open || dockPop.back ? 1 : smooth(unit((toured - 110) / 150));
     const across = dockPop.open || dockPop.back ? 1 : smooth(unit((toured - 260) / Math.max(120, whole - 310)));
-    const riding = dockPop.back || toured > along + 1; // leaving with the Dock, not arriving
-    const away = dockPop.open ? smooth(unit((past - CLICK_PAST) / 110)) : 0;
+    const riding = dockPop.back || toured > along + 1; // with the Dock as it rises or leaves, not arriving on its own
+    const away = closing ? 0 : dockPop.open ? smooth(dockPop.away) : 0;
     const pointX = (arrive < 1 ? iconX(0) - 300 + 300 * arrive : iconX(0) + (iconX(3) - iconX(0)) * across) + away * 280;
     const pointY = (arrive < 1 ? viewTall + 40 + (iconY - 8 - viewTall - 40) * arrive : iconY - 8) + away * 220 + (1 - up) * DOCK_HIDE * (riding ? 1 : 0);
     dockPointer.style.visibility = arrive > 0 && away < 1 && up > 0 ? 'visible' : 'hidden';
-    dockPointer.classList.toggle('is-hand', across > 0.9 && away < 0.3);
+    dockPointer.classList.toggle('is-hand', across > 0.9 && away < 0.2);
     dockPointer.style.transform = 'translate3d(' + (pointX - 7).toFixed(2) + 'px, ' + (pointY - 3).toFixed(2) + 'px, 0) scale(' + (1 - 0.14 * press).toFixed(4) + ')';
     // Each icon swells as the pointer passes over it and, like the real Dock, pushes its
     // neighbours aside so they never overlap. (Moved and scaled with transforms only.)
@@ -2363,15 +2458,24 @@
     // Get the strips ready while the Dock is still coming up, so the click never stutters.
     if (up > 0) buildGenie(wide, card.height, tabTall);
 
-    // The folder. Not there before the click; the real one once it is fully out.
-    if (k <= 0 || k >= 1) {
-      genieBox.classList.remove('is-on');
-      firstFolder.style.visibility = k >= 1 ? '' : 'hidden';
-      return;
+    // The folder. Not there before the click; the real one once it is fully out. The warp
+    // is a copy drawn on top, and the two are cross-faded where they are identical (fully
+    // out), so there is no cut when one takes over from the other: the real folder fades in
+    // under the copy as it lands, and the copy fades in over it as the minimise begins.
+    const real = k >= 1;
+    const copy = k > 0 && k < 1;
+    firstFolder.style.visibility = real ? '' : 'hidden';
+    genieBox.classList.toggle('is-on', copy);
+    if (!copy) return;
+    const at = top; // the warp is drawn wherever the page has the folder
+    // The folder's soft shadow, which the copy cannot carry: it grows in under the folder
+    // as it settles and is exactly the real folder's shadow at the moment of the swap.
+    if (genieShade) {
+      genieShade.style.transform = 'translate3d(' + left.toFixed(1) + 'px, ' + (at + tabTall).toFixed(1) + 'px, 0)';
+      genieShade.style.width = wide + 'px';
+      genieShade.style.height = card.height + 'px';
+      genieShade.style.opacity = real ? '0' : unit((k - 0.72) / 0.28).toFixed(3);
     }
-    firstFolder.style.visibility = 'hidden';
-    genieBox.classList.add('is-on');
-    const at = Math.min(top, stackTop); // the warp stays where the folder sits, even if the page has scrolled its place away
     // The Mac genie, as the Mac does it. Going in: the folder's sides bend into a funnel
     // that narrows to the Dock icon, then the whole folder slides down the funnel and
     // into the icon. Coming out is the same thing backwards: it slides up out of the icon
@@ -2386,8 +2490,11 @@
     const mouth = iconY;                            // the icon the folder comes out of
     const gone = (1 - k) ** 1.25;                    // 0 = fully out, 1 = fully in the Dock; eased so
                                                     // it leaves the icon fast and settles gently
-    const bend = unit(gone / 0.45);                 // how pinched the bottom is
-    const slide = unit((gone - 0.45) / 0.55);       // how far down the funnel it has slid
+    // The two halves overlap and each eases in and out, so one flows into the other with
+    // no change of gear in between.
+    const ease = (t) => t * t * (3 - 2 * t);
+    const bend = ease(unit(gone / 0.62));           // how pinched the bottom is
+    const slide = ease(unit((gone - 0.3) / 0.7));   // how far down the funnel it has slid
     const slice = tall / GENIE_STRIPS;
     // Pinched, the folder's bottom edge is in the icon, so its height is the gap from its
     // top to the icon (a Mac stretches or squeezes a window the same way); straightened,
@@ -2442,6 +2549,39 @@
   };
   const queuePage = () => { if (!pageFrame) pageFrame = window.requestAnimationFrame(paintPage); };
   window.addEventListener('scroll', queuePage, { passive: true });
+
+  // A top speed for scrolling. However hard the wheel or trackpad is flicked, the page
+  // moves at most this fast, so the scroll-driven pieces above always get the time they
+  // need and the site never has to race to keep up. Below the limit it follows the hand
+  // as usual. (Keyboard, the scrollbar and the nav links are left alone.)
+  const MAX_SCROLL = 1200; // px a second
+  const wheel = { target: null, at: 0, frame: 0, last: 0 };
+  const wheelStep = (now) => {
+    wheel.frame = 0;
+    if (wheel.target === null) return;
+    const dt = Math.min(50, now - wheel.last) / 1000;
+    wheel.last = now;
+    const left = wheel.target - wheel.at;
+    if (Math.abs(left) < 0.5) { wheel.target = null; return; }
+    // Ease towards where the hand has asked for, never faster than the limit.
+    const want = left * (1 - Math.exp(-dt / 0.09));
+    const most = MAX_SCROLL * dt;
+    wheel.at += Math.max(-most, Math.min(most, want));
+    window.scrollTo({ top: wheel.at, behavior: 'instant' });
+    wheel.frame = window.requestAnimationFrame(wheelStep);
+  };
+  window.addEventListener('wheel', (event) => {
+    if (!playing() || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
+    if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+    event.preventDefault();
+    const line = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? window.innerHeight : 1;
+    const end = document.documentElement.scrollHeight - window.innerHeight;
+    if (wheel.target === null) wheel.at = wheel.target = window.scrollY;
+    // No backlog: at most half a second of travel is ever queued, so it stops when the hand stops.
+    const reach = MAX_SCROLL * 0.5;
+    wheel.target = Math.max(0, Math.min(end, Math.max(wheel.at - reach, Math.min(wheel.at + reach, wheel.target + event.deltaY * line))));
+    if (!wheel.frame) { wheel.last = performance.now(); wheel.frame = window.requestAnimationFrame(wheelStep); }
+  }, { passive: false });
   window.addEventListener('resize', queuePage);
   // The first measure can happen before fonts and images have set the final positions,
   // so measure again whenever the page finishes loading or its layout changes size.
