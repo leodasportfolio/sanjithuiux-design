@@ -1995,6 +1995,9 @@
     };
     pop.frame = window.requestAnimationFrame(step);
   };
+  const ABOUT_FLOAT = 76; // how far from the top of the screen the open About Me window floats
+  let aboutEdge = null;
+  if (window.__probe) window.__probe.aboutEdge = () => aboutEdge; // temporary, for testing: remove with the other debug hooks
   function paintAbout() {
     if (!aboutWindow) return;
     const style = aboutWindow.style;
@@ -2074,15 +2077,17 @@
     if (pop.k <= 0) {
       style.visibility = 'hidden';
       aboutWindow.classList.remove('is-moving');
+      aboutEdge = null;
       return;
     }
     style.visibility = '';
-    const floatY = 100;
-    const fit = Math.min(1, (viewTall - floatY - 24) / tall);
+    const floatY = ABOUT_FLOAT;
+    const fit = Math.min(1, (viewTall - floatY - 44) / tall);
     const docked = smooth(unit((viewTall * 0.92 - homeY) / (viewTall * 0.92 - floatY)));
     const restScale = fit + (1 - fit) * docked;
     const restX = homeX + wide * (1 - restScale) / 2;
     const restY = Math.min(homeY, floatY); // floating until its real place has come up to meet it
+    aboutEdge = { now: restX, rest: restX }; // (its visible left edge on screen, for the Stage Manager tile beside it)
     const photo = aboutWindow.querySelector('.about-photo');
     if (pop.k >= 1) {
       style.clipPath = '';
@@ -2090,14 +2095,24 @@
       style.removeProperty('--photo-tilt');
     }
     if (pop.k >= 1 && homeY <= floatY) {
+      aboutEdge.now = aboutEdge.rest = homeX;
       style.transform = '';
       aboutWindow.classList.remove('is-moving');
       return;
     }
     aboutWindow.classList.add('is-moving');
+    // While the Motion Graphics card is still shrinking away to its tile, About Me shows
+    // only what lies to the right of it, a small gap away: the two change size side by
+    // side and the window never opens out over the card.
+    // (Its picture is never hidden: that is what it grows out of, and it starts on the card as the notification did.)
+    const pictureLeft = photo ? photo.offsetLeft : 0;
+    const clear = (edgeX, size, least) => (stage.right === null || stage.k >= 1 ? least : Math.min(pictureLeft, Math.max(least, (stage.right + STAGE_GAP - edgeX) / size)));
     if (pop.k >= 1 || !photo) {
       // Open and floating.
       style.transform = 'translate3d(' + (restX - homeX).toFixed(2) + 'px, ' + (restY - homeY).toFixed(2) + 'px, 0) scale(' + restScale.toFixed(5) + ')';
+      const cut = clear(restX, restScale, 0);
+      style.clipPath = cut > 0.5 ? 'inset(0 0 0 ' + cut.toFixed(2) + 'px round ' + (16 / restScale).toFixed(2) + 'px)' : '';
+      aboutEdge.now = restX + cut * restScale;
       return;
     }
     // Unfolding. It starts as nothing but its photo, sitting exactly on the notification's
@@ -2120,9 +2135,11 @@
     // The window opening out around the photo: from the photo's own outline to the full window.
     const reveal = smooth(unit(pop.k / 0.72));
     const keep = 1 - reveal;
+    const cutLeft = clear(x, scale, photoX * keep);
+    aboutEdge.now = x + cutLeft * scale;
     const settle = unit(pop.k);
     const corner = (12 + 4 * reveal) / scale; // on screen: the picture's 12px corners easing to the window's 16px
-    style.clipPath = 'inset(' + (photoY * keep).toFixed(2) + 'px ' + ((wide - photoX - photoSize) * keep).toFixed(2) + 'px ' + ((tall - photoY - photoSize) * keep).toFixed(2) + 'px ' + (photoX * keep).toFixed(2) + 'px round ' + corner.toFixed(2) + 'px)';
+    style.clipPath = 'inset(' + (photoY * keep).toFixed(2) + 'px ' + ((wide - photoX - photoSize) * keep).toFixed(2) + 'px ' + ((tall - photoY - photoSize) * keep).toFixed(2) + 'px ' + cutLeft.toFixed(2) + 'px round ' + corner.toFixed(2) + 'px)';
     // The photo's corners, measured on screen: the picture's 12px at first, easing to the
     // photo's usual 18px (in the window's own units) by the time it is open.
     const cornerOnScreen = 12 + (18 * scale - 12) * settle;
@@ -2181,7 +2198,7 @@
     reelTitle.style.visibility = 'hidden';
     reelHeading.style.visibility = 'visible';
     reelHeading.style.transform = 'translate3d(' + x.toFixed(2) + 'px, ' + y.toFixed(2) + 'px, 0) scale(' + scale.toFixed(5) + ')';
-    reelHeadingAt = { x, y };
+    reelHeadingAt = { x, y, s: scale };
     // Ink above the card's top edge, white below it.
     reelHeading.style.setProperty('--edge', ((card.top - y) / scale).toFixed(2) + 'px');
   };
@@ -2560,19 +2577,20 @@
   // scroll-driven motion.
   const STAGE_IN_MS = 780;
   const STAGE_OUT_MS = 660;
-  const STAGE_WIDE = 360;  // the thumbnail's width before it is turned (about 265px wide on screen once turned)
+  const STAGE_WIDE = 360;  // the most the tile's width may be before it is turned
+  const STAGE_GAP = 24;    // the gap kept between the tile and the About Me window
   const STAGE_TURN = 26;   // degrees
   const STAGE_LEAVE = 380; // scrolling through About Me over which the thumbnail slides away
-  const STAGE_LABEL = 0.5; // the heading's size as the thumbnail's name (about 17px)
-  const stage = { k: 0, frame: 0, last: 0, done: new Map(), on: false };
+  const stage = { k: 0, frame: 0, last: 0, done: new Map(), on: false, right: null };
   const stageClear = () => {
     if (!stage.on) return;
     stage.on = false;
     reelCard.style.translate = reelCard.style.scale = reelCard.style.transform = reelCard.style.transformOrigin = reelCard.style.pointerEvents = '';
     for (const folder of caseFolders) folder.style.opacity = '';
-    if (reelHeading) reelHeading.style.translate = reelHeading.style.scale = '';
+    if (reelHeading) reelHeading.style.translate = reelHeading.style.scale = reelHeading.style.opacity = '';
     stage.done.clear();
     stage.from = stage.headFrom = null;
+    stage.right = null;
     stage.seen = 0;
   };
   const runStage = () => {
@@ -2583,7 +2601,9 @@
       const dt = Math.min(100, now - stage.last);
       stage.last = now;
       stage.k = pop.on ? Math.min(1, stage.k + dt / STAGE_IN_MS) : Math.max(0, stage.k - dt / STAGE_OUT_MS);
+      paintAbout(); // (About Me opens out beside the card as the card clears)
       paintStage();
+      paintAbout();
       if (stage.k !== (pop.on ? 1 : 0) && !stage.frame) stage.frame = window.requestAnimationFrame(step);
     };
     stage.frame = window.requestAnimationFrame(step);
@@ -2612,34 +2632,53 @@
       return from;
     };
     stage.from = home(stage.from, card.left, card.top);
-    const small = STAGE_WIDE / card.width;
-    // Scrolling on through About Me, the thumbnail slides away to the left.
+    // Turned about its left edge, the card looks narrower: this is how wide it shows on
+    // screen at a given size and turn.
+    const FAR = 2600;
+    const turn = STAGE_TURN * smooth(unit((eased - 0.4) / 0.6)); // (it turns once its title is back inside it)
+    const shown = (size, degrees) => {
+      const a = degrees * Math.PI / 180;
+      return card.width * size * Math.cos(a) * FAR / (FAR + card.width * Math.sin(a));
+    };
+    // The tile is sized to sit in the space left of the About Me window, a small gap away.
+    const room = aboutEdge ? aboutEdge.rest - STAGE_GAP - 34 : STAGE_WIDE;
+    const small = Math.min(STAGE_WIDE / card.width, Math.max(120, room) / shown(1, STAGE_TURN));
+    // Scrolling on through About Me, the tile slides away to the left.
     const aboutTop = aboutWindow.parentElement.getBoundingClientRect().top + aboutWindow.offsetTop;
-    const leaving = smooth(unit((100 - aboutTop) / STAGE_LEAVE));
+    const leaving = smooth(unit((ABOUT_FLOAT - aboutTop) / STAGE_LEAVE));
     const endX = 34 - leaving * (STAGE_WIDE + 120);
-    const endY = viewTall / 2 - card.height * small / 2 + 14;
-    const x = stage.from.x + (endX - stage.from.x) * eased - card.left;
-    const y = stage.from.y + (endY - stage.from.y) * eased - card.top;
+    const endY = viewTall / 2 - card.height * small / 2;
+    const at = stage.from.x + (endX - stage.from.x) * eased; // its left edge on screen
     const size = 1 + (small - 1) * eased;
+    // Side by side: the card shrinks at its own steady pace, and About Me opens out to
+    // its right only as far as the card has cleared (paintAbout reads this edge).
+    stage.right = at + shown(size, turn);
+    const x = at - card.left;
+    const y = stage.from.y + (endY - stage.from.y) * eased - card.top;
     reelCard.style.transformOrigin = '0 0';
     reelCard.style.translate = x.toFixed(2) + 'px ' + y.toFixed(2) + 'px';
     reelCard.style.scale = size.toFixed(5);
     // Turned about its left edge, like a Stage Manager thumbnail (far edge further away).
     const half = (card.height / 2).toFixed(1);
-    reelCard.style.transform = 'translate3d(0, ' + half + 'px, 0) perspective(2600px) rotateY(' + (STAGE_TURN * eased).toFixed(2) + 'deg) translate3d(0, -' + half + 'px, 0)';
+    reelCard.style.transform = 'translate3d(0, ' + half + 'px, 0) perspective(' + FAR + 'px) rotateY(' + turn.toFixed(2) + 'deg) translate3d(0, -' + half + 'px, 0)';
     reelCard.style.pointerEvents = 'none';
     stage.done.set(reelCard, { x, y, s: size });
     // The folders are directly behind the card, hidden by it; they stay out of sight while it is aside.
     for (const folder of caseFolders) folder.style.opacity = '0';
-    // Its name goes with it: the "Motion Graphics" heading shrinks to a label that sits
-    // just above the thumbnail.
+    // The heading goes back where it came from: it travels down into the card, to the
+    // title's own place, and is the card's title again by the time the card turns.
     if (reelHeading && reelHeadingAt) {
       stage.headFrom = home(stage.headFrom, reelHeadingAt.x, reelHeadingAt.y);
-      const label = 1 + (STAGE_LABEL - 1) * eased;
-      const px = stage.headFrom.x + (endX + 2 - stage.headFrom.x) * eased;
-      const py = stage.headFrom.y + (endY - 30 - stage.headFrom.y) * eased;
-      reelHeading.style.translate = (px - label * reelHeadingAt.x).toFixed(2) + 'px ' + (py - label * reelHeadingAt.y).toFixed(2) + 'px';
-      reelHeading.style.scale = label.toFixed(5);
+      const back = smooth(unit(eased / 0.4));
+      const grow = 1 + (size / reelHeadingAt.s - 1) * back;
+      const px = stage.headFrom.x + (card.left + x + reelTitleSpot.x * size - stage.headFrom.x) * back;
+      const py = stage.headFrom.y + (card.top + y + reelTitleSpot.y * size - stage.headFrom.y) * back;
+      reelHeading.style.translate = (px - grow * reelHeadingAt.x).toFixed(2) + 'px ' + (py - grow * reelHeadingAt.y).toFixed(2) + 'px';
+      reelHeading.style.scale = grow.toFixed(5);
+      // Dark above the card's top edge, white once inside it.
+      reelHeading.style.setProperty('--edge', ((card.top + y - py) / (grow * reelHeadingAt.s)).toFixed(2) + 'px');
+      reelHeading.style.opacity = back >= 1 ? '0' : '';
+      if (back >= 1) reelTitle.style.visibility = 'visible';
     }
   }
 
@@ -2697,7 +2736,8 @@
     const left = wheel.target - wheel.at;
     if (Math.abs(left) < 0.5) { wheel.target = null; return; }
     // Ease towards where the hand has asked for, never faster than the limit.
-    const want = left * (1 - Math.exp(-dt / 0.09));
+    // (A short catch-up, so it follows the hand closely and never feels heavy.)
+    const want = left * (1 - Math.exp(-dt / 0.032));
     const most = MAX_SCROLL * dt;
     wheel.at += Math.max(-most, Math.min(most, want));
     window.scrollTo({ top: wheel.at, behavior: 'instant' });
