@@ -9,9 +9,20 @@
   <title>Sanjith | Product Designer</title>
   <script>
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // Pick fun or normal mode before the page paints. Fun is the default; a saved
+    // choice wins; reduced-motion visitors start in normal.
+    (function () {
+      var mode = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'normal' : 'fun';
+      try {
+        var saved = window.localStorage.getItem('hero-mode');
+        if (saved === 'fun' || saved === 'normal') mode = saved;
+      } catch (error) {}
+      document.documentElement.dataset.mode = mode;
+    })();
   </script>
   <link rel="preload" href="assets/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=20261023-about-illustration">
+  <link rel="stylesheet" href="styles.css?v=20261109-pixel3">
+  <link rel="stylesheet" href="hero-play.css?v=20261109-pixel3">
   <link rel="stylesheet" href="/assets/site-analytics.css?v=20261028-cookieless">
   <script src="/assets/site-analytics.js?v=20261029-resume" defer></script>
 </head>
@@ -35,15 +46,58 @@
       <a href="#about-me">About Me</a>
       <a href="/resume/" target="_blank" rel="noopener noreferrer" aria-label="Open Sanjith’s résumé in a new tab">Resume</a>
     </nav>
+
+    <button class="mode-switch" type="button" role="switch" aria-checked="true" aria-label="Fun mode">
+      <span data-mode-label="fun" aria-hidden="true">fun</span>
+      <span class="mode-switch-track" aria-hidden="true"><span class="mode-switch-thumb"></span></span>
+      <span data-mode-label="normal" aria-hidden="true">normal</span>
+    </button>
+
+    <span class="reset-dock">
+      <button class="hero-reset" type="button" aria-label="Reset: put everything back" disabled>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <span class="reset-label" aria-hidden="true">Reset</span>
+      </button>
+    </span>
   </header>
 
+  <div class="dot-glow" aria-hidden="true"></div>
   <main id="main">
     <section id="home" class="hero page-panel" aria-labelledby="hero-title">
+      <svg class="pen-path" viewBox="0 0 1472 603" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <path class="wire" pathLength="1" d="M-20 548 C 30 566, 96 540, 92 478 C 89 424, 28 428, 38 480 C 47 528, 118 500, 146 442"/>
+        <path class="wire" pathLength="1" d="M1236 624 C 1262 548, 1338 566, 1350 498 C 1358 448, 1292 446, 1302 496 C 1314 552, 1418 522, 1440 432 C 1452 380, 1470 346, 1500 330"/>
+        <g class="sling">
+          <path class="handle" d="M1316 426 L1302 477 L1288 528"/>
+          <circle class="knob" cx="1316" cy="426" r="3.5"/><circle class="knob" cx="1288" cy="528" r="3.5"/>
+          <rect class="anchor" x="1297" y="472" width="10" height="10"/>
+        </g>
+      </svg>
+      <div class="spark-layer" aria-hidden="true">
+        <img class="spark" src="assets/stickers/diamond.png" alt="" style="left:19%;top:15%;width:14px;--r:12deg;--i:0;--t:2.6s">
+        <img class="spark" src="assets/stickers/hourglass.png" alt="" style="left:3.5%;top:50%;width:10px;--r:-14deg;--i:1;--t:3.4s">
+        <img class="spark" src="assets/stickers/diamond.png" alt="" style="left:40%;top:90%;width:13px;--r:-8deg;--i:2;--t:2.2s">
+        <img class="spark" src="assets/stickers/hourglass.png" alt="" style="left:61%;top:88%;width:10px;--r:10deg;--i:3;--t:3.9s">
+        <img class="spark" src="assets/stickers/diamond.png" alt="" style="left:88%;top:17%;width:14px;--r:18deg;--i:4;--t:3.1s">
+        <img class="spark" src="assets/stickers/diamond.png" alt="" style="left:96.5%;top:74%;width:13px;--r:-12deg;--i:5;--t:2.4s">
+        <img class="spark" src="assets/stickers/hourglass.png" alt="" style="left:29%;top:26%;width:10px;--r:8deg;--i:6;--t:3.6s">
+      </div>
+      <div class="play-layer" aria-hidden="true">
+        <img class="sticker" data-sticker="mug" src="assets/stickers/mug.png" alt="" draggable="false" style="--i:0;--x:7.5%;--y:27%;--w:112px;--r:-8deg;--nw:30px">
+        <img class="sticker" data-sticker="razor" src="assets/stickers/razor.png" alt="" draggable="false" style="--i:1;--x:82%;--y:18%;--w:82px;--r:10deg;--nw:38px">
+        <img class="sticker" data-sticker="clapper" src="assets/stickers/clapper.png" alt="" draggable="false" style="--i:2;--x:91.5%;--y:44%;--w:118px;--r:9deg;--nw:31px">
+        <img class="sticker" data-sticker="stopwatch" src="assets/stickers/stopwatch.png" alt="" draggable="false" style="--i:3;--x:77%;--y:82%;--w:60px;--r:-7deg;--nw:33px">
+        <img class="sticker" data-sticker="component" src="assets/stickers/component.png" alt="" draggable="false" style="--i:4;--x:21%;--y:83%;--w:70px;--r:8deg;--nw:33px">
+        <img class="sticker" data-sticker="wacom" src="assets/stickers/wacom.png" alt="" draggable="false" style="--i:5;--x:12.5%;--y:64%;--w:54px;--r:14deg;--nw:17px">
+      </div>
       <div class="hero-copy reveal">
         <h1 id="hero-title">
           <span>Hi,</span>
-          <img src="assets/sanjith-hero-illustration-yellow.png" width="96" height="96" alt="Cartoon portrait of Sanjith with yellow accents">
-          <span>I’m Sanjith!</span>
+          <span class="hero-portrait">
+            <img src="assets/sanjith-hero-illustration-yellow.png" width="96" height="96" alt="Cartoon portrait of Sanjith with yellow accents">
+            <span class="hero-bubble" aria-hidden="true">Psst… don’t grab me, okay?</span>
+          </span>
+          <span>I’m <span class="name-select"><span class="name-word">Sanjith!</span><span class="name-box" aria-hidden="true"><i class="tl"></i><i class="tc"></i><i class="tr"></i><i class="ml"></i><i class="mr"></i><i class="bl"></i><i class="bc"></i><i class="br"></i><b class="size-tag"></b></span></span></span>
         </h1>
         <p>I’m a product designer creating people-centered experiences that fit daily life and make information easier to find, understand, and use. I turn complex needs into clear, intuitive products that feel natural from the first interaction.</p>
       </div>
@@ -53,7 +107,7 @@
       <h2 id="case-title" class="section-title reveal">Case Studies</h2>
 
       <div class="project-grid">
-        <a class="project-card reveal" href="/drexel-works/" aria-label="View the Drexel Works case study">
+        <a class="project-card reveal" href="/drexel-works/" data-tab="Case Study 01" aria-label="View the Drexel Works case study">
           <div class="project-image project-image--drexel">
             <img src="assets/drexel-works-dashboard.png" alt="Drexel Works mobile dashboard showing campus jobs and application tracking" loading="lazy">
           </div>
@@ -65,7 +119,7 @@
           </div>
         </a>
 
-        <a class="project-card reveal" href="/glowm/" aria-label="View the GLOWM case study, A Clearer Record of Care">
+        <a class="project-card reveal" href="/glowm/" data-tab="Case Study 02" aria-label="View the GLOWM case study, A Clearer Record of Care">
           <div class="project-image project-image--glowm">
             <img src="assets/glowm-patient-list.jpg" alt="GLOWM patient list screen" loading="lazy">
             <img src="assets/glowm-patient-overview.jpg" alt="GLOWM patient record overview screen" loading="lazy">
@@ -78,6 +132,41 @@
             <span class="project-link">View case study</span>
           </div>
         </a>
+
+        <!-- Files still to come. Shown in Fun mode only, and holding no invented details. -->
+        <div class="project-card project-card--soon reveal" data-tab="Case Study 03">
+          <div class="project-image project-image--soon" aria-hidden="true">Coming soon</div>
+          <div class="project-copy">
+            <p class="project-type">Case Study</p>
+            <h3>Coming soon</h3>
+          </div>
+        </div>
+
+        <!-- Motion Graphics: not a folder. In Fun mode this dark screening card is pulled up
+             out of the folder stack as the page scrolls (hero-play.js). No invented details. -->
+        <div class="reel">
+          <div class="reel-card">
+            <div class="reel-screen">
+              <div class="reel-bar">
+                <span class="reel-rec" aria-hidden="true"></span>
+                <span>Motion Graphics</span>
+                <span class="reel-status">Coming soon</span>
+              </div>
+              <div class="reel-stage">
+                <h3 class="reel-title">Motion Graphics</h3>
+                <span class="reel-play" aria-hidden="true"></span>
+                <p class="reel-note">Coming soon</p>
+              </div>
+              <div class="reel-timeline" aria-hidden="true">
+                <div class="reel-ruler"></div>
+                <div class="reel-track"><i style="--a:4%;--b:38%;--c:#3f86f0"></i><i style="--a:44%;--b:71%;--c:#f6bc1c"></i></div>
+                <div class="reel-track"><i style="--a:12%;--b:55%;--c:#f4608f"></i><i style="--a:60%;--b:92%;--c:#6b7079"></i></div>
+                <div class="reel-track"><i style="--a:0%;--b:26%;--c:#6b7079"></i><i style="--a:31%;--b:83%;--c:#3f86f0"></i></div>
+                <span class="reel-playhead"></span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -112,6 +201,7 @@
     <p class="copyright">2026 Sanjith</p>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=20261109-pixel3"></script>
+  <script src="hero-play.js?v=20261109-pixel3"></script>
 </body>
 </html>

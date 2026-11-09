@@ -1,0 +1,851 @@
+/* Hero playground.
+   Normal mode (the default, and the only mode on small screens): the clean hero with
+   the six stickers lined up small and grey under the paragraph.
+   Fun mode (html[data-mode="fun"], wide screens): stickers scattered around the headline,
+   dotted canvas, loose wires and the orange selection box. */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 124px;
+  transition: padding .8s cubic-bezier(.3, 1, .3, 1);
+}
+
+.hero-copy { position: relative; z-index: 2; }
+.hero-copy > p { transition: margin .8s cubic-bezier(.3, 1, .3, 1); }
+
+/* Fun / normal switch in the nav bar. */
+.mode-switch { display: none; }
+
+/* ---------- Stickers ---------- */
+
+.play-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+.sticker {
+  position: absolute;
+  left: calc(50% + (var(--i) - 2.5) * 52px);
+  top: calc(100% - 62px);
+  width: var(--nw);
+  height: auto;
+  /* Position, turn and size are separate properties so that growing a sticker
+     never shifts where it sits. */
+  translate: -50% -50%;
+  rotate: -360deg;
+  filter: grayscale(1);
+  opacity: .7;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition:
+    left .9s cubic-bezier(.3, 1.15, .4, 1),
+    top .9s cubic-bezier(.45, 0, .25, 1.25),
+    width .9s cubic-bezier(.3, 1, .3, 1),
+    translate .9s cubic-bezier(.3, 1, .3, 1),
+    rotate .9s cubic-bezier(.3, 1, .3, 1),
+    scale .2s ease,
+    opacity .4s ease,
+    filter .25s ease;
+  transition-delay: calc(var(--i) * 45ms);
+}
+
+/* Each word of the copy is its own piece so his tile can knock it loose. */
+.w { display: inline-block; transition: transform .75s cubic-bezier(.3, 1, .3, 1); }
+.w.is-live { position: relative; transition: none; }
+.sticker.is-live { transition: opacity .4s ease, filter .25s ease, scale .2s ease; transition-delay: 0s; }
+/* A sticker hopping clear of his tile passes in front of him. */
+.sticker.is-hopping { z-index: 6; }
+
+/* ---------- Fun-only pieces start hidden ---------- */
+
+.pen-path {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+
+.pen-path .wire {
+  fill: none;
+  stroke: rgba(25, 29, 33, .22);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.3s cubic-bezier(.65, 0, .35, 1);
+}
+
+/* The orange handle is a slingshot: it thickens and its knobs grow when he is carried
+   close (ready to hook him) and while he is loaded in it. */
+.pen-path .handle { fill: none; stroke: #ff5a1f; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke-width .2s ease; }
+.pen-path .knob { fill: #ff5a1f; transform-box: fill-box; transform-origin: center; transition: transform .28s cubic-bezier(.3, 1.6, .4, 1); }
+.pen-path .anchor { fill: #fff; stroke: #ff5a1f; stroke-width: 1.5; transition: stroke-width .2s ease; }
+.pen-path .sling.is-ready, .pen-path .sling.is-loaded { filter: drop-shadow(0 0 5px rgba(255, 90, 31, .55)); }
+.pen-path .sling.is-ready .handle, .pen-path .sling.is-loaded .handle { stroke-width: 2.6; }
+.pen-path .sling.is-ready .knob, .pen-path .sling.is-loaded .knob { transform: scale(1.8); }
+.pen-path .sling.is-ready .anchor, .pen-path .sling.is-loaded .anchor { stroke-width: 2.4; }
+.pen-path .sling { opacity: 0; transition: opacity .4s ease; }
+
+.spark-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+
+.spark {
+  position: absolute;
+  height: auto;
+  translate: -50% -50%;
+  rotate: var(--r, 0deg);
+  scale: 0;
+  opacity: 0;
+  transition: scale .6s cubic-bezier(.34, 1.56, .64, 1), opacity .4s ease;
+}
+
+.name-select { position: relative; display: inline-block; }
+.name-word { display: inline-block; transform-origin: 0 0; }
+
+.name-box {
+  position: absolute;
+  inset: -2px -10px;
+  border: 1.5px solid #ff5a1f;
+  opacity: 0;
+  transform: scale(1.1);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.name-box i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -5px;
+  border: 1.5px solid #ff5a1f;
+  background: #fff;
+}
+
+.name-box .tl { top: 0; left: 0; }
+.name-box .tc { top: 0; left: 50%; }
+.name-box .tr { top: 0; left: 100%; }
+.name-box .ml { top: 50%; left: 0; }
+.name-box .mr { top: 50%; left: 100%; }
+.name-box .bl { top: 100%; left: 0; }
+.name-box .bc { top: 100%; left: 50%; }
+.name-box .br { top: 100%; left: 100%; }
+
+.name-box .size-tag {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: #ff5a1f;
+  color: #fff;
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.hero-portrait { position: relative; flex: 0 0 auto; display: inline-flex; }
+
+.hero-bubble {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 16px);
+  padding: 9px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #ffcb05;
+  opacity: 0;
+  transform: translate(-62%, 8px) scale(.85);
+  transform-origin: 80% 100%;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .35s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.hero-bubble::after {
+  content: "";
+  position: absolute;
+  left: 80%;
+  bottom: -8px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border: solid var(--ink);
+  border-width: 0 2px 2px 0;
+  background: #fff;
+  transform: rotate(45deg);
+}
+
+/* His tile once it has been lifted out of the headline. hero-play.js moves it. */
+.tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, .85);
+  background: #fff;
+  box-shadow: 0 8px 16px rgba(25, 29, 33, .15);
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tile.is-held { cursor: grabbing; box-shadow: 0 18px 30px rgba(25, 29, 33, .22); }
+
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* What he says: a small speech bubble that rides above his tile. */
+.tile-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 7;
+  padding: 6px 11px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 #ffcb05;
+  opacity: 0;
+  scale: .7;
+  pointer-events: none;
+  transition: opacity .15s ease, scale .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.tile-bubble.is-on { opacity: 1; scale: 1; }
+
+.tile.is-giggling img { animation: giggle .09s linear infinite alternate; }
+
+@keyframes giggle {
+  from { transform: translate(-2px, 1px) rotate(-1.5deg); }
+  to { transform: translate(2px, -1px) rotate(1.5deg); }
+}
+
+/* While he is out, his place in the headline stays as an empty gap. */
+html.is-out .hero-portrait img { visibility: hidden; }
+html.is-out .hero-portrait { cursor: default !important; }
+html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px) scale(.85) !important; transition-delay: 0s !important; }
+
+/* A spray of tiny keyframes when Fun mode switches on. */
+.burst {
+  position: absolute;
+  z-index: 4;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  background: #ffcb05;
+  pointer-events: none;
+}
+
+/* The copy comes back into focus when the mode changes. */
+.hero-copy.is-switching h1,
+.hero-copy.is-switching > p { animation: copy-sharpen .7s cubic-bezier(.3, 1, .3, 1) both; }
+.hero-copy.is-switching > p { animation-delay: .12s; }
+
+@keyframes copy-sharpen {
+  from { filter: blur(9px); opacity: .15; }
+  to { filter: blur(0); opacity: 1; }
+}
+
+/* ---------- Fun mode ---------- */
+
+/* Reset: a small orange button just outside the nav bar, beside the fun/normal switch.
+   It slides out from behind the bar's edge as soon as anything is out of place, travels
+   with the bar, and one click puts everything back. */
+.reset-dock {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  width: 64px;
+  height: 44px;
+  margin-top: -22px;
+  /* Clipped along the nav bar's edge only, so the button emerges from behind it. */
+  clip-path: inset(-40px -80px -60px 0);
+  pointer-events: none;
+}
+.hero-reset {
+  position: absolute;
+  left: 10px;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #ff5a1f;
+  color: #fff;
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 16px rgba(255, 90, 31, .32);
+  cursor: pointer;
+  translate: -66px 0;
+  scale: .7;
+  visibility: hidden;
+  pointer-events: none;
+  transition: translate .28s cubic-bezier(.5, 0, .8, .4), scale .28s ease, visibility 0s linear .28s;
+}
+.hero-reset.is-on {
+  translate: 0 0;
+  scale: 1;
+  visibility: visible;
+  pointer-events: auto;
+  /* Overshoots a little on the way out: the small pop that catches the eye. */
+  transition: translate .5s cubic-bezier(.3, 1.6, .4, 1), scale .5s cubic-bezier(.3, 1.6, .4, 1), visibility 0s;
+}
+.hero-reset svg { transition: rotate .35s cubic-bezier(.3, 1, .3, 1); }
+.hero-reset:hover svg { rotate: -45deg; }
+.hero-reset.is-on:active { scale: .92; transition-duration: .1s; }
+.hero-reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.hero-reset.is-wobbling { animation: reset-wobble .5s ease; }
+.reset-label {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  translate: -50% -4px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, translate .18s ease;
+}
+.hero-reset.is-on:hover .reset-label,
+.hero-reset.is-on:focus-visible .reset-label { opacity: 1; translate: -50% 0; }
+@keyframes reset-wobble {
+  0%, 100% { rotate: 0deg; }
+  25% { rotate: -16deg; }
+  50% { rotate: 11deg; }
+  75% { rotate: -5deg; }
+}
+
+@media (min-width: 1101px) {
+  .site-header {
+    left: max(20px, calc((100vw - 860px) / 2));
+    right: max(20px, calc((100vw - 860px) / 2));
+  }
+
+  .mode-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 6px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(25, 29, 33, .06);
+    color: #8a8f94;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .mode-switch-track {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: #fff;
+  }
+
+  .mode-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    background: #c9cccf;
+    transform: translateX(14px);
+    transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), background-color .2s ease;
+  }
+
+  .mode-switch [data-mode-label="normal"] { color: var(--ink); }
+
+  html[data-mode="fun"] .mode-switch-thumb { background: #ffcb05; transform: translateX(0); }
+  html[data-mode="fun"] .mode-switch [data-mode-label="fun"] { color: var(--ink); }
+  html[data-mode="fun"] .mode-switch [data-mode-label="normal"] { color: #8a8f94; }
+
+  html[data-mode="fun"] .hero {
+    padding-top: 196px;
+    padding-bottom: 150px;
+    background-image: radial-gradient(circle, rgba(25, 29, 33, .17) 1px, transparent 1.4px);
+    background-size: 24px 24px;
+    background-position: 12px 12px;
+  }
+
+  html[data-mode="fun"] .hero-copy > p { margin-top: 34px; }
+
+  html[data-mode="fun"] .sticker {
+    left: var(--x);
+    top: var(--y);
+    width: var(--w);
+    translate: calc(-50% + var(--dx, 0px)) calc(-50% + var(--dy, 0px));
+    rotate: calc(var(--r, 0deg) + var(--da, 0deg));
+    opacity: 1;
+    filter: grayscale(1) drop-shadow(0 6px 10px rgba(25, 29, 33, .16));
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  html[data-mode="fun"] .sticker:hover {
+    filter: grayscale(0) drop-shadow(0 10px 16px rgba(25, 29, 33, .2));
+    scale: 1.04;
+  }
+
+  html[data-mode="fun"] .sticker:active,
+  html[data-mode="fun"] .sticker.is-held {
+    cursor: grabbing;
+    scale: 1.2;
+    filter: grayscale(0) drop-shadow(0 14px 20px rgba(25, 29, 33, .22));
+    z-index: 2;
+  }
+
+  /* While he or a sticker is being carried, the other stickers ignore the cursor:
+     they stay grey and do not pop, even if the cursor ends up over them. */
+  html[data-mode="fun"].is-dragging .sticker:not(.is-held) { pointer-events: none; }
+
+  /* One settle-in wiggle per sticker when the page first opens. */
+  html[data-mode="fun"].is-fresh .sticker {
+    animation: sticker-wiggle .7s ease-in-out calc(1s + var(--i) * 150ms) 1;
+  }
+
+  html[data-mode="fun"] .pen-path { opacity: 1; }
+  html[data-mode="fun"] .pen-path .wire { stroke-dashoffset: 0; transition-delay: .35s; }
+  html[data-mode="fun"] .pen-path .sling { opacity: 1; transition-delay: 1.3s; }
+
+  html[data-mode="fun"] .spark {
+    scale: 1;
+    opacity: 1;
+    transition-delay: calc(.45s + var(--i) * 70ms);
+    animation: spark-twinkle var(--t, 3s) ease-in-out calc(1.4s + var(--i) * .37s) infinite alternate;
+  }
+
+  html[data-mode="fun"] .name-box { opacity: 1; transform: scale(1); transition-delay: .55s; }
+
+  /* The box can be moved by the word and resized by its handles; hero-play.js springs it back. */
+  html[data-mode="fun"] .name-select { z-index: 4; cursor: move; user-select: none; -webkit-user-select: none; touch-action: none; }
+  html[data-mode="fun"] .name-box i { pointer-events: auto; touch-action: none; }
+  html[data-mode="fun"] .name-box .tl, html[data-mode="fun"] .name-box .br { cursor: nwse-resize; }
+  html[data-mode="fun"] .name-box .tr, html[data-mode="fun"] .name-box .bl { cursor: nesw-resize; }
+  html[data-mode="fun"] .name-box .tc, html[data-mode="fun"] .name-box .bc { cursor: ns-resize; }
+  html[data-mode="fun"] .name-box .ml, html[data-mode="fun"] .name-box .mr { cursor: ew-resize; }
+
+  html[data-mode="fun"] .hero-portrait { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+  html[data-mode="fun"] .hero-bubble {
+    opacity: 1;
+    transform: translate(-62%, 0) scale(1);
+    transition-delay: 1s;
+  }
+}
+
+@keyframes sticker-wiggle {
+  0%, 100% { rotate: var(--r, 0deg); }
+  30% { rotate: calc(var(--r, 0deg) - 9deg); }
+  65% { rotate: calc(var(--r, 0deg) + 6deg); }
+}
+
+@keyframes spark-twinkle {
+  from { scale: .65; }
+  to { scale: 1.3; }
+}
+
+@media (max-width: 700px) {
+  .hero { padding-bottom: 112px; }
+  .sticker { left: calc(50% + (var(--i) - 2.5) * 46px); top: calc(100% - 54px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark { animation: none !important; }
+}
+
+/* ---------- Fun mode: one dotted canvas down the page, and case studies as folders ----------
+   Wide screens in Fun mode only. Normal mode and small screens keep the clean page and
+   the two project cards exactly as they were. */
+
+.dot-glow { display: none; }
+.project-card--soon { display: none; }
+.reel { display: none; }
+
+@media (min-width: 1101px) {
+  /* The hero's dotted canvas carries on down the whole page and scrolls with it. */
+  html[data-mode="fun"] body {
+    background-image: radial-gradient(circle, rgba(25, 29, 33, .17) 1px, transparent 1.4px);
+    background-size: 24px 24px;
+    background-position: 12px 12px;
+  }
+
+  /* The hero stays a box, a frame sitting on that canvas: the dots run straight through
+     it, and a thin outline and soft shadow mark the edges things bounce off. */
+  html[data-mode="fun"] .hero {
+    background-color: transparent;
+    background-image: none;
+    box-shadow: 0 0 0 1px rgba(25, 29, 33, .1), 0 30px 60px -36px rgba(24, 31, 36, .3);
+  }
+
+  /* The dots softly brighten around the cursor. It only ever responds to the pointer:
+     nothing loops or drifts by itself. */
+  html[data-mode="fun"] .dot-glow {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(25, 29, 33, .6) 1.2px, transparent 1.7px);
+    background-size: 24px 24px;
+    background-position: 12px calc(12px - var(--sy, 0px));
+    -webkit-mask-image: radial-gradient(circle 190px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, .45) 45%, transparent 100%);
+    mask-image: radial-gradient(circle 190px at var(--mx, -999px) var(--my, -999px), #000 0%, rgba(0, 0, 0, .45) 45%, transparent 100%);
+    opacity: 0;
+    transition: opacity 200ms cubic-bezier(.16, 1, .3, 1);
+  }
+  html[data-mode="fun"] .dot-glow.is-on { opacity: 1; }
+
+  /* Case studies as a stack of Mac-style folders: rounded, a soft gradient rather than
+     flat colour, a darker back panel carrying the tab with a lighter front panel over
+     it, and gentle shadows. Every folder sticks at the same place, so scrolling brings
+     the next one up over the one before. The tabs step along side by side, so the earlier
+     folders stay in view. */
+  html[data-mode="fun"] .project-grid {
+    --tab-h: 56px;
+    --tab-w: 328px;
+    --tab-step: 284px;
+    --lip: 14px;
+    --card-h: clamp(454px, calc(100vh - 84px - var(--tab-h) - 24px), 620px);
+    display: block;
+    width: min(100%, 1344px);
+    margin-inline: auto;
+    padding-top: var(--tab-h);
+  }
+
+  /* The card itself is the back panel; its ::after is the front panel lying over it,
+     leaving a lip of the back showing along the top. */
+  html[data-mode="fun"] .project-card {
+    position: sticky;
+    top: calc(84px + var(--tab-h));
+    height: var(--card-h);
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1fr);
+    gap: 56px;
+    padding: calc(var(--lip) + 46px) 54px 52px;
+    border-radius: 30px;
+    background: var(--back);
+    color: var(--ink-on);
+    box-shadow: 0 -14px 34px -16px rgba(20, 24, 30, .34), 0 30px 50px -34px rgba(20, 24, 30, .4);
+  }
+  html[data-mode="fun"] .project-card + .project-card { margin-top: calc(var(--tab-h) + 44px); }
+  html[data-mode="fun"] .project-card--soon { display: grid; }
+  html[data-mode="fun"] .project-card::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: var(--lip) 0 0;
+    border-radius: 30px;
+    background: linear-gradient(180deg, var(--front-1), var(--front-2));
+    box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .42), 0 -4px 10px rgba(0, 0, 0, .14);
+    pointer-events: none;
+  }
+  html[data-mode="fun"] .project-card:nth-child(1) { --back: #123f96; --front-1: #2a72e0; --front-2: #164fb8; --ink-on: #fff; --tab-ink: #fff; --tab-i: 0; }
+  html[data-mode="fun"] .project-card:nth-child(2) { --back: #1b1d21; --front-1: #4a4e56; --front-2: #2c2f35; --ink-on: #fff; --tab-ink: #fff; --tab-i: 1; }
+  html[data-mode="fun"] .project-card:nth-child(3) { --back: #e3a800; --front-1: #ffdb62; --front-2: #f6bc1c; --ink-on: #2a2000; --tab-ink: #2a2000; --tab-i: 2; }
+  html[data-mode="fun"] .project-card:nth-child(4) { --back: #e0437d; --front-1: #ff97b9; --front-2: #f4608f; --ink-on: #35091b; --tab-ink: #2b0613; --tab-i: 3; }
+
+  /* The tab: part of the back panel, with the soft curve of a Mac folder. */
+  html[data-mode="fun"] .project-card::before {
+    content: attr(data-tab);
+    position: absolute;
+    box-sizing: border-box;
+    left: calc(var(--tab-i) * var(--tab-step));
+    bottom: calc(100% - 1px);
+    width: var(--tab-w);
+    height: var(--tab-h);
+    padding: 4px 58px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--back);
+    color: var(--tab-ink);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 328 56' preserveAspectRatio='none'%3E%3Cpath d='M0,56 C16,56 22,44 28,28 C34,12 40,0 58,0 L270,0 C288,0 294,12 300,28 C306,44 312,56 328,56 Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 328 56' preserveAspectRatio='none'%3E%3Cpath d='M0,56 C16,56 22,44 28,28 C34,12 40,0 58,0 L270,0 C288,0 294,12 300,28 C306,44 312,56 328,56 Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+  /* A tab at the far left runs straight down the folder's edge. */
+  html[data-mode="fun"] .project-card:nth-child(1) { border-top-left-radius: 0; }
+  html[data-mode="fun"] .project-card:nth-child(1)::before {
+    left: 0;
+    padding: 4px 58px 0 30px;
+    justify-content: flex-start;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 328 56' preserveAspectRatio='none'%3E%3Cpath d='M0,56 L0,18 Q0,0 18,0 L270,0 C288,0 294,12 300,28 C306,44 312,56 328,56 Z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 328 56' preserveAspectRatio='none'%3E%3Cpath d='M0,56 L0,18 Q0,0 18,0 L270,0 C288,0 294,12 300,28 C306,44 312,56 328,56 Z'/%3E%3C/svg%3E");
+  }
+
+  /* Inside: the words on the left, the picture on the right. */
+  html[data-mode="fun"] .project-copy {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 4px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  html[data-mode="fun"] .project-type { margin: 0 0 16px; color: inherit; opacity: .78; font-size: 13px; letter-spacing: .12em; }
+  html[data-mode="fun"] .project-copy h3 {
+    font-size: clamp(46px, 4.7vw, 72px);
+    font-weight: 700;
+    line-height: 1.03;
+    letter-spacing: -.025em;
+  }
+  /* A long name keeps its first word big and sets the rest beneath it, smaller. */
+  html[data-mode="fun"] .project-copy h3 span {
+    display: block;
+    margin-top: 12px;
+    font-size: .46em;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -.01em;
+  }
+  html[data-mode="fun"] .project-description {
+    max-width: 500px;
+    margin-top: 20px;
+    color: inherit;
+    opacity: .92;
+    font-size: 19px;
+    line-height: 1.55;
+  }
+  html[data-mode="fun"] .project-link {
+    margin-top: 30px;
+    padding: 13px 22px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .2);
+    background: color-mix(in srgb, currentColor 14%, transparent);
+    color: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color .2s ease;
+  }
+  html[data-mode="fun"] .project-link::after { content: "\2002\2192"; }
+  html[data-mode="fun"] .project-card[href]:hover .project-link,
+  html[data-mode="fun"] .project-card[href]:focus-visible .project-link { background: color-mix(in srgb, currentColor 24%, transparent); }
+
+  /* The picture: clean and rounded, sitting on the front of the folder. */
+  html[data-mode="fun"] .project-image {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    height: 100%;
+    min-height: 0;
+    border-radius: 22px;
+    box-shadow: 0 22px 44px -22px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .14);
+  }
+  /* The single Drexel screen is fitted inside its panel whatever the folder's height. */
+  html[data-mode="fun"] .project-image--drexel img {
+    position: absolute;
+    inset: 34px;
+    width: calc(100% - 68px);
+    height: calc(100% - 68px);
+    object-fit: contain;
+  }
+  html[data-mode="fun"] .project-card:focus-visible { outline: 3px solid #ff5a1f; outline-offset: 4px; }
+
+  /* Folders still to come: the same folder, an empty picture, and no invented details. */
+  html[data-mode="fun"] .project-image--soon {
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, .26);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4);
+    color: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+
+  /* Motion Graphics is not a folder. It is a dark screening card, like a video player,
+     and it arrives differently: once the folders are stacked, scrolling on builds the
+     card out of square blocks that pop in over the stack a few at a time, until they
+     form the whole card; then its title decodes from scrambled characters. hero-play.js
+     draws the blocks into an SVG clip (#reel-clip) from the scroll position. Nothing
+     moves by itself except the short title decode. */
+  html[data-mode="fun"] .reel {
+    display: block;
+    position: relative;
+    z-index: 1;
+    /* It starts a little after the last folder has landed, and lasts a screenful or so. */
+    margin-top: calc(40px - var(--card-h));
+    height: calc(var(--tab-h) + var(--card-h) + 95vh);
+    pointer-events: none;
+  }
+  html[data-mode="fun"] .reel-card {
+    position: sticky;
+    top: 84px;
+    height: calc(var(--tab-h) + var(--card-h));
+    visibility: hidden;
+    filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, .3));
+  }
+  html[data-mode="fun"] .reel.is-out .reel-card { visibility: visible; }
+  html[data-mode="fun"] .reel.is-open { pointer-events: auto; }
+  html[data-mode="fun"] .reel-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 18px 18px 26px 26px;
+    background: radial-gradient(120% 90% at 50% 38%, #23262d 0%, #121419 62%, #0b0c10 100%);
+    color: #fff;
+    clip-path: url(#reel-clip);
+  }
+  /* The part of the title still scrambled. */
+  html[data-mode="fun"] .reel-scr { color: #ff5a1f; }
+  html[data-mode="fun"] .reel-bar {
+    flex: none;
+    height: 56px;
+    padding: 0 26px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+  html[data-mode="fun"] .reel-rec { width: 10px; height: 10px; border-radius: 50%; background: #ff5a1f; }
+  html[data-mode="fun"] .reel-status { margin-left: auto; opacity: .6; font-weight: 500; }
+  html[data-mode="fun"] .reel-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    padding: 34px 44px;
+    display: grid;
+    place-items: center;
+  }
+  html[data-mode="fun"] .reel-title {
+    position: absolute;
+    left: 44px;
+    top: 30px;
+    margin: 0;
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-size: clamp(40px, 4.2vw, 64px);
+    font-weight: 700;
+    line-height: 1.03;
+    letter-spacing: -.025em;
+  }
+  html[data-mode="fun"] .reel-play {
+    position: relative;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .1);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .28), 0 18px 40px -18px rgba(0, 0, 0, .8);
+  }
+  html[data-mode="fun"] .reel-play::after {
+    content: "";
+    position: absolute;
+    left: 43px;
+    top: 34px;
+    border-style: solid;
+    border-width: 18px 0 18px 30px;
+    border-color: transparent transparent transparent #fff;
+  }
+  html[data-mode="fun"] .reel-note {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 74px);
+    margin: 0;
+    translate: -50% 0;
+    opacity: .62;
+    font-size: 15px;
+    letter-spacing: .04em;
+  }
+  /* The editing timeline along the bottom: a ruler, three tracks of clips, a playhead. */
+  html[data-mode="fun"] .reel-timeline {
+    position: relative;
+    flex: none;
+    padding: 0 26px 22px;
+    display: grid;
+    gap: 7px;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    background: rgba(0, 0, 0, .22);
+    border-radius: 0 0 26px 26px;
+  }
+  html[data-mode="fun"] .reel-ruler {
+    height: 22px;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .34) 0 1px, transparent 1px 12px) bottom / 100% 6px no-repeat,
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, .5) 0 1px, transparent 1px 60px) bottom / 100% 11px no-repeat;
+  }
+  html[data-mode="fun"] .reel-track { position: relative; height: 15px; border-radius: 5px; background: rgba(255, 255, 255, .05); }
+  html[data-mode="fun"] .reel-track i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--a);
+    right: calc(100% - var(--b));
+    border-radius: 5px;
+    background: var(--c);
+    opacity: .92;
+  }
+  html[data-mode="fun"] .reel-playhead {
+    position: absolute;
+    left: calc(26px + (100% - 52px) * .37);
+    top: 6px;
+    bottom: 16px;
+    width: 2px;
+    border-radius: 2px;
+    background: #ff5a1f;
+  }
+  html[data-mode="fun"] .reel-playhead::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: -2px;
+    border-style: solid;
+    border-width: 8px 6px 0;
+    border-color: #ff5a1f transparent transparent;
+  }
+
+  /* Coming down from the hero, the section rises in from below: the heading first, then
+     the first file. The files after it need no fade: scrolling slides them up, solid. */
+  html[data-mode="fun"] .case-studies .section-title.reveal { transform: translateY(64px); transition-duration: .8s, .9s; }
+  html[data-mode="fun"] .case-studies .project-card.reveal { transform: translateY(90px); transition: opacity .8s ease .12s, transform 1s cubic-bezier(.16, 1, .3, 1) .12s; }
+  html[data-mode="fun"] .case-studies .section-title.reveal.is-visible,
+  html[data-mode="fun"] .case-studies .project-card.reveal.is-visible { transform: none; }
+  html[data-mode="fun"] .case-studies .project-card + .project-card.reveal { opacity: 1; transform: none; transition: none; }
+}
