@@ -1829,9 +1829,10 @@
     const runway = Math.max(1, reel.offsetHeight - tall);
     const stick = parseFloat(window.getComputedStyle(reelCard).top) || 0;
     const progress = Math.max(0, Math.min(1, (stick - reel.getBoundingClientRect().top) / runway));
-    // The build takes the first three quarters of the scroll; the rest is the finished
-    // card simply resting there before it and the folders scroll away together.
-    const build = Math.min(1, progress / 0.74);
+    // The build takes the first 64vh of the scroll. For the rest the finished card simply
+    // rests there (its heading rises into the title spot, then the About Me notification
+    // and pointer arrive over it) before it and the folders scroll away together.
+    const build = Math.min(1, progress * runway / (0.64 * window.innerHeight));
     const wide = 1 / REEL_COLS;
     const high = 1 / REEL_ROWS;
     for (const cell of reelCells) {
@@ -1859,6 +1860,7 @@
   // time it is well into view, and the same happens in reverse on the way back up.
   const caseTitle = document.querySelector('.case-studies .section-title');
   const caseFolders = [...document.querySelectorAll('.project-grid .project-card')];
+  const aboutWindow = document.querySelector('.about-inner');
   const ARRIVE_RISE = 70; // matches the 70px in hero-play.css
   const paintArrivals = () => {
     const pieces = [];
@@ -1872,11 +1874,11 @@
     }
     const tall = window.innerHeight;
     let gate = 0; // how far the page must have scrolled before this piece may begin
-    for (const [piece, from, to, lead] of pieces) {
+    for (const [piece, from, to, lead, anchor] of pieces) {
       const was = parseFloat(piece.style.getPropertyValue('--in'));
-      const risen = Number.isFinite(was) ? (1 - was) * ARRIVE_RISE : 0;
+      const risen = !anchor && Number.isFinite(was) ? (1 - was) * ARRIVE_RISE : 0;
       // Where it would be without the rise it is currently given.
-      const top = piece.getBoundingClientRect().top - risen - lead;
+      const top = (anchor || piece).getBoundingClientRect().top - risen - lead;
       // On a tall window a piece can already be on screen before any scrolling. It still
       // waits: the heading begins only once the page has started to move, and the first
       // folder only once the heading is fully in. (Later folders are a whole folder further
@@ -1884,7 +1886,12 @@
       const span = (from - to) * tall;
       const place = top + window.scrollY;
       const begin = Math.min(from * tall, place - gate - 24);
-      const arrived = Math.max(0, Math.min(1, (begin - top) / span));
+      let arrived = Math.max(0, Math.min(1, (begin - top) / span));
+      // The folders after the first never show while it is still pouring out of the Dock.
+      // If the scroll has already brought them up, they come in one after the other as
+      // soon as it has finished.
+      const turn = caseFolders.indexOf(piece);
+      if (turn > 0 && dock) arrived = Math.min(arrived, Math.max(0, Math.min(1, (performance.now() - dockPop.doneAt - (turn - 1) * FOLLOW * 0.6) / FOLLOW)));
       gate = piece === caseTitle ? place - begin + span : 0;
       if (piece === caseTitle) {
         // The title shrinks a little as it settles into the place where it stays.
@@ -1894,7 +1901,528 @@
       }
       piece.style.setProperty('--in', arrived.toFixed(3));
     }
+    // The first folder does not fade or rise in: it pours out of the Dock (paintDock).
+    if (caseFolders[0]) caseFolders[0].style.setProperty('--in', '1');
   };
+
+  // About Me arrives the way something opens on a Mac. A notification slides in at the top
+  // right (the illustration, "About Me", the opening words of the text). Scrolling on
+  // brings a pointer over to it. When the pointer gets there it clicks by itself: the
+  // notification slides away and the window pops open from that spot, floats in view,
+  // and settles into the page as the scroll catches up with it. Scrolling back up closes
+  // it again. Nothing fades: every piece slides, scales or pops as a solid object.
+  const smooth = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  const unit = (t) => Math.max(0, Math.min(1, t));
+  const backOut = (t) => 1 + 2.2 * (t - 1) ** 3 + 1.2 * (t - 1) ** 2; // lands with a small overshoot
+  let notice = null;
+  let pointer = null;
+  if (aboutWindow) {
+    const words = (aboutWindow.querySelector('p') || {}).textContent || '';
+    // The line under the title is the opening of the visitor-facing text itself.
+    const opening = words.trim().split(/\s+/).slice(0, 7).join(' ').replace(/[,.;:]$/, '') + '…';
+    const picture = aboutWindow.querySelector('.about-photo img');
+    notice = document.createElement('div');
+    notice.className = 'notice';
+    notice.setAttribute('aria-hidden', 'true');
+    notice.innerHTML = '<img alt=""><span><b>About Me</b><i></i></span>';
+    notice.querySelector('img').src = picture ? picture.getAttribute('src') : '';
+    notice.querySelector('i').textContent = opening;
+    pointer = document.createElement('div');
+    pointer.className = 'pointer';
+    pointer.setAttribute('aria-hidden', 'true');
+    pointer.innerHTML = '<svg class="arrow" viewBox="0 0 24 24"><path d="M5 2.5v17.2l4.5-4 3 6.8 2.7-1.2-3-6.7h6z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>'
+      + '<svg class="hand" viewBox="0 0 24 24" fill="#fff" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.2a1.7 1.7 0 0 1 3.4 0V10l5.2 1.1a2.4 2.4 0 0 1 1.9 2.6l-.7 4.9A3.9 3.9 0 0 1 14.9 22H12a4.4 4.4 0 0 1-3.5-1.7l-3.6-4.6a1.6 1.6 0 0 1 2.4-2.1L9 15.200z"/></svg>';
+    document.body.append(notice, pointer);
+  }
+  const pop = { on: false, k: 0, pressAt: 0, frame: 0, last: 0 };
+  if (window.__probe) window.__probe.pop = pop; // temporary, for testing: remove with the other debug hooks
+  const PRESS = 150; // the click itself
+  const runPop = () => {
+    if (pop.frame) return;
+    pop.last = performance.now();
+    const step = (now) => {
+      pop.frame = 0;
+      const dt = Math.min(48, now - pop.last);
+      pop.last = now;
+      const pressing = pop.on && now < pop.pressAt + PRESS;
+      if (!pressing) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 300);
+      paintAbout();
+      if (pressing || (pop.on ? pop.k < 1 : pop.k > 0)) pop.frame = window.requestAnimationFrame(step);
+    };
+    pop.frame = window.requestAnimationFrame(step);
+  };
+  function paintAbout() {
+    if (!aboutWindow) return;
+    const style = aboutWindow.style;
+    if (!playing()) {
+      style.transform = style.clipPath = style.visibility = '';
+      style.removeProperty('--photo-r');
+      style.removeProperty('--photo-tilt');
+      aboutWindow.classList.remove('is-moving');
+      notice.style.visibility = pointer.style.visibility = 'hidden';
+      pop.on = false;
+      pop.k = 0;
+      return;
+    }
+    const now = performance.now();
+    const viewWide = window.innerWidth;
+    const viewTall = window.innerHeight;
+    const section = aboutWindow.parentElement.getBoundingClientRect();
+    const wide = aboutWindow.offsetWidth;
+    const tall = aboutWindow.offsetHeight;
+    // Where the window really belongs right now.
+    const homeX = section.left + aboutWindow.offsetLeft;
+    const homeY = section.top + aboutWindow.offsetTop;
+
+    // The click happens once the scroll has brought the pointer all the way over; scrolling
+    // back above that point closes the window again.
+    if (!pop.on && homeY <= viewTall + 40) {
+      pop.on = true;
+      pop.pressAt = now;
+      if (homeY < viewTall * 0.6) { pop.k = 1; pop.pressAt = 0; } // arrived by a jump: already open
+      runPop();
+    } else if (pop.on && homeY > viewTall + 70) {
+      pop.on = false;
+      runPop();
+    }
+    const pressing = pop.on && now < pop.pressAt + PRESS;
+    const press = pressing ? Math.sin(Math.PI * (now - pop.pressAt) / PRESS) : 0;
+    const away = smooth(unit(pop.k / 0.5)); // the notification and pointer leaving after the click
+
+    // The notification: slides in from the right, dips when clicked, slides back out.
+    const noticeWide = notice.offsetWidth;
+    const noticeTall = notice.offsetHeight;
+    const noticeStyle = window.getComputedStyle(notice);
+    const noticeTop = parseFloat(noticeStyle.top) || 0;
+    const noticeRight = parseFloat(noticeStyle.right) || 0;
+    const slide = smooth(unit((viewTall + 640 - homeY) / 130));
+    const noticeGone = (1 - slide) + away;
+    notice.style.visibility = slide > 0 && noticeGone < 1 ? 'visible' : 'hidden';
+    notice.style.transform = 'translate3d(' + (Math.min(1, noticeGone) * (noticeWide + noticeRight + 30)).toFixed(2) + 'px, 0, 0) scale(' + (1 - 0.04 * press).toFixed(4) + ')';
+    // Once the window starts to open, the picture has left the notification: it is the
+    // window's own photo from here on, so the notification's copy is put away.
+    const icon = notice.querySelector('img');
+    icon.style.visibility = pop.k > 0 ? 'hidden' : '';
+    const spotX = viewWide - noticeRight - noticeWide / 2; // the middle of the notification
+    const spotY = noticeTop + noticeTall / 2;
+
+    // The pointer: comes up from below along a gentle curve, becomes a hand over the
+    // notification, clicks, then leaves with it.
+    // (Unhurried: it takes a good 440px of scrolling to cross the screen.)
+    const along = unit((viewTall + 480 - homeY) / 440);
+    const reach = along * along * (3 - 2 * along); // a gentle ease, so it never rushes mid-way
+    const fromX = viewWide * 0.56;
+    const fromY = viewTall + 40;
+    const bendX = viewWide * 0.82;
+    const bendY = viewTall * 0.6;
+    const toX = spotX - 26;
+    const toY = spotY + 4;
+    const pointX = (1 - reach) ** 2 * fromX + 2 * (1 - reach) * reach * bendX + reach ** 2 * toX + away * (noticeWide + noticeRight + 120);
+    const pointY = (1 - reach) ** 2 * fromY + 2 * (1 - reach) * reach * bendY + reach ** 2 * toY;
+    pointer.style.visibility = reach > 0 && away < 1 ? 'visible' : 'hidden';
+    pointer.classList.toggle('is-hand', reach > 0.86);
+    // (The hot spot of each cursor, its tip, sits a few pixels inside its box.)
+    pointer.style.transform = 'translate3d(' + (pointX - 7).toFixed(2) + 'px, ' + (pointY - 3).toFixed(2) + 'px, 0) scale(' + (1 - 0.14 * press).toFixed(4) + ')';
+
+    // The window. Closed, it is not there at all. Open, it floats near the top of the
+    // screen, a little smaller if it would not fit, until the page has scrolled far
+    // enough for its real place to arrive; from then on it is an ordinary part of the page.
+    if (pop.k <= 0) {
+      style.visibility = 'hidden';
+      aboutWindow.classList.remove('is-moving');
+      return;
+    }
+    style.visibility = '';
+    const floatY = 100;
+    const fit = Math.min(1, (viewTall - floatY - 24) / tall);
+    const docked = smooth(unit((viewTall * 0.92 - homeY) / (viewTall * 0.92 - floatY)));
+    const restScale = fit + (1 - fit) * docked;
+    const restX = homeX + wide * (1 - restScale) / 2;
+    const restY = Math.min(homeY, floatY); // floating until its real place has come up to meet it
+    const photo = aboutWindow.querySelector('.about-photo');
+    if (pop.k >= 1) {
+      style.clipPath = '';
+      style.removeProperty('--photo-r');
+      style.removeProperty('--photo-tilt');
+    }
+    if (pop.k >= 1 && homeY <= floatY) {
+      style.transform = '';
+      aboutWindow.classList.remove('is-moving');
+      return;
+    }
+    aboutWindow.classList.add('is-moving');
+    if (pop.k >= 1 || !photo) {
+      // Open and floating.
+      style.transform = 'translate3d(' + (restX - homeX).toFixed(2) + 'px, ' + (restY - homeY).toFixed(2) + 'px, 0) scale(' + restScale.toFixed(5) + ')';
+      return;
+    }
+    // Unfolding. It starts as nothing but its photo, sitting exactly on the notification's
+    // picture at the same size, then the rest of the window opens out around the photo
+    // while the whole thing grows and travels to where it rests.
+    const photoX = photo.offsetLeft;
+    const photoY = photo.offsetTop;
+    const photoSize = photo.offsetWidth;
+    const iconSize = icon.offsetWidth;
+    const iconX = viewWide - noticeRight - noticeWide + icon.offsetLeft;
+    const iconY = noticeTop + icon.offsetTop;
+    const startScale = iconSize / photoSize;
+    const startX = iconX - photoX * startScale;
+    const startY = iconY - photoY * startScale;
+    const opened = backOut(pop.k);
+    const scale = startScale + (restScale - startScale) * opened;
+    const x = startX + (restX - startX) * opened;
+    const y = startY + (restY - startY) * opened;
+    style.transform = 'translate3d(' + (x - homeX).toFixed(2) + 'px, ' + (y - homeY).toFixed(2) + 'px, 0) scale(' + scale.toFixed(5) + ')';
+    // The window opening out around the photo: from the photo's own outline to the full window.
+    const reveal = smooth(unit(pop.k / 0.72));
+    const keep = 1 - reveal;
+    const settle = unit(pop.k);
+    const corner = (12 + 4 * reveal) / scale; // on screen: the picture's 12px corners easing to the window's 16px
+    style.clipPath = 'inset(' + (photoY * keep).toFixed(2) + 'px ' + ((wide - photoX - photoSize) * keep).toFixed(2) + 'px ' + ((tall - photoY - photoSize) * keep).toFixed(2) + 'px ' + (photoX * keep).toFixed(2) + 'px round ' + corner.toFixed(2) + 'px)';
+    // The photo's corners, measured on screen: the picture's 12px at first, easing to the
+    // photo's usual 18px (in the window's own units) by the time it is open.
+    const cornerOnScreen = 12 + (18 * scale - 12) * settle;
+    style.setProperty('--photo-r', (cornerOnScreen / Math.max(scale, 0.05)).toFixed(2) + 'px');
+    style.setProperty('--photo-tilt', (-3 * smooth(settle)).toFixed(3) + 'deg');
+  }
+
+  // The "Motion Graphics" heading becomes the section title. After "Case Studies" has faded
+  // and the card is built and decoded, scrolling on lifts the heading out of the card to
+  // the spot above it where "Case Studies" sat, centred and at that same size. It follows
+  // the scroll both ways. Because the heading inside the card is clipped to the card, a
+  // copy does the travelling: the two are swapped where they coincide exactly.
+  let reelHeading = null;
+  if (reelTitle) {
+    reelHeading = document.createElement('p');
+    reelHeading.className = 'reel-heading';
+    reelHeading.setAttribute('aria-hidden', 'true');
+    reelHeading.textContent = reelWords;
+    document.body.append(reelHeading);
+  }
+  const paintReelHeading = () => {
+    if (!reelHeading) return;
+    const hide = () => { reelHeading.style.visibility = 'hidden'; reelTitle.style.visibility = ''; };
+    if (!playing() || !aboutWindow) { hide(); return; }
+    const section = aboutWindow.parentElement.getBoundingClientRect();
+    const until = section.top + aboutWindow.offsetTop - window.innerHeight; // scrolling left before About Me reaches the fold
+    const lift = reel.classList.contains('is-open') ? smooth(Math.max(0, Math.min(1, (800 - until) / 130))) : 0;
+    if (lift <= 0) { hide(); return; }
+    // A fast scroll can get here while the heading is still decoding: finish it at once so
+    // the heading that lifts off is always the finished words.
+    if (reelTimer || reelDecoded < reelWords.length) {
+      window.clearInterval(reelTimer);
+      reelTimer = 0;
+      reelDecoded = reelWords.length;
+      writeReelTitle();
+    }
+    const from = reelTitle.getBoundingClientRect();
+    const card = reelCard.getBoundingClientRect();
+    if (card.bottom < 0) { hide(); return; }
+    const size = parseFloat(window.getComputedStyle(reelTitle).fontSize) || 48;
+    reelHeading.style.fontSize = size + 'px';
+    // Where "Case Studies" sat: centred, 54px above the card, at 0.72 of a 48px title.
+    const endScale = 48 * 0.72 / size;
+    const endX = window.innerWidth / 2 - reelHeading.offsetWidth * endScale / 2;
+    const endY = card.top - 54;
+    const scale = 1 + (endScale - 1) * lift;
+    const x = from.left + (endX - from.left) * lift;
+    const y = from.top + (endY - from.top) * lift;
+    reelTitle.style.visibility = 'hidden';
+    reelHeading.style.visibility = 'visible';
+    reelHeading.style.transform = 'translate3d(' + x.toFixed(2) + 'px, ' + y.toFixed(2) + 'px, 0) scale(' + scale.toFixed(5) + ')';
+    // Ink above the card's top edge, white below it.
+    reelHeading.style.setProperty('--edge', ((card.top - y) / scale).toFixed(2) + 'px');
+  };
+
+  // The first folder's entrance. As the page scrolls, a Mac Dock pops up from the bottom,
+  // a pointer runs across After Effects, Photoshop and Figma (each icon swells as it
+  // passes), reaches the folder and clicks it. The click and what follows play by
+  // themselves: the folder pours out of the Dock icon as a narrow funnel that widens into
+  // the full folder (the Mac "genie"), and the Dock drops away. Scrolling back above the
+  // click pours it back in.
+  const firstFolder = caseFolders[0] || null;
+  const DOCK_ICONS = [
+    '<svg viewBox="0 0 56 56"><rect width="56" height="56" rx="13" fill="#00005b"/><text x="28" y="37" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#9999ff">Ae</text></svg>',
+    '<svg viewBox="0 0 56 56"><rect width="56" height="56" rx="13" fill="#001e36"/><text x="28" y="37" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#31a8ff">Ps</text></svg>',
+    '<svg viewBox="0 0 56 56"><rect width="56" height="56" rx="13" fill="#1e1e1e"/><path d="M28 7h-7a7 7 0 0 0 0 14h7z" fill="#f24e1e"/><path d="M28 7h7a7 7 0 0 1 0 14h-7z" fill="#ff7262"/><path d="M28 21h-7a7 7 0 0 0 0 14h7z" fill="#a259ff"/><circle cx="35" cy="28" r="7" fill="#1abcfe"/><path d="M28 35h-7a7 7 0 1 0 7 7z" fill="#0acf83"/></svg>',
+    '<svg viewBox="0 0 56 56"><path d="M4 16a6 6 0 0 1 6-6h12a5 5 0 0 1 4 2l2 3h18a6 6 0 0 1 6 6v4H4z" fill="#123f96"/><rect x="4" y="19" width="48" height="29" rx="6" fill="#2a72e0"/><rect x="4" y="34" width="48" height="14" rx="6" fill="#164fb8" opacity=".55"/></svg>'
+  ];
+  let dock = null;
+  let dockPointer = null;
+  let genieBox = null;
+  let genieStrips = [];
+  let genieKey = '';
+  if (firstFolder && pointer) {
+    dock = document.createElement('div');
+    dock.className = 'dock';
+    dock.setAttribute('aria-hidden', 'true');
+    dock.innerHTML = DOCK_ICONS.map((icon) => '<span>' + icon + '</span>').join('');
+    dockPointer = pointer.cloneNode(true);
+    document.body.append(dock, dockPointer);
+    genieBox = document.createElement('div');
+    genieBox.className = 'genie';
+    genieBox.setAttribute('aria-hidden', 'true');
+    genieBox.inert = true;
+    firstFolder.parentElement.append(genieBox);
+  }
+  const GENIE_STRIPS = 44;
+  const buildGenie = (wide, tall, tabTall) => {
+    const key = Math.round(wide) + 'x' + Math.round(tall);
+    if (key === genieKey) return;
+    genieKey = key;
+    genieBox.textContent = '';
+    genieStrips = [];
+    const slice = (tall + tabTall) / GENIE_STRIPS;
+    for (let i = 0; i < GENIE_STRIPS; i += 1) {
+      const strip = document.createElement('div');
+      strip.className = 'genie-strip';
+      strip.style.width = wide + 'px';
+      strip.style.height = slice + 'px';
+      const copy = firstFolder.cloneNode(true);
+      copy.removeAttribute('id');
+      copy.removeAttribute('href');
+      copy.style.cssText = 'width:' + wide + 'px;height:' + tall + 'px;top:' + (tabTall - i * slice) + 'px;--in:1';
+      for (const image of copy.querySelectorAll('img')) image.loading = 'eager';
+      strip.append(copy);
+      genieBox.append(strip);
+      genieStrips.push(strip);
+    }
+  };
+  // The Dock and the pointer follow the scroll. The click, the pour and the minimise each
+  // play by themselves as one quick motion, like a real Mac, so nobody ever stops on an
+  // in-between shape. Scrolling down, the click comes when the folder reaches its place.
+  // Scrolling back up, the folder stays open until it starts to leave that place (the hero
+  // is coming back); then the Dock pops up and the folder minimises into it.
+  const dockPop = { open: false, seen: false, back: false, far: 0, doneAt: Infinity, k: 0, up: 0, want: 0, pressAt: -1e9, frame: 0, last: 0 };
+  if (window.__probe) window.__probe.dock = dockPop; // temporary, for testing: remove with the other debug hooks
+  // Motion rules for this piece. The Dock and the pointer are positions on the scroll: move
+  // the page and they move with it at once, both ways, and stop when it stops. Only the
+  // folder's warp runs on a clock, and it starts on the very frame the click point is
+  // crossed. Entering eases out, leaving eases in, nothing bounces. The warp is a
+  // full-screen move, so it gets longer than the usual 300ms (the one stated exception).
+  const POUR_MS = 1100;     // the folder pouring out (a Mac takes 0.4s; slowed so it can be watched)
+  const MINIMISE_MS = 1000; // the folder going back in
+  const FOLLOW = 320;       // a later folder that was kept waiting takes this long to come in
+  const DOCK_CATCH_MS = 200; // the most the Dock may lag behind a very fast scroll
+  const CLICK_PAST = 300;   // the click comes this far after the folder's place is reached (matches hero-play.css)
+  const REOPEN_GAP = 20;    // scrolling back up, the second click comes this much earlier
+  const DOCK_HIDE = 260;    // how far below its place the Dock waits, out of sight
+  const runDock = () => {
+    if (dockPop.frame) return;
+    dockPop.last = performance.now();
+    const step = (now) => {
+      dockPop.frame = 0;
+      const dt = Math.min(100, now - dockPop.last);
+      dockPop.last = now;
+      if (dockPop.up < dockPop.want) dockPop.up = Math.min(dockPop.want, dockPop.up + dt / DOCK_CATCH_MS);
+      else if (dockPop.up > dockPop.want) dockPop.up = Math.max(dockPop.want, dockPop.up - dt / DOCK_CATCH_MS);
+      // The warp keeps its own steady pace, however fast or slowly the page is scrolled.
+      if (dockPop.open) {
+        if (dockPop.k < 1) {
+          dockPop.k = Math.min(1, dockPop.k + dt / POUR_MS);
+          if (dockPop.k >= 1) dockPop.doneAt = now;
+        }
+      } else {
+        dockPop.doneAt = Infinity;
+        dockPop.k = Math.max(0, dockPop.k - dt / MINIMISE_MS);
+      }
+      paintArrivals();
+      paintDock();
+      const busy = dockPop.up !== dockPop.want || now < dockPop.pressAt + PRESS
+        || (dockPop.open ? (dockPop.k < 1 || now < dockPop.doneAt + 2 * FOLLOW + 60) : dockPop.k > 0);
+      // (paintDock may already have asked for the next frame.)
+      if (busy && !dockPop.frame) dockPop.frame = window.requestAnimationFrame(step);
+    };
+    dockPop.frame = window.requestAnimationFrame(step);
+  };
+  let dockGap = 110;
+  let folderHome = null;    // where the first folder sits in its grid when it is not stuck
+  function paintDock() {
+    if (!dock) return;
+    if (!playing()) {
+      dock.style.visibility = dockPointer.style.visibility = 'hidden';
+      genieBox.classList.remove('is-on');
+      firstFolder.style.visibility = '';
+      dockPop.open = dockPop.seen = dockPop.back = false;
+      dockPop.k = dockPop.up = dockPop.want = dockPop.far = 0;
+      dockPop.doneAt = Infinity;
+      return;
+    }
+    const now = performance.now();
+    const viewWide = window.innerWidth;
+    const viewTall = window.innerHeight;
+    const grid = firstFolder.parentElement;
+    const gridStyle = window.getComputedStyle(grid);
+    const tabTall = parseFloat(gridStyle.getPropertyValue('--tab-h')) || 56;
+    const stackTop = parseFloat(gridStyle.getPropertyValue('--stack-top')) || 134;
+    const card = firstFolder.getBoundingClientRect();
+    const top = card.top - tabTall;       // the top of the folder's tab
+    const left = card.left;
+    const wide = card.width;
+    const tall = card.height + tabTall;
+    // Where the folder would be if it did not stick: this keeps counting after it has
+    // stuck, which is what the click and the pour are measured against.
+    const gridTop = grid.getBoundingClientRect().top;
+    if (top > stackTop + 2) folderHome = top - gridTop;
+    else if (folderHome === null) folderHome = (parseFloat(gridStyle.paddingTop) || 0) + tabTall;
+    const toGo = gridTop + folderHome - stackTop; // above zero: still rising; below: stuck, and scrolling on
+    const past = -toGo; // how far the page has scrolled on since the folder reached its place
+    if (!dockPop.seen) {
+      // The page opened already past this point: the folder is simply there.
+      dockPop.seen = true;
+      if (past >= CLICK_PAST) { dockPop.open = true; dockPop.k = 1; dockPop.doneAt = -1e9; }
+    }
+    if (!dockPop.open && past >= CLICK_PAST) {
+      // The click: the folder starts pouring on this same frame.
+      dockPop.open = true;
+      dockPop.pressAt = now;
+    } else if (dockPop.open && past < CLICK_PAST - REOPEN_GAP) {
+      // Scrolling back up: the pointer is back on the folder icon and clicks it again.
+      dockPop.open = false;
+      dockPop.back = true;
+      dockPop.pressAt = now;
+    }
+    // The warp is never hurried or cut short by the scroll. Two things make that safe: the
+    // folders after this one wait until it is fully out (paintArrivals), and the warp is
+    // drawn where the folder sits, so it finishes there even if the page has moved on.
+    // The one exception: flung so far that the Motion Graphics card is already building
+    // over the folders, there is nothing left to watch, so the folder is simply out.
+    if (dockPop.open && dockPop.k < 1 && reel && reel.classList.contains('is-out')) { dockPop.k = 1; dockPop.doneAt = -1e9; }
+    const k = dockPop.k;
+    const press = now < dockPop.pressAt + PRESS ? Math.sin(Math.PI * (now - dockPop.pressAt) / PRESS) : 0;
+
+    // Everything waits for the "Case Studies" title: the Dock starts only once the title is
+    // fully in. (The folder sits a fixed distance below the title until the title sticks.)
+    if (caseTitle) {
+      const titleIn = parseFloat(caseTitle.style.getPropertyValue('--in'));
+      const titleTop = caseTitle.getBoundingClientRect().top - (Number.isFinite(titleIn) ? (1 - titleIn) * ARRIVE_RISE : 0);
+      if (titleTop > 100) dockGap = gridTop + folderHome - titleTop;
+    }
+    const start = Math.max(260, Math.min(560, 0.72 * viewTall + dockGap - stackTop - 70));
+    const along = start - toGo;           // scrolling done since the Dock began
+    const whole = start + CLICK_PAST;     // scrolling from the Dock beginning to the click
+    if (along <= 0) { dockPop.back = false; dockPop.far = 0; } // back above it all: the next visit starts fresh
+    // The pointer only ever tours the icons going down. Scroll back up part-way and it
+    // waits where it had got to; it never walks back across them.
+    dockPop.far = Math.max(dockPop.far, along);
+    const toured = dockPop.far;
+
+    // The Dock. Its place is read straight off the scroll: it rises over the first 170px,
+    // stays while the pointer works and the folder comes out, and sinks over 130px once
+    // the page has moved on. Scroll back and the same happens in reverse.
+    const easeOut = (t) => 1 - (1 - t) ** 3;
+    const easeIn = (t) => t ** 3;
+    // After the folder has been minimised on the way back up, the Dock does not hang about:
+    // it sinks as soon as the page scrolls on (over the next 140px), well before the
+    // "Case Studies" title begins to fade.
+    const rise = dockPop.back ? 1 - easeIn(unit(toGo / 140)) : easeOut(unit(along / 150));
+    const drop = easeIn(unit((past - CLICK_PAST - 110) / 130));
+    dockPop.want = k > 0 && k < 1 ? 1 : rise * (1 - drop);
+    const busy = dockPop.want !== dockPop.up || now < dockPop.pressAt + PRESS || (dockPop.open ? k < 1 : k > 0);
+    if (busy) runDock();
+    const up = dockPop.up;
+    dock.style.visibility = up > 0 ? 'visible' : 'hidden';
+    dock.style.transform = 'translate3d(-50%, ' + ((1 - up) * DOCK_HIDE).toFixed(2) + 'px, 0)';
+    const icons = dock.children;
+    const ICON = 76, GAP = 32;
+    const iconY = viewTall - 88 - 14 - ICON / 2; // (the Dock floats 88px above the bottom edge)
+    const iconX = (i) => viewWide / 2 + (i - 1.5) * (ICON + GAP);
+
+    // The pointer, also read straight off the scroll. Going down: in from the lower left,
+    // along the row of icons to the folder, the click, then off to the lower right as the
+    // page moves on. Coming back up it returns the same way to the folder icon and clicks;
+    // after that it simply leaves with the Dock, with no second tour of the icons.
+    const arrive = dockPop.open || dockPop.back ? 1 : smooth(unit((toured - 110) / 150));
+    const across = dockPop.open || dockPop.back ? 1 : smooth(unit((toured - 260) / Math.max(120, whole - 310)));
+    const riding = dockPop.back || toured > along + 1; // leaving with the Dock, not arriving
+    const away = dockPop.open ? smooth(unit((past - CLICK_PAST) / 110)) : 0;
+    const pointX = (arrive < 1 ? iconX(0) - 300 + 300 * arrive : iconX(0) + (iconX(3) - iconX(0)) * across) + away * 280;
+    const pointY = (arrive < 1 ? viewTall + 40 + (iconY - 8 - viewTall - 40) * arrive : iconY - 8) + away * 220 + (1 - up) * DOCK_HIDE * (riding ? 1 : 0);
+    dockPointer.style.visibility = arrive > 0 && away < 1 && up > 0 ? 'visible' : 'hidden';
+    dockPointer.classList.toggle('is-hand', across > 0.9 && away < 0.3);
+    dockPointer.style.transform = 'translate3d(' + (pointX - 7).toFixed(2) + 'px, ' + (pointY - 3).toFixed(2) + 'px, 0) scale(' + (1 - 0.14 * press).toFixed(4) + ')';
+    // Each icon swells as the pointer passes over it and, like the real Dock, pushes its
+    // neighbours aside so they never overlap. (Moved and scaled with transforms only.)
+    const power = up * arrive * (1 - away);
+    const sizes = [];
+    let row = (icons.length - 1) * GAP;
+    for (let i = 0; i < icons.length; i += 1) {
+      const far = (pointX - iconX(i)) / (ICON + GAP);
+      sizes[i] = 1 + 0.42 * power * Math.exp(-far * far);
+      row += ICON * sizes[i];
+    }
+    let edge = -row / 2;
+    for (let i = 0; i < icons.length; i += 1) {
+      const centre = edge + ICON * sizes[i] / 2;
+      icons[i].style.transform = 'translate3d(' + (centre - (i - 1.5) * (ICON + GAP)).toFixed(2) + 'px, 0, 0) scale(' + sizes[i].toFixed(4) + ')';
+      edge += ICON * sizes[i] + GAP;
+    }
+    const plain = icons.length * ICON + (icons.length - 1) * GAP;
+    dock.style.setProperty('--bar', ((row + 56) / (plain + 56)).toFixed(4));
+
+    // Get the strips ready while the Dock is still coming up, so the click never stutters.
+    if (up > 0) buildGenie(wide, card.height, tabTall);
+
+    // The folder. Not there before the click; the real one once it is fully out.
+    if (k <= 0 || k >= 1) {
+      genieBox.classList.remove('is-on');
+      firstFolder.style.visibility = k >= 1 ? '' : 'hidden';
+      return;
+    }
+    firstFolder.style.visibility = 'hidden';
+    genieBox.classList.add('is-on');
+    const at = Math.min(top, stackTop); // the warp stays where the folder sits, even if the page has scrolled its place away
+    // The Mac genie, as the Mac does it. Going in: the folder's sides bend into a funnel
+    // that narrows to the Dock icon, then the whole folder slides down the funnel and
+    // into the icon. Coming out is the same thing backwards: it slides up out of the icon
+    // through the funnel, top first, and then the funnel straightens into the folder.
+    // Matched frame by frame to a real Mac (the user's reference recording). Opening has
+    // two halves. First the folder slides up out of the icon through a funnel: its top
+    // edge rises and widens while its bottom stays pinched in the icon. Then, with the top
+    // already in place, the funnel straightens: the two bottom corners travel out from
+    // the icon to where they belong. Minimising is the same film backwards: the bottom
+    // corners pinch into the icon, then the folder slides down the funnel into it.
+    const fromX = iconX(3);
+    const mouth = iconY;                            // the icon the folder comes out of
+    const gone = (1 - k) ** 1.25;                    // 0 = fully out, 1 = fully in the Dock; eased so
+                                                    // it leaves the icon fast and settles gently
+    const bend = unit(gone / 0.45);                 // how pinched the bottom is
+    const slide = unit((gone - 0.45) / 0.55);       // how far down the funnel it has slid
+    const slice = tall / GENIE_STRIPS;
+    // Pinched, the folder's bottom edge is in the icon, so its height is the gap from its
+    // top to the icon (a Mac stretches or squeezes a window the same way); straightened,
+    // it is its own height again.
+    const scale = 1 + ((mouth - at) / tall - 1) * bend;
+    const bottom = at + tall * scale;              // where the folder's bottom edge is now
+    const fall = slide * (mouth - at);
+    const yOf = (i) => Math.min(bottom, at + i * slice * scale + fall);
+    const edges = (y) => {
+      const f = smooth(unit((y - at) / (bottom - at))) * bend;
+      return [left + (fromX - 26 - left) * f, left + wide + (fromX + 26 - left - wide) * f];
+    };
+    // Each strip is bent into a trapezoid whose top and bottom follow the funnel exactly
+    // (a perspective transform), so the picture and words flow across the strips in one
+    // continuous, smooth warp with no steps between them.
+    let y0 = yOf(0);
+    let e0 = edges(y0);
+    for (let i = 0; i < GENIE_STRIPS; i += 1) {
+      const y1 = yOf(i + 1);
+      const e1 = edges(y1);
+      const yb = y1 + 0.7; // a hair of overlap, so no seam shows between strips
+      const x0 = e0[0], x1 = e0[1], x2 = e1[1], x3 = e1[0];
+      // Square-to-quad mapping; the top and bottom edges are level, which leaves one
+      // perspective term (how much narrower or wider the bottom is than the top).
+      const tilt = (x0 - x1 + x2 - x3) / (x3 - x2);
+      genieStrips[i].style.transform = 'matrix3d(' + [
+        (x1 - x0) / wide, 0, 0, 0,
+        (x3 - x0 + tilt * x3) / slice, (yb - y0 + tilt * yb) / slice, 0, tilt / slice,
+        0, 0, 1, 0,
+        x0, y0, 0, 1
+      ].map((n) => n.toFixed(7)).join(',') + ')';
+      y0 = y1;
+      e0 = e1;
+    }
+  }
 
   let pageFrame = 0;
   let pointerX = -999;
@@ -1902,7 +2430,10 @@
   const paintPage = () => {
     pageFrame = 0;
     paintArrivals();
+    paintDock();
     paintReel();
+    paintReelHeading();
+    paintAbout();
     if (glow) {
       glow.style.setProperty('--mx', pointerX + 'px');
       glow.style.setProperty('--my', pointerY + 'px');

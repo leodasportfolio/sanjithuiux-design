@@ -502,6 +502,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
 .dot-glow { display: none; }
 .project-card--soon { display: none; }
 .reel { display: none; }
+.notice, .pointer, .reel-heading, .dock, .genie { display: none; }
 
 @media (min-width: 1101px) {
   /* The hero's dotted canvas carries on down the whole page and scrolls with it. */
@@ -572,6 +573,11 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     box-shadow: 0 -14px 34px -16px rgba(20, 24, 30, .34), 0 30px 50px -34px rgba(20, 24, 30, .4);
   }
   html[data-mode="fun"] .project-card + .project-card { margin-top: calc(var(--tab-h) + 44px); }
+  /* The second folder waits. After the first has stuck, the page scrolls on while it is
+     clicked 300px later and pours out of the Dock, then it sits alone
+     for half a screen; only then does the second folder begin to come in (which it does
+     when its tab is 85% of the way down the screen). */
+  html[data-mode="fun"] .project-card:nth-child(2) { margin-top: max(calc(var(--tab-h) + 44px), calc(300px + 135vh - var(--stack-top) - var(--card-h))); }
   html[data-mode="fun"] .project-card--soon { display: grid; }
   html[data-mode="fun"] .project-card::after {
     content: "";
@@ -713,7 +719,10 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     z-index: 1;
     /* It starts a little after the last folder has landed, and lasts a screenful or so. */
     margin-top: calc(40px - var(--card-h));
-    height: calc(var(--tab-h) + var(--card-h) + 95vh);
+    /* Long enough for the build (about 64vh of scrolling), then a rest while the heading
+       rises into the title spot, the About Me notification arrives, and the pointer makes
+       its unhurried way over to it (about 820px of scrolling). */
+    height: calc(var(--tab-h) + var(--card-h) + 64vh + 820px);
     pointer-events: none;
   }
   html[data-mode="fun"] .reel-card {
@@ -797,6 +806,34 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     font-size: 15px;
     letter-spacing: .04em;
   }
+  /* The travelling heading. Once "Case Studies" has faded and the card is built, the big
+     "Motion Graphics" heading rises out of the card into that same spot above it, centred,
+     and becomes the section's title. This is the copy that travels (the one inside the
+     card is clipped to the card, so it cannot leave it); hero-play.js moves it and hands
+     over between the two. It is white where it is still over the dark card and ink where
+     it is over the page, split exactly along the card's top edge (--edge). */
+  html[data-mode="fun"] .reel-heading {
+    display: block;
+    position: fixed;
+    z-index: 2;
+    left: 0;
+    top: 0;
+    margin: 0;
+    white-space: nowrap;
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+    line-height: 1.03;
+    letter-spacing: -.025em;
+    color: transparent;
+    background: linear-gradient(to bottom, var(--ink) 0, var(--ink) var(--edge, 0px), #fff var(--edge, 0px), #fff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    transform-origin: 0 0;
+    visibility: hidden;
+    pointer-events: none;
+    will-change: transform;
+  }
+
   /* The editing timeline along the bottom: a ruler, three tracks of clips, a playhead. */
   html[data-mode="fun"] .reel-timeline {
     position: relative;
@@ -866,5 +903,151 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     opacity: calc(var(--in, 1) * (1 - var(--out, 0)));
     transform: translate3d(0, calc((1 - var(--in, 1)) * 70px), 0) scale(var(--sc, 1));
     transition: none;
+  }
+
+  /* About Me as a Mac window: the section's grey panel goes, and its content sits in a
+     window on the dotted canvas, with a title bar and the three window dots. The words
+     are untouched.
+     How it arrives (hero-play.js, paintAbout): a notification slides in at the top right
+     with the illustration, "About Me" and the opening words of the text. Scrolling on
+     brings a pointer over to it; the pointer clicks, the notification slides away, and
+     the window unfolds from the notification's picture (that picture becomes the photo
+     in the window), floats in view, then settles into the page.
+     Nothing fades: every piece slides, scales or pops as a solid object. */
+  html[data-mode="fun"] .about {
+    position: relative;
+    z-index: 3;
+    padding: 40px 32px 96px;
+    background: transparent;
+    /* The shadow is drawn here, on the section, so it follows the window's clipped shape. */
+    filter: drop-shadow(0 26px 38px rgba(20, 24, 30, .24)) drop-shadow(0 3px 9px rgba(20, 24, 30, .12));
+  }
+  html[data-mode="fun"] .about-inner {
+    position: relative;
+    width: min(100%, 980px);
+    padding: 92px 56px 56px;
+    border: 1px solid rgba(25, 29, 33, .1);
+    border-radius: 16px;
+    background: #fff;
+    transform-origin: 0 0;
+  }
+  html[data-mode="fun"] .about-inner.is-moving { will-change: transform, clip-path; }
+
+  /* The first folder's entrance. A Mac Dock pops up at the bottom of the screen, a pointer
+     runs across its icons (each swells as it passes), clicks the folder, and the folder
+     pours out of the Dock the way a Mac window opens (the "genie"). hero-play.js drives
+     all of it from the scroll; the folder itself is hidden until the click. */
+  html[data-mode="fun"] .dock {
+    display: flex;
+    position: fixed;
+    z-index: 6;
+    left: 50%;
+    bottom: 88px;
+    gap: 32px;
+    align-items: flex-end;
+    padding: 14px 28px;
+    box-sizing: border-box;
+    height: 104px;
+    visibility: hidden;
+    pointer-events: none;
+    will-change: transform;
+  }
+  /* The bar itself is a separate layer, so it can stretch a little (--bar) when an icon
+     swells without anything changing size in the layout. */
+  html[data-mode="fun"] .dock::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, .72);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 0 0 1px rgba(25, 29, 33, .1), 0 20px 40px -16px rgba(20, 24, 30, .5);
+    transform: scaleX(var(--bar, 1));
+  }
+  html[data-mode="fun"] .dock span { flex: none; width: 76px; height: 76px; transform-origin: 50% 100%; will-change: transform; }
+  html[data-mode="fun"] .dock svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 5px rgba(20, 24, 30, .25)); }
+  /* The pouring folder: the real folder copied into thin horizontal strips, each squeezed
+     to the funnel's width at its height. */
+  html[data-mode="fun"] .genie { display: none; position: fixed; z-index: 5; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+  html[data-mode="fun"] .genie.is-on { display: block; }
+  html[data-mode="fun"] .genie-strip { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; will-change: transform; }
+  html[data-mode="fun"] .genie-strip .project-card { position: absolute; left: 0; margin: 0; opacity: 1; transform: none; box-shadow: none; }
+
+  /* The notification: a Mac banner, top right, clear of the nav bar. Styled to match the
+     sample the user approved: a large rounded picture, a bold title, one grey line. */
+  html[data-mode="fun"] .notice {
+    position: fixed;
+    /* Above the folders and the Motion Graphics card, but below the About window, so the
+       picture lifts off the top of the notification as the window unfolds from it. */
+    z-index: 2;
+    /* Below the Motion Graphics card's title bar, so it never sits on top of it. */
+    top: 206px;
+    right: 48px;
+    width: 372px;
+    padding: 16px 22px 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .84);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 0 0 1px rgba(25, 29, 33, .1), 0 20px 40px -16px rgba(20, 24, 30, .5);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", Arial, sans-serif;
+    visibility: hidden;
+    pointer-events: none;
+    will-change: transform;
+  }
+  html[data-mode="fun"] .notice img { flex: none; width: 60px; height: 60px; border-radius: 12px; object-fit: contain; background: #fff; box-shadow: 0 0 0 1px rgba(25, 29, 33, .08); }
+  html[data-mode="fun"] .notice span { min-width: 0; flex: 1; display: grid; gap: 2px; }
+  html[data-mode="fun"] .notice b { font-size: 19px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+  html[data-mode="fun"] .notice i { overflow: hidden; color: #6b7178; font-size: 15px; font-style: normal; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* The pointer that comes over and clicks it: the Mac arrow, then the pointing hand. */
+  html[data-mode="fun"] .pointer {
+    display: block;
+    position: fixed;
+    z-index: 9;
+    left: 0;
+    top: 0;
+    width: 30px;
+    height: 30px;
+    visibility: hidden;
+    pointer-events: none;
+    will-change: transform;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .3));
+  }
+  html[data-mode="fun"] .pointer svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  html[data-mode="fun"] .pointer .hand,
+  html[data-mode="fun"] .pointer.is-hand .arrow { display: none; }
+  html[data-mode="fun"] .pointer.is-hand .hand { display: block; }
+  /* The title bar, with the red, yellow and green window dots. */
+  html[data-mode="fun"] .about-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 46px;
+    border-bottom: 1px solid rgba(25, 29, 33, .09);
+    border-radius: 15px 15px 0 0;
+    background:
+      radial-gradient(circle at 24px 23px, #ff5f57 0 6px, transparent 6.6px),
+      radial-gradient(circle at 44px 23px, #febc2e 0 6px, transparent 6.6px),
+      radial-gradient(circle at 64px 23px, #28c840 0 6px, transparent 6.6px),
+      linear-gradient(180deg, #f6f6f7, #ececee);
+  }
+  html[data-mode="fun"] .about-intro { grid-template-columns: minmax(0, 1fr) 300px; gap: 48px; }
+  html[data-mode="fun"] .about-intro.reveal,
+  html[data-mode="fun"] .about-more.reveal { opacity: 1; transform: none; transition: none; }
+  html[data-mode="fun"] .about-photo {
+    margin-top: 4px;
+    border: 0;
+    /* Both are eased by hero-play.js while the window unfolds from the notification's
+       picture, so this photo starts out as that picture exactly: upright, same corners. */
+    border-radius: var(--photo-r, 18px);
+    transform: rotate(var(--photo-tilt, -3deg));
+    box-shadow: 0 0 0 1px rgba(25, 29, 33, .08), 0 18px 34px -16px rgba(25, 29, 33, .4);
   }
 }
