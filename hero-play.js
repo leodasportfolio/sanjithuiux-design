@@ -2050,7 +2050,8 @@
     const noticeStyle = window.getComputedStyle(notice);
     const noticeTop = parseFloat(noticeStyle.top) || 0;
     const noticeRight = parseFloat(noticeStyle.right) || 0;
-    const slide = smooth(unit((viewTall + 640 - homeY) / 130));
+    // (It arrives 400px of scrolling before the pointer sets off, so it sits there a while on its own first.)
+    const slide = smooth(unit((viewTall + 1040 - homeY) / 130));
     const noticeGone = (1 - slide) + away;
     notice.style.visibility = slide > 0 && noticeGone < 1 ? 'visible' : 'hidden';
     notice.style.transform = 'translate3d(' + (Math.min(1, noticeGone) * (noticeWide + noticeRight + 30)).toFixed(2) + 'px, 0, 0) scale(' + (1 - 0.04 * press).toFixed(4) + ')';

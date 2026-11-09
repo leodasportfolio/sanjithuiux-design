@@ -740,8 +740,8 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     margin-top: calc(40px - var(--card-h) + 50vh);
     /* Long enough for the build (about 64vh of scrolling), then a rest while the heading
        rises into the title spot, the About Me notification arrives, and the pointer makes
-       its unhurried way over to it (about 1120px of scrolling: a rest, then the heading, then the notification and pointer). */
-    height: calc(var(--tab-h) + var(--card-h) + 64vh + 1120px);
+       its unhurried way over to it (about 1920px of scrolling: the card rests on its own, the notification arrives and rests too: a rest, then the heading, then the notification and pointer). */
+    height: calc(var(--tab-h) + var(--card-h) + 64vh + 1920px);
     pointer-events: none;
   }
   html[data-mode="fun"] .reel-card {
@@ -990,6 +990,10 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     transform-origin: 0 0;
   }
   html[data-mode="fun"] .about-inner.is-moving { will-change: transform, clip-path; }
+  /* A stay: once the open window has settled, it holds its place near the top for a
+     further 400px of scrolling before the page carries it away to the last screen. */
+  html[data-mode="fun"] .about-inner { position: sticky; top: 76px; }
+  html[data-mode="fun"] .about::after { content: ""; display: block; height: 400px; }
 
   /* The first folder's entrance. A Mac Dock pops up at the bottom of the screen, a pointer
      runs across its icons (each swells as it passes), clicks the folder, and the folder
