@@ -264,6 +264,7 @@ html.is-out .hero-portrait img { visibility: hidden; }
 html.is-out .hero-portrait .wave-clip, html:not([data-mode="fun"]) .hero-portrait .wave-clip { visibility: hidden; }
 html.is-out .hero-portrait { cursor: default !important; }
 html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px) scale(.85) !important; transition-delay: 0s !important; }
+html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px) scale(.85) !important; transition-delay: 0s !important; }
 
 /* A spray of tiny keyframes when Fun mode switches on. */
 .burst {

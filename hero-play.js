@@ -636,8 +636,6 @@
     // The moment he is back in his place he says so: the bubble pops straight up.
     const finish = () => {
       el.remove();
-      const bubble = hero.querySelector('.hero-bubble');
-      if (bubble && root.classList.contains('is-out')) bubble.textContent = 'Don\u2019t touch me!';
       root.classList.add('is-back');
       const arrived = root.classList.contains('is-out');
       root.classList.remove('is-out');
@@ -832,7 +830,9 @@
   waveClip.preload = 'auto';
   waveClip.setAttribute('aria-hidden', 'true');
   portrait.insertBefore(waveClip, portraitImg.nextSibling);
-  const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); stopShake(); };
+  // (Stopping also ends "recovering": the bubble is held back while he shakes his head and
+  // smiles, and pops up the moment he is his normal self again.)
+  const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); stopShake(); root.classList.remove('is-recovering'); };
 
   // Home again after a throw, he shakes the dizziness out of his head and breaks into a
   // smile: one acted clip in his box. It ends on a frame of the wave clip (smiling, hand
@@ -854,10 +854,11 @@
     waveClip.classList.remove('is-on');
     waveClip.pause();
     shaking = true;
+    root.classList.add('is-recovering');
     shakeClip.currentTime = 0;
     shakeClip.classList.add('is-on'); // (its first frame is the dizzy drawing he arrived wearing)
     window.clearTimeout(shakeGuard);
-    shakeGuard = window.setTimeout(() => { if (shaking) stopShake(); }, 6000); // (never leave him stuck if the clip stalls)
+    shakeGuard = window.setTimeout(() => { if (shaking) stopWave(); }, 6000); // (never leave him stuck if the clip stalls)
     const going = shakeClip.play();
     if (going && going.catch) going.catch(() => {});
   }
