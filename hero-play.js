@@ -677,7 +677,9 @@
   // wind hitting him, because a flight is often over in a fraction of a second.)
   // Startled is joined just as he flinches and its first moment is played a little faster,
   // so his hands are on the screen about as quickly as his hand comes up for the wave.
-  const CLIPS = { startled: { from: 0.45, hold: 0.9, hurry: 1.3, hurryMs: 260 }, panic: { from: 0.2, hold: 0.5 } };
+  const CLIPS = { startled: { from: 0.45, hold: 0.9, hurry: 1.3, hurryMs: 260 }, panic: { from: 0.2, hold: 0.5 },
+    // Dizzy starts and ends on the same drawing, so it simply goes round.
+    dizzy: { from: 0, hold: 0 } };
   Object.keys(CLIPS).forEach((name) => {
     const clip = document.createElement('video');
     clip.className = 'tile-clip';
