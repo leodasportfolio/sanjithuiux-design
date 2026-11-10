@@ -21,8 +21,9 @@
     })();
   </script>
   <link rel="preload" href="assets/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=20261110-top4">
-  <link rel="stylesheet" href="hero-play.css?v=20261110-top4">
+  <link rel="stylesheet" href="styles.css?v=20261110-reel">
+  <link rel="stylesheet" href="hero-play.css?v=20261110-reel">
+  <link rel="stylesheet" href="reel.css?v=20261110-reel2">
   <link rel="stylesheet" href="/assets/site-analytics.css?v=20261028-cookieless">
   <script src="/assets/site-analytics.js?v=20261029-resume" defer></script>
 </head>
@@ -147,19 +148,25 @@
         </div>
 
         <!-- Motion Graphics: not a folder. In Fun mode this dark screening card is pulled up
-             out of the folder stack as the page scrolls (hero-play.js). No invented details. -->
+             out of the folder stack as the page scrolls (hero-play.js). A click grows it into a
+             panel of the Vimeo videos (reel.js). -->
         <div class="reel" id="motion-graphics">
-          <div class="reel-card">
+          <div class="reel-card" role="button" tabindex="0" aria-label="Open Motion Graphics: 7 videos">
             <div class="reel-screen">
               <div class="reel-bar">
                 <span class="reel-rec" aria-hidden="true"></span>
                 <span>Motion Graphics</span>
-                <span class="reel-status">Coming soon</span>
+                <span class="reel-status">7 videos</span>
               </div>
               <div class="reel-stage">
+                <!-- The screen plays the Anxiety clip, muted and on a loop, as the card's picture.
+                     Vimeo's do-not-track setting keeps it cookieless. -->
+                <div class="reel-video" aria-hidden="true">
+                  <iframe src="https://player.vimeo.com/video/1245620221?dnt=1&amp;background=1&amp;autoplay=1&amp;loop=1&amp;muted=1" tabindex="-1" title=""></iframe>
+                </div>
                 <h3 class="reel-title">Motion Graphics</h3>
                 <span class="reel-play" aria-hidden="true"></span>
-                <p class="reel-note">Coming soon</p>
+                <p class="reel-note">Click to watch</p>
               </div>
               <div class="reel-timeline" aria-hidden="true">
                 <div class="reel-ruler"></div>
@@ -205,7 +212,37 @@
     <p class="copyright">2026 Sanjith</p>
   </footer>
 
-  <script src="script.js?v=20261110-top4"></script>
-  <script src="hero-play.js?v=20261110-top4"></script>
+  <!-- Motion Graphics, opened: the card grows into this panel, a grid of the videos from the
+       two Vimeo showcases. A click on a tile pops the video up with its notes beside it.
+       Filled and moved by reel.js. -->
+  <div class="reel-veil" hidden></div>
+  <div class="reel-panel" role="dialog" aria-modal="true" aria-label="Motion Graphics videos" hidden>
+    <div class="reel-panel-inner">
+      <div class="reel-bar"><span class="reel-rec" aria-hidden="true"></span><span>Motion Graphics</span><span class="reel-status">7 videos</span><button class="reel-close" type="button" aria-label="Close"></button></div>
+      <div class="reel-grids">
+        <div class="reel-group-head"><h3>Motion design</h3><span>Click to watch</span></div>
+        <div class="reel-grid" data-group="motion"></div>
+        <div class="reel-group-head"><h3>Video edits</h3><span>3 videos</span></div>
+        <div class="reel-grid" data-group="video"></div>
+      </div>
+      <div class="reel-player">
+        <div class="reel-holder">
+          <button class="reel-back" type="button" aria-label="Close video"></button>
+          <div class="reel-frame"></div>
+        </div>
+        <aside class="reel-info">
+          <h4></h4>
+          <p></p>
+          <h5>Tools used</h5>
+          <ul class="reel-tools"></ul>
+          <div class="reel-meta"></div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=20261110-reel"></script>
+  <script src="hero-play.js?v=20261110-reel"></script>
+  <script src="reel.js?v=20261110-reel"></script>
 </body>
 </html>

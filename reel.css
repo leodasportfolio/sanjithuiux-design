@@ -1,0 +1,119 @@
+/* Motion Graphics: the card's moving picture, and the panel of videos it opens into.
+   Works in both modes; the card itself is styled in hero-play.css. */
+
+/* ---------- The card: the Anxiety clip plays muted and on a loop behind the title ---------- */
+.reel-card { cursor: pointer; }
+.reel-card:focus-visible { outline: 3px solid #ffcb05; outline-offset: 4px; }
+.reel-stage { position: relative; overflow: hidden; }
+html:not([data-mode="fun"]) .reel-stage { min-height: min(440px, 52vw); }
+.reel-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #0b0c10; }
+/* The clip is upright (9:16) and stays upright: the whole picture, centred on the screen,
+   with the dark screen either side of it. */
+.reel-video iframe {
+  position: absolute; left: 50%; top: 0; translate: -50% 0;
+  height: 100%; width: auto; aspect-ratio: 9 / 16;
+  border: 0; pointer-events: none;
+}
+/* A little shade so the title and play button stay readable over the picture. */
+.reel-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, .45), rgba(0, 0, 0, .08) 45%, rgba(0, 0, 0, .4)); }
+.reel-stage > .reel-title, .reel-stage > .reel-play, .reel-stage > .reel-note { position: relative; z-index: 1; }
+/* The plain card (Normal mode, phones) lifts a little under the hand. */
+html:not([data-mode="fun"]) .reel-card { transition: translate .35s cubic-bezier(.16, 1, .3, 1), box-shadow .35s ease; }
+@media (hover: hover) {
+  html:not([data-mode="fun"]) .reel-card:hover { translate: 0 -8px; box-shadow: 0 46px 70px -36px rgba(24, 31, 36, .62); border-radius: 28px; }
+}
+/* While the panel is open the card's screen is blank: the panel is the card, grown. */
+.reel.is-showing .reel-screen { opacity: 0; }
+html.reel-open { overflow: hidden; }
+
+/* ---------- The panel ---------- */
+.reel-veil { position: fixed; inset: 0; z-index: 60; background: rgba(25, 29, 33, .28); opacity: 0; transition: opacity .45s ease; }
+.reel-veil.is-on { opacity: 1; }
+.reel-panel {
+  position: fixed; left: 0; top: 0; z-index: 61;
+  width: min(1480px, calc(100vw - 48px)); height: min(680px, calc(100vh - 48px));
+  background: #16181d; color: #fff; border-radius: 28px; overflow: hidden;
+  box-shadow: 0 50px 100px -40px rgba(24, 31, 36, .7);
+  transform-origin: 0 0; will-change: transform;
+}
+.reel-panel::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .035) 0 1px, transparent 1px 3px); }
+.reel-panel::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; box-shadow: inset 0 0 120px rgba(0, 0, 0, .55); }
+.reel-panel-inner { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.reel-panel .reel-bar { flex: none; display: flex; align-items: center; gap: 10px; padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, .08); font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+.reel-panel .reel-rec { width: 10px; height: 10px; border-radius: 50%; background: #ff5a1f; }
+.reel-panel .reel-status { margin-left: 0; font-weight: 500; opacity: .6; }
+.reel-close { margin-left: auto; width: 32px; height: 32px; border: 1.5px solid rgba(255, 255, 255, .35); border-radius: 50%; background: transparent; color: #fff; font: inherit; cursor: pointer; display: grid; place-items: center; }
+.reel-close::before { content: "\00d7"; font-size: 20px; line-height: 1; margin-top: -2px; }
+.reel-close:hover { background: rgba(255, 255, 255, .12); }
+.reel-grids { flex: 1; overflow: auto; padding: 26px 30px 34px; }
+.reel-group-head { display: flex; align-items: baseline; gap: 16px; margin: 0 0 22px; }
+.reel-group-head h3 { margin: 0; font-family: "Bricolage Grotesque", sans-serif; font-size: 28px; letter-spacing: -.02em; color: #fff; }
+.reel-group-head span { color: rgba(255, 255, 255, .55); font-size: 14px; font-weight: 500; }
+.reel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.reel-grid + .reel-group-head { margin-top: 30px; }
+.reel-tile {
+  position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; cursor: pointer;
+  background: #2a2e36; box-shadow: 0 0 0 1px rgba(255, 255, 255, .06);
+  opacity: 0; translate: 0 18px;
+  transition: scale .3s cubic-bezier(.16, 1, .3, 1), box-shadow .3s ease, opacity .5s ease, translate .5s cubic-bezier(.16, 1, .3, 1);
+  transition-delay: calc(var(--i) * 45ms), calc(var(--i) * 45ms), calc(.18s + var(--i) * 45ms), calc(.18s + var(--i) * 45ms);
+}
+.reel-panel.is-in .reel-tile { opacity: 1; translate: 0 0; }
+.reel-tile:hover, .reel-tile:focus-visible { scale: 1.06; z-index: 2; box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .8), 0 0 0 1.5px rgba(255, 255, 255, .3); transition-delay: 0s; outline: none; }
+.reel-thumb { position: absolute; inset: 0; background: var(--thumb) center / cover no-repeat; }
+.reel-thumb::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, .65), transparent 55%); }
+.reel-tile-label { position: absolute; left: 14px; right: 14px; bottom: 12px; font-size: 14px; font-weight: 600; text-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
+.reel-tile-label small { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, .72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reel-tile-play { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; transition: opacity .25s ease .2s; }
+.reel-tile:hover .reel-tile-play, .reel-tile:focus-visible .reel-tile-play { opacity: 1; }
+.reel-tile-play i { width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, .18); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4); position: relative; }
+.reel-tile-play i::after { content: ""; position: absolute; left: 50%; top: 50%; margin: -8px 0 0 -4px; border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent #fff; }
+
+/* A clicked tile pops up as the big player, with its notes on the right. */
+.reel-player { position: absolute; inset: 0; z-index: 3; display: none; background: rgba(22, 24, 29, 0); transition: background .4s ease; }
+.reel-player.is-on { display: flex; align-items: center; justify-content: center; gap: 32px; padding: 40px 48px; }
+.reel-player.is-lit { background: rgba(22, 24, 29, .96); }
+.reel-holder { position: relative; flex: none; width: min(880px, calc(100% - 392px), calc((100vh - 200px) * 16 / 9)); }
+.reel-holder.is-tall { width: auto; }
+.reel-frame { width: 100%; aspect-ratio: var(--ratio, 16 / 9); border-radius: 16px; overflow: hidden; background: #000 var(--poster) center / cover no-repeat; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .9); transform-origin: 0 0; will-change: transform; }
+.reel-frame.is-tall { width: auto; height: min(calc(100vh - 200px), 600px); }
+.reel-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+/* The close button sits on the video's own corner, where the hand already is. */
+.reel-back {
+  position: absolute; right: -16px; top: -16px; z-index: 2;
+  width: 36px; height: 36px; border: 1.5px solid #191d21; border-radius: 50%;
+  background: #fff; color: #191d21; font: inherit; cursor: pointer;
+  display: grid; place-items: center; box-shadow: 0 6px 14px rgba(0, 0, 0, .4);
+  opacity: 0; transition: opacity .25s ease;
+}
+.reel-player.is-lit .reel-back { opacity: 1; transition-delay: .3s; }
+.reel-back::before { content: "\00d7"; font-size: 22px; line-height: 1; margin-top: -2px; }
+.reel-back:hover { background: #ffcb05; }
+.reel-info { flex: none; width: 320px; opacity: 0; translate: 18px 0; transition: opacity .35s ease, translate .45s cubic-bezier(.16, 1, .3, 1); }
+.reel-player.is-lit .reel-info { opacity: 1; translate: 0 0; transition-delay: .22s; }
+.reel-info h4 { margin: 0 0 10px; font-family: "Bricolage Grotesque", sans-serif; font-size: 30px; line-height: 1.1; letter-spacing: -.02em; color: #fff; }
+.reel-info p { margin: 0 0 22px; color: rgba(255, 255, 255, .78); font-size: 15px; line-height: 1.6; }
+.reel-info h5 { margin: 0 0 10px; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .55); }
+.reel-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.reel-tools li { padding: 6px 11px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; font-size: 13px; font-weight: 500; color: rgba(255, 255, 255, .9); }
+.reel-meta { margin-top: 22px; font-size: 13px; color: rgba(255, 255, 255, .5); }
+
+/* Phones and narrow windows: the panel fills the screen, two tiles to a row, the notes
+   below the video. */
+@media (max-width: 860px) {
+  .reel-panel { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; }
+  .reel-grids { padding: 20px 16px 28px; }
+  .reel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .reel-group-head h3 { font-size: 22px; }
+  .reel-player.is-on { flex-direction: column; justify-content: flex-start; gap: 20px; padding: 56px 16px 24px; overflow: auto; }
+  .reel-holder { width: 100%; }
+  .reel-holder.is-tall { width: auto; }
+  .reel-frame.is-tall { height: min(60vh, 520px); }
+  .reel-back { right: 4px; top: -44px; }
+  .reel-info { width: 100%; }
+  .reel-info h4 { font-size: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-tile, .reel-info, .reel-veil, .reel-panel, .reel-frame, .reel-card { transition: none !important; }
+}
