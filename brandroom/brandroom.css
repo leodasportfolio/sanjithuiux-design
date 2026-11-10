@@ -309,3 +309,10 @@ h2 { font-size: 28px; font-weight: 800; line-height: 1.2; letter-spacing: -.03em
   .closing-actions { flex-direction: column; width: 100%; }
   .closing-button { width: 100%; }
 }
+/* Desktop closing bar uses Drexel Works' reading scale (same size as Drexel and GLOWM). */
+@media (min-width: 1000px) {
+  .closing-card { border-radius: 18.7px; }
+  .closing-card h2 { font-size: clamp(19.125px, 1.6983vw, 24.48px); letter-spacing: -.035em; }
+  .closing-actions { gap: 10.2px; }
+  .closing-button { gap: 8.5px; min-height: 44.2px; padding: 11.9px 15.3px; border-width: .85px; border-radius: 10.2px; font-size: 13.005px; }
+}
