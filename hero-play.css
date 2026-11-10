@@ -679,6 +679,9 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
      for half a screen; only then does the second folder begin to come in (which it does
      when its tab is 85% of the way down the screen). */
   html[data-mode="fun"] .project-card:nth-child(2) { margin-top: max(calc(var(--tab-h) + 44px), calc(300px + 135vh - var(--stack-top) - var(--card-h))); }
+  /* The third folder waits the same way: the second sits alone for half a screen before
+     the third begins to come in. */
+  html[data-mode="fun"] .project-card:nth-child(3) { margin-top: max(calc(var(--tab-h) + 44px), calc(135vh - var(--stack-top) - var(--card-h))); }
   html[data-mode="fun"] .project-card::after {
     content: "";
     position: absolute;
