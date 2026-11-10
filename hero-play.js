@@ -675,7 +675,9 @@
   // keeps going round its hold part, and each is cut in and out: no fade.
   // (from: where it starts; hold: where its loop starts. Panic starts part-way into the
   // wind hitting him, because a flight is often over in a fraction of a second.)
-  const CLIPS = { startled: { from: 0, hold: 0.8 }, panic: { from: 0.2, hold: 0.5 } };
+  // Startled is joined just as he flinches and its first moment is played a little faster,
+  // so his hands are on the screen about as quickly as his hand comes up for the wave.
+  const CLIPS = { startled: { from: 0.45, hold: 0.9, hurry: 1.3, hurryMs: 260 }, panic: { from: 0.2, hold: 0.5 } };
   Object.keys(CLIPS).forEach((name) => {
     const clip = document.createElement('video');
     clip.className = 'tile-clip';
@@ -698,6 +700,9 @@
       if (name !== face || !tile.el || !clip.src || calm.matches) { clip.pause(); clip.remove(); return; }
       tile.el.append(clip);
       clip.currentTime = CLIPS[name].from;
+      clip.playbackRate = CLIPS[name].hurry || 1;
+      window.clearTimeout(CLIPS[name].settle);
+      if (CLIPS[name].hurry) CLIPS[name].settle = window.setTimeout(() => { clip.playbackRate = 1; }, CLIPS[name].hurryMs);
       const going = clip.play();
       if (going && going.catch) going.catch(() => {});
     });
@@ -787,8 +792,11 @@
   // hand, waves, lowers it and is his portrait again. The clip starts and ends on the
   // portrait itself, so it is cut in and out with no fade. If the pointer leaves while his
   // hand is up, he skips to lowering it rather than vanishing.
+  const WAVE_FROM = 0.3;  // where the clip is joined: just as his smile starts, so his hand is up sooner
   const WAVE_UP = 0.55;   // his hand is in view from here
   const WAVE_DOWN = 2.95; // he starts lowering it here
+  const WAVE_END = 4.05;  // he is his portrait again from here; the rest of the clip is him standing still
+  const WAVE_HURRY = 1.5; // the raise is played a little faster, so he answers the pointer quickly
   const waveClip = document.createElement('video');
   waveClip.className = 'wave-clip';
   // Loaded whole, so he can skip to any moment of it whatever the server supports.
@@ -801,21 +809,31 @@
   const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); };
   const startWave = () => {
     if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src) return;
-    if (waveClip.classList.contains('is-on') && !waveClip.paused && !waveClip.ended) return; // already waving
-    waveClip.currentTime = 0;
+    const running = waveClip.classList.contains('is-on') && !waveClip.paused && !waveClip.ended;
+    if (running && waveClip.currentTime < WAVE_DOWN) return; // already waving, hand up
+    // Not waving, or caught lowering his hand: either way he answers at once. Caught
+    // lowering it, he brings it straight back up instead of finishing first.
+    waveClip.currentTime = running ? WAVE_UP : WAVE_FROM;
+    waveClip.playbackRate = WAVE_HURRY;
+    window.clearTimeout(waveSettle);
+    waveSettle = window.setTimeout(() => { waveClip.playbackRate = 1; }, 330);
     const going = waveClip.play();
     if (going && going.catch) going.catch(() => {});
   };
+  let waveSettle = 0;
   // He waves every time the pointer comes onto him, and while it stays on him he waves
   // again after a short breath, for as long as it is there.
   let waveOver = false;
   let waveAgain = 0;
   waveClip.addEventListener('playing', () => { if (!tile.el && playing()) waveClip.classList.add('is-on'); else stopWave(); });
-  waveClip.addEventListener('ended', () => {
+  const waveDone = () => {
+    if (!waveClip.classList.contains('is-on')) return;
     stopWave();
     window.clearTimeout(waveAgain);
-    if (waveOver) waveAgain = window.setTimeout(() => { if (waveOver) startWave(); }, 700);
-  });
+    if (waveOver) waveAgain = window.setTimeout(() => { if (waveOver) startWave(); }, 500);
+  };
+  waveClip.addEventListener('ended', waveDone);
+  waveClip.addEventListener('timeupdate', () => { if (waveClip.currentTime >= WAVE_END) waveDone(); });
   const waveIn = (event) => {
     if (event.pointerType === 'touch') return;
     waveOver = true;
@@ -829,9 +847,18 @@
     if (waveClip.currentTime <= WAVE_UP) { stopWave(); return; } // his hand is not up yet: he is still his portrait
     if (waveClip.currentTime < WAVE_DOWN) waveClip.currentTime = WAVE_DOWN;
   };
-  portrait.addEventListener('pointerenter', waveIn);
-  portrait.addEventListener('pointermove', (event) => { if (!waveOver) waveIn(event); });
-  portrait.addEventListener('pointerleave', waveOut);
+  // Whether the pointer is on him is read from where it is, not from which element it
+  // hits: a sticker drifting across his face would otherwise swallow the hover.
+  const onHim = (event) => {
+    const box = portraitImg.getBoundingClientRect();
+    return event.clientX >= box.left && event.clientX <= box.right && event.clientY >= box.top && event.clientY <= box.bottom;
+  };
+  hero.addEventListener('pointermove', (event) => {
+    const inside = onHim(event);
+    if (inside && !waveOver) waveIn(event);
+    else if (!inside && waveOver) waveOut();
+  });
+  hero.addEventListener('pointerleave', () => { if (waveOver) waveOut(); });
   portrait.addEventListener('pointerdown', stopWave, true);
 
   // ---------- Loose things: stickers and words ----------
