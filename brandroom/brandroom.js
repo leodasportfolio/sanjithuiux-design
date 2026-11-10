@@ -15,7 +15,8 @@
   }, { passive: true }));
   const updateSection = () => {
     frame = 0;
-    const readingLine = window.innerHeight * .35;
+    // A line near the top, so a short section like Problem lights up while its heading is in view.
+    const readingLine = Math.min(window.innerHeight * .35, 160);
     const bounds = sections.map(section => section?.getBoundingClientRect() ?? null);
     let current = -1;
     bounds.forEach((rect, i) => {
