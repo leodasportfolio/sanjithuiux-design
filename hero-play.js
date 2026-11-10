@@ -648,7 +648,8 @@
   // held and pulled back, cheeks-out panic while he flies, dizzy when he lands. A few
   // seconds after landing he floats back to his place in the headline by himself.
   const FACES = ['calm', 'startled', 'panic', 'dizzy'];
-  const REST_HOME_MS = 3000; // how long he lies where he landed before floating home
+  const REST_HOME_MS = 3000;
+  const SCREAM_ON_MS = 500; // how long he keeps screaming after the first knock // how long he lies where he landed before floating home
   const mood = { face: '', changedAt: 0, was: 'home', flight: false, landedAt: 0, slowSince: 0, activeAt: 0, contacts: {}, homeTimer: 0, tick: 0 };
   const placeBubble = () => {};
   const hush = () => {};
@@ -664,33 +665,42 @@
     mood.face = face;
     mood.changedAt = performance.now();
     tile.el.querySelector('img').src = 'assets/faces/' + face + '.jpg?v=2';
-    showScare(face === 'startled');
+    showScare(face);
     return true;
   };
 
-  // Startled is an acted clip, not a drawing: it opens on his portrait, his hands fly up
-  // and hit the screen, and then he stays there blinking for as long as he is held (the
-  // clip keeps going round its hold part). It is cut in and out: no fade.
-  const SCARE_HOLD = 0.8; // the hold part starts here; before it is the fright itself
-  const scareClip = document.createElement('video');
-  scareClip.className = 'tile-clip';
-  scareClip.muted = true;
-  scareClip.playsInline = true;
-  scareClip.preload = 'auto';
-  scareClip.setAttribute('aria-hidden', 'true');
-  fetch('assets/clips/startled.mp4?v=1').then((reply) => reply.blob()).then((clip) => { scareClip.src = URL.createObjectURL(clip); }).catch(() => {});
-  scareClip.addEventListener('ended', () => {
-    if (!scareClip.isConnected) return;
-    scareClip.currentTime = SCARE_HOLD;
-    const going = scareClip.play();
-    if (going && going.catch) going.catch(() => {});
+  // Startled and panic are acted clips, not drawings. Startled opens on his portrait: his
+  // hands fly up and hit the screen, and he stays there blinking while he is held. Panic
+  // opens on the end of startled: the wind hits and he screams while he flies. Each clip
+  // keeps going round its hold part, and each is cut in and out: no fade.
+  // (from: where it starts; hold: where its loop starts. Panic starts part-way into the
+  // wind hitting him, because a flight is often over in a fraction of a second.)
+  const CLIPS = { startled: { from: 0, hold: 0.8 }, panic: { from: 0.2, hold: 0.5 } };
+  Object.keys(CLIPS).forEach((name) => {
+    const clip = document.createElement('video');
+    clip.className = 'tile-clip';
+    clip.muted = true;
+    clip.playsInline = true;
+    clip.preload = 'auto';
+    clip.setAttribute('aria-hidden', 'true');
+    fetch('assets/clips/' + name + '.mp4?v=1').then((reply) => reply.blob()).then((file) => { clip.src = URL.createObjectURL(file); }).catch(() => {});
+    clip.addEventListener('ended', () => {
+      if (!clip.isConnected) return;
+      clip.currentTime = CLIPS[name].hold;
+      const going = clip.play();
+      if (going && going.catch) going.catch(() => {});
+    });
+    CLIPS[name].el = clip;
   });
-  function showScare(on) {
-    if (!on || !tile.el || !scareClip.src || calm.matches) { scareClip.pause(); scareClip.remove(); return; }
-    tile.el.append(scareClip);
-    scareClip.currentTime = 0;
-    const going = scareClip.play();
-    if (going && going.catch) going.catch(() => {});
+  function showScare(face) {
+    Object.keys(CLIPS).forEach((name) => {
+      const clip = CLIPS[name].el;
+      if (name !== face || !tile.el || !clip.src || calm.matches) { clip.pause(); clip.remove(); return; }
+      tile.el.append(clip);
+      clip.currentTime = CLIPS[name].from;
+      const going = clip.play();
+      if (going && going.catch) going.catch(() => {});
+    });
   }
 
   // Stickers have no powers any more: touching one does nothing to him.
@@ -700,6 +710,7 @@
   const onGrab = () => {
     mood.flight = false;
     mood.struck = false;
+    mood.knockAt = 0;
     mood.activeAt = performance.now();
     wear('startled');
   };
@@ -729,8 +740,14 @@
     if (state !== 'rest') { mood.activeAt = now; window.clearTimeout(mood.homeTimer); mood.homeTimer = 0; }
     if (state === 'held') { wear('startled'); mood.was = state; return; }
     if (state === 'air') {
-      // Cheeks out while he flies clean; the first knock (a wall, the nav bar, a sticker) and he is dizzy from then on.
-      if (mood.flight) wear(tile.hits > 0 || mood.struck ? 'dizzy' : 'panic');
+      // Cheeks out while he flies. The first knock (a wall, the nav bar, a sticker) makes him
+      // dizzy, but not on the instant: he goes on screaming for half a second first, so the
+      // scream is seen even when the knock comes straight after he is let go.
+      if (mood.flight) {
+        const knocked = tile.hits > 0 || mood.struck;
+        if (knocked && !mood.knockAt) mood.knockAt = now;
+        wear(knocked && now - mood.knockAt >= SCREAM_ON_MS ? 'dizzy' : 'panic');
+      }
       mood.was = state;
       return;
     }
@@ -783,18 +800,38 @@
   portrait.insertBefore(waveClip, portraitImg.nextSibling);
   const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); };
   const startWave = () => {
-    if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src || waveClip.classList.contains('is-on')) return;
+    if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src) return;
+    if (waveClip.classList.contains('is-on') && !waveClip.paused && !waveClip.ended) return; // already waving
     waveClip.currentTime = 0;
     const going = waveClip.play();
     if (going && going.catch) going.catch(() => {});
   };
+  // He waves every time the pointer comes onto him, and while it stays on him he waves
+  // again after a short breath, for as long as it is there.
+  let waveOver = false;
+  let waveAgain = 0;
   waveClip.addEventListener('playing', () => { if (!tile.el && playing()) waveClip.classList.add('is-on'); else stopWave(); });
-  waveClip.addEventListener('ended', stopWave);
-  portrait.addEventListener('pointerenter', (event) => { if (event.pointerType !== 'touch') startWave(); });
-  portrait.addEventListener('pointerleave', () => {
-    if (!waveClip.classList.contains('is-on')) return;
-    if (waveClip.currentTime > WAVE_UP && waveClip.currentTime < WAVE_DOWN) waveClip.currentTime = WAVE_DOWN;
+  waveClip.addEventListener('ended', () => {
+    stopWave();
+    window.clearTimeout(waveAgain);
+    if (waveOver) waveAgain = window.setTimeout(() => { if (waveOver) startWave(); }, 700);
   });
+  const waveIn = (event) => {
+    if (event.pointerType === 'touch') return;
+    waveOver = true;
+    window.clearTimeout(waveAgain);
+    startWave();
+  };
+  const waveOut = () => {
+    waveOver = false;
+    window.clearTimeout(waveAgain);
+    if (!waveClip.classList.contains('is-on')) return;
+    if (waveClip.currentTime <= WAVE_UP) { stopWave(); return; } // his hand is not up yet: he is still his portrait
+    if (waveClip.currentTime < WAVE_DOWN) waveClip.currentTime = WAVE_DOWN;
+  };
+  portrait.addEventListener('pointerenter', waveIn);
+  portrait.addEventListener('pointermove', (event) => { if (!waveOver) waveIn(event); });
+  portrait.addEventListener('pointerleave', waveOut);
   portrait.addEventListener('pointerdown', stopWave, true);
 
   // ---------- Loose things: stickers and words ----------
