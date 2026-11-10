@@ -204,6 +204,9 @@
   -webkit-user-select: none;
 }
 
+/* An acted clip laid over his face inside the tile (startled). Cut in and out, no fade. */
+.tile .tile-clip { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0%; pointer-events: none; background: #fff; }
+
 .tile.is-held { cursor: grabbing; box-shadow: 0 18px 30px rgba(25, 29, 33, .22); }
 
 .tile img {
@@ -249,6 +252,16 @@
 
 /* While he is out, his place in the headline stays as an empty gap. */
 html.is-out .hero-portrait img { visibility: hidden; }
+
+/* His wave: a clip laid exactly over the portrait, cut in and out (no fade). */
+.hero-portrait .wave-clip {
+  position: absolute; left: 0; top: 0; width: 96px; height: 96px;
+  border: 2px solid rgba(255,255,255,.85); border-radius: 14px; box-sizing: border-box;
+  object-fit: cover; object-position: 50% 0%; transform: rotate(4deg);
+  visibility: hidden; pointer-events: none; background: #fff;
+}
+.hero-portrait .wave-clip.is-on { visibility: visible; }
+html.is-out .hero-portrait .wave-clip, html:not([data-mode="fun"]) .hero-portrait .wave-clip { visibility: hidden; }
 html.is-out .hero-portrait { cursor: default !important; }
 html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px) scale(.85) !important; transition-delay: 0s !important; }
 
@@ -455,6 +468,9 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
   /* The band from the slingshot's post to him while he is pulled back. */
   /* The aimer: a dotted line (small squares) the way he will fly, from the spot he was grabbed. */
   html[data-mode="fun"] .sling-band { position: absolute; left: 0; top: 0; height: 6px; margin-top: -3px; background: repeating-linear-gradient(to right, transparent 0 10px, #ff5a1f 10px 16px, transparent 16px 20px); transform-origin: 0 50%; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .15s ease; }
+  html[data-mode="fun"] .hit-burst { z-index: 6; }
+  html[data-mode="fun"] .sticker.is-live { transition: opacity .4s ease, filter .7s ease, scale .2s ease; }
+  html[data-mode="fun"] .sticker.is-hit { filter: grayscale(0) saturate(1.25) drop-shadow(0 10px 16px rgba(25, 29, 33, .2)); transition: filter .12s ease; }
   html[data-mode="fun"] .sling-band::before { content: ""; position: absolute; left: -5px; top: -2px; width: 10px; height: 10px; background: #fff; box-shadow: 0 0 0 1.5px var(--ink); }
 
   html[data-mode="fun"] .spark {
@@ -481,6 +497,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
     transform: translate(-62%, 0) scale(1);
     transition-delay: 1s;
   }
+  html[data-mode="fun"].is-back .hero-bubble { transition-delay: 0s; }
 }
 
 @keyframes sticker-wiggle {

@@ -466,6 +466,42 @@
 
   const PULL_MAX = 120; // the furthest he can be pulled back
   const PULL_MIN = 14;  // a shorter pull than this is just letting go of him
+  // A hit sprays the same tiny keyframe pieces as the Fun mode switch, in every direction
+  // from the spot where they touched: many small bits, quick out, then they drop and fade.
+  const SPARK_FILLS = ['#ffcb05', '#ffcb05', '#ff5a1f', '#ffffff'];
+  let sparkAt = 0;
+  const sparkBurst = (x, y, force) => {
+    const now = performance.now();
+    if (calm.matches || !playLayer.animate || now - sparkAt < 140) return;
+    sparkAt = now;
+    const count = Math.round(26 + Math.min(1, force / 1400) * 16);
+    for (let i = 0; i < count; i += 1) {
+      const piece = document.createElement('span');
+      piece.className = 'burst hit-burst';
+      piece.style.left = x.toFixed(1) + 'px';
+      piece.style.top = y.toFixed(1) + 'px';
+      piece.style.background = SPARK_FILLS[Math.floor(Math.random() * SPARK_FILLS.length)];
+      const size = 5 + Math.random() * 5;
+      piece.style.width = piece.style.height = size.toFixed(1) + 'px';
+      playLayer.append(piece);
+      const angle = Math.random() * Math.PI * 2;
+      const reach = 60 + Math.random() * 220 + Math.min(80, force * 0.05);
+      const dx = Math.cos(angle) * reach;
+      const dy = Math.sin(angle) * reach;
+      piece.animate([
+        { transform: 'translate(-50%, -50%) rotate(45deg) scale(.4)', opacity: 1 },
+        { transform: 'translate(calc(-50% + ' + dx.toFixed(1) + 'px), calc(-50% + ' + dy.toFixed(1) + 'px)) rotate(' + (180 + Math.random() * 360).toFixed(0) + 'deg) scale(1)', opacity: 1, offset: 0.6 },
+        { transform: 'translate(calc(-50% + ' + (dx * 1.08).toFixed(1) + 'px), calc(-50% + ' + (dy + 30).toFixed(1) + 'px)) rotate(' + (360 + Math.random() * 360).toFixed(0) + 'deg) scale(.2)', opacity: 0 },
+      ], { duration: 800 + Math.random() * 500, easing: 'cubic-bezier(.2, .8, .3, 1)' }).onfinish = () => piece.remove();
+    }
+  };
+  // A sticker he hits wakes up into its colours, and goes grey again a little after.
+  const colourHit = (body) => {
+    body.el.classList.add('is-hit');
+    clearTimeout(body.hitTimer);
+    body.hitTimer = setTimeout(() => body.el.classList.remove('is-hit'), 2600);
+  };
+
   let slingLine = null;
   // The aimer: from where he was grabbed, a dotted line points the way he will fly, longer
   // the harder the pull, with a small white square marking the spot he was grabbed from.
@@ -594,7 +630,14 @@
     el.style.margin = -size / 2 + 'px 0 0 ' + -size / 2 + 'px';
     el.style.borderRadius = size * 0.146 + 'px';
     el.style.transform = 'translate(' + (rect.left + rect.width / 2 - heroRect.left) + 'px, ' + (rect.top + rect.height / 2 - heroRect.top) + 'px) rotate(4deg)';
-    const finish = () => { el.remove(); root.classList.remove('is-out'); };
+    // The moment he is back in his place he says so: the bubble pops straight up.
+    const finish = () => {
+      el.remove();
+      const bubble = hero.querySelector('.hero-bubble');
+      if (bubble && root.classList.contains('is-out')) bubble.textContent = 'Don\u2019t touch me!';
+      root.classList.add('is-back');
+      root.classList.remove('is-out');
+    };
     runWorld();
     el.addEventListener('transitionend', finish, { once: true });
     window.setTimeout(finish, 1250);
@@ -621,8 +664,34 @@
     mood.face = face;
     mood.changedAt = performance.now();
     tile.el.querySelector('img').src = 'assets/faces/' + face + '.jpg?v=2';
+    showScare(face === 'startled');
     return true;
   };
+
+  // Startled is an acted clip, not a drawing: it opens on his portrait, his hands fly up
+  // and hit the screen, and then he stays there blinking for as long as he is held (the
+  // clip keeps going round its hold part). It is cut in and out: no fade.
+  const SCARE_HOLD = 0.8; // the hold part starts here; before it is the fright itself
+  const scareClip = document.createElement('video');
+  scareClip.className = 'tile-clip';
+  scareClip.muted = true;
+  scareClip.playsInline = true;
+  scareClip.preload = 'auto';
+  scareClip.setAttribute('aria-hidden', 'true');
+  fetch('assets/clips/startled.mp4?v=1').then((reply) => reply.blob()).then((clip) => { scareClip.src = URL.createObjectURL(clip); }).catch(() => {});
+  scareClip.addEventListener('ended', () => {
+    if (!scareClip.isConnected) return;
+    scareClip.currentTime = SCARE_HOLD;
+    const going = scareClip.play();
+    if (going && going.catch) going.catch(() => {});
+  });
+  function showScare(on) {
+    if (!on || !tile.el || !scareClip.src || calm.matches) { scareClip.pause(); scareClip.remove(); return; }
+    tile.el.append(scareClip);
+    scareClip.currentTime = 0;
+    const going = scareClip.play();
+    if (going && going.catch) going.catch(() => {});
+  }
 
   // Stickers have no powers any more: touching one does nothing to him.
   const feelTouch = () => {};
@@ -695,6 +764,38 @@
 
   window.__probe = { tile, mood, band, get bodies() { return bodies; } };
   portrait.addEventListener('pointerdown', (event) => { if (!tile.el) grabTile(event); });
+
+  // ---------- The wave ----------
+  // Hovering him in his place plays one acted clip inside his box: he smiles, raises his
+  // hand, waves, lowers it and is his portrait again. The clip starts and ends on the
+  // portrait itself, so it is cut in and out with no fade. If the pointer leaves while his
+  // hand is up, he skips to lowering it rather than vanishing.
+  const WAVE_UP = 0.55;   // his hand is in view from here
+  const WAVE_DOWN = 2.95; // he starts lowering it here
+  const waveClip = document.createElement('video');
+  waveClip.className = 'wave-clip';
+  // Loaded whole, so he can skip to any moment of it whatever the server supports.
+  fetch('assets/clips/wave.mp4?v=1').then((reply) => reply.blob()).then((clip) => { waveClip.src = URL.createObjectURL(clip); }).catch(() => {});
+  waveClip.muted = true;
+  waveClip.playsInline = true;
+  waveClip.preload = 'auto';
+  waveClip.setAttribute('aria-hidden', 'true');
+  portrait.insertBefore(waveClip, portraitImg.nextSibling);
+  const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); };
+  const startWave = () => {
+    if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src || waveClip.classList.contains('is-on')) return;
+    waveClip.currentTime = 0;
+    const going = waveClip.play();
+    if (going && going.catch) going.catch(() => {});
+  };
+  waveClip.addEventListener('playing', () => { if (!tile.el && playing()) waveClip.classList.add('is-on'); else stopWave(); });
+  waveClip.addEventListener('ended', stopWave);
+  portrait.addEventListener('pointerenter', (event) => { if (event.pointerType !== 'touch') startWave(); });
+  portrait.addEventListener('pointerleave', () => {
+    if (!waveClip.classList.contains('is-on')) return;
+    if (waveClip.currentTime > WAVE_UP && waveClip.currentTime < WAVE_DOWN) waveClip.currentTime = WAVE_DOWN;
+  });
+  portrait.addEventListener('pointerdown', stopWave, true);
 
   // ---------- Loose things: stickers and words ----------
   // Stickers can be grabbed and thrown; they drift in moon gravity, bump each other and
@@ -952,6 +1053,8 @@
             }
             tile.touch = { sticker: body.el.dataset.sticker, at: performance.now(), thrown, pushed: body.held, force: Math.max(0, closing) };
             if (closing > 150 && !tile.held) mood.struck = true; // he has hit a sticker: he feels it
+            // Only his own hit sparks: a sticker drifting into him while he lies there does not.
+            if (closing > 150 && !tile.held && Math.hypot(tile.vx, tile.vy) > 260) { sparkBurst((tile.x + body.x) / 2, (tile.y + body.y) / 2, closing); colourHit(body); }
             feelTouch(tile.touch);
           } else if ((body.held || tile.held) && overlap > -48 && performance.now() - (mood.contacts[body.el.dataset.sticker] || 0) < 700) {
             // Held right beside each other after touching (the sticker in the hand, or him):
