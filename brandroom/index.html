@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>document.documentElement.classList.add('chapter-menu-pending');</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f6f3">
 <title>Brandroom | UX/UI case study</title>
 <link rel="canonical" href="https://sanjithuiux.design/brandroom/">
@@ -8,31 +9,25 @@
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=IBM+Plex+Sans:wght@500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="brandroom.css?v=20261110-figma">
+<link rel="stylesheet" href="brandroom.css?v=20261110-nav">
 <link rel="stylesheet" href="/assets/site-analytics.css?v=20261028-cookieless">
 <script src="/assets/site-analytics.js?v=20261029-resume" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#the-problem">Skip to the case study</a>
 
-<nav class="rail" aria-label="Case study sections">
-  <span class="progress" aria-hidden="true"></span>
-  <ol>
-    <li><a href="#overview" aria-current="true">Overview</a></li>
-    <li><a href="#the-problem">Problem</a></li>
-    <li><a href="#approach">Approach</a></li>
-    <li><a href="#the-idea">Solution</a></li>
-  </ol>
+<button class="mobile-menu-toggle" type="button" aria-label="Open section menu" aria-expanded="false" aria-controls="chapter-menu"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
+<nav class="chapter-rail" id="chapter-menu" aria-label="Case study sections">
+  <a class="chapter-link" href="#overview" aria-label="Overview section"><span class="chapter-label" aria-hidden="true">Overview</span><span class="chapter-dot" aria-hidden="true"></span></a>
+  <a class="chapter-link" href="#the-problem" aria-label="Problem section"><span class="chapter-label" aria-hidden="true">Problem</span><span class="chapter-dot" aria-hidden="true"></span></a>
+  <a class="chapter-link" href="#approach" aria-label="Approach section"><span class="chapter-label" aria-hidden="true">Approach</span><span class="chapter-dot" aria-hidden="true"></span></a>
+  <a class="chapter-link" href="#the-idea" aria-label="Solution section"><span class="chapter-label" aria-hidden="true">Solution</span><span class="chapter-dot" aria-hidden="true"></span></a>
 </nav>
 
 <main class="page">
   <header class="m-header">
     <a class="round" href="/" aria-label="Return to portfolio homepage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/></svg></a>
     <span class="name">Brandroom</span>
-    <button class="round m-toggle" type="button" aria-label="Open section menu" aria-expanded="false" aria-controls="m-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-    <nav class="m-menu" id="m-menu" aria-label="Case study sections">
-      <a href="#overview">Overview</a><a href="#the-problem">Problem</a><a href="#approach">Approach</a><a href="#the-idea">Solution</a>
-    </nav>
   </header>
 
   <section class="block overview" id="overview" aria-label="Brandroom project overview">
@@ -171,6 +166,6 @@
   </section>
 </main>
 <footer class="site-foot"></footer>
-<script src="brandroom.js?v=20261110-figma" defer></script>
+<script src="brandroom.js?v=20261110-nav" defer></script>
 </body>
 </html>

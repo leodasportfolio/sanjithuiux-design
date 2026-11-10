@@ -1,36 +1,96 @@
-// Brandroom case study: chapter rail highlight, phone menu, and scaling the design system card on phones.
+// Brandroom case study: chapter rail and phone menu copied from Drexel Works, plus scaling the design system card on phones.
+// Section tracking must also run on the static Solution page without a carousel.
 (() => {
-  const sections = ['overview', 'the-problem', 'approach', 'the-idea'].map((id) => document.getElementById(id));
-  const railLinks = [...document.querySelectorAll('.rail a')];
-  const progress = document.querySelector('.rail .progress');
-
-  const setActive = (index) => {
-    railLinks.forEach((a, i) => a.setAttribute('aria-current', i === index ? 'true' : 'false'));
-    if (progress) progress.style.height = `${18 + index * 62}px`;
-  };
-
-  const update = () => {
-    let index = 0;
-    sections.forEach((s, i) => { if (s && s.getBoundingClientRect().top < window.innerHeight * 0.35) index = i; });
-    setActive(index);
-  };
-  window.addEventListener('scroll', update, { passive: true });
-  update();
-
-  const toggle = document.querySelector('.m-toggle');
-  const menu = document.getElementById('m-menu');
-  if (toggle && menu) {
-    const close = () => { menu.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); };
-    toggle.addEventListener('click', () => {
-      const open = !menu.classList.contains('open');
-      menu.classList.toggle('open', open);
-      toggle.setAttribute('aria-expanded', String(open));
-      if (open) menu.querySelector('a').focus();
+  const links = Array.from(document.querySelectorAll('.section-nav a, .chapter-rail a'));
+  if (!links.length) return;
+  const sections = links.map(link => document.getElementById(link.hash.slice(1)));
+  const rail = document.querySelector('.chapter-rail');
+  let frame = 0;
+  const updateSection = () => {
+    frame = 0;
+    const readingLine = window.innerHeight * .35;
+    const bounds = sections.map(section => section?.getBoundingClientRect() ?? null);
+    let current = -1;
+    bounds.forEach((rect, i) => {
+      if (rect && rect.top <= readingLine) current = i;
     });
-    menu.addEventListener('click', (e) => { if (e.target.closest('a')) close(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('open')) { close(); toggle.focus(); } });
-  }
+    const atEnd = current >= 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    links.forEach((link, i) => {
+      if (i === current) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+      // Derive completion from position every time, never from visit history.
+      if (i < current || atEnd) link.setAttribute('data-complete', 'true');
+      else link.removeAttribute('data-complete');
+    });
+    if (rail) {
+      let progress = 0;
+      if (current >= 0) {
+        if (current === links.length - 1 || atEnd) progress = 1;
+        else {
+          const start = bounds[current].top;
+          const end = bounds[current + 1]?.top ?? start + 1;
+          const fraction = Math.max(0, Math.min(1, (readingLine - start) / Math.max(1, end - start)));
+          progress = (current + fraction) / Math.max(1, links.length - 1);
+        }
+      }
+      rail.style.setProperty('--chapter-progress', String(progress));
+    }
+  };
+  window.addEventListener('scroll', () => {
+    if (!frame) frame = requestAnimationFrame(updateSection);
+  }, { passive: true });
+  window.addEventListener('resize', updateSection, { passive: true });
+  window.addEventListener('load', updateSection, { once: true });
+  window.addEventListener('pageshow', updateSection);
+  updateSection();
+})();
 
+// Phone section menu (same as Drexel Works).
+(() => {
+const rail = document.querySelector('.chapter-rail');
+  const toggle = document.querySelector('.mobile-menu-toggle');
+  if (!rail || !toggle) return;
+  const phone = window.matchMedia('(max-width: 760px)');
+  let open = false;
+  const setOpen = (next, returnFocus = false) => {
+    open = phone.matches && next;
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close section menu' : 'Open section menu');
+    rail.toggleAttribute('data-menu-open', open);
+    if (returnFocus) toggle.focus({ preventScroll: true });
+    rail.inert = phone.matches && !open;
+    if (rail.inert) rail.setAttribute('aria-hidden', 'true');
+    else rail.removeAttribute('aria-hidden');
+  };
+  const resetMenu = () => {
+    rail.setAttribute('data-menu-reset', '');
+    setOpen(false, phone.matches && rail.contains(document.activeElement));
+  };
+  toggle.addEventListener('click', () => {
+    rail.removeAttribute('data-menu-reset');
+    setOpen(!open);
+  });
+  // Section links scroll normally and deliberately leave the menu open.
+  document.addEventListener('keydown', event => {
+    if (open && event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false, true);
+    }
+  });
+  document.addEventListener('pointerdown', event => {
+    if (open && !rail.contains(event.target) && !toggle.contains(event.target)) setOpen(false);
+  });
+  phone.addEventListener('change', resetMenu);
+  window.addEventListener('pageshow', resetMenu);
+  window.addEventListener('pagehide', resetMenu);
+  document.addEventListener('visibilitychange', resetMenu);
+  resetMenu();
+  document.documentElement.classList.add('chapter-menu-ready');
+  document.documentElement.classList.remove('chapter-menu-pending');
+})();
+
+// Design system card scaling.
+(() => {
   // On phones the Figma design shows the desktop design system card scaled down to fit.
   const fit = document.querySelector('.ds-fit');
   const card = fit && fit.querySelector('.ds');
