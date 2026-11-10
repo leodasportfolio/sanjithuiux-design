@@ -1,0 +1,267 @@
+/* Approved GLOWM mobile treatment, adapted to Drexel's five chapters and copy.
+ * Existing desktop styles, research values and source screen assets stay intact. */
+.mobile-menu-toggle, .mobile-home-link { display: none; }
+.mobile-brand-row { display: contents; }
+.study-sample-mobile { display: none; }
+
+@media (max-width: 700px) {
+  html { scroll-padding-top: 80px; }
+  .case-study-page {
+    --mobile-body-size: clamp(14px, 3.85vw, 18px);
+    --chapter-gap: 64px;
+    --subsection-gap: 40px;
+    --content-gap: 24px;
+    --balanced-inset: 24px;
+    font-size: var(--mobile-body-size);
+    line-height: 1.55;
+  }
+  .case-study-page .section,
+  .case-study-page .hero,
+  .case-study-page .case-study-footer {
+    padding-inline: 16px;
+    scroll-margin-top: 16px;
+  }
+  .case-study-page .inner { width: 100%; min-width: 0; }
+  .case-study-page .hero { padding-top: 24px; }
+  .case-study-page .eyebrow { margin-left: 0; font-size: 12px; line-height: 1.5; }
+  .case-study-page .section :is(h2, h3, h4),
+  .case-study-page .solution-steps h3,
+  .case-study-page .closing-card h2 { font-size: 18px; }
+  .case-study-page .findings-evidence .finding h3 { font-size: 16px; }
+  .case-study-page .section p:not(.eyebrow):not(.cover-kicker),
+  .case-study-page .findings-evidence .finding > p,
+  .case-study-page .facts b,
+  .case-study-page .study-facts dd,
+  .case-study-page :is(.voice, .impact-voice) > span {
+    font-size: var(--mobile-body-size);
+    line-height: 1.55;
+    letter-spacing: 0;
+  }
+  .case-study-page .reading-guide-content a { font-size: inherit; }
+  .case-study-page .section :is(h2, h3, h4),
+  .case-study-page .section p:not(.eyebrow):not(.cover-kicker) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 0;
+    text-align: justify;
+    text-align-last: left;
+    text-justify: inter-word;
+    text-wrap: wrap;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    hyphenate-limit-chars: 6 3 3;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Same header controls, with Drexel's own project name rather than GLOWM's logo. */
+  .case-study-page .mobile-brand-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    margin-bottom: 10px;
+    padding-right: 52px;
+  }
+  .case-study-page .cover-kicker {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.2;
+    letter-spacing: -.03em;
+    text-transform: none;
+  }
+  .case-study-page .cover-intro h1 {
+    font-size: 18px;
+    line-height: 1.25;
+    text-align: justify;
+    text-align-last: left;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+  .case-study-page .cover-lede { margin-top: 6px; line-height: 1.45; }
+  .case-study-page .cover-intro { margin-bottom: 24px; }
+  .case-study-page .project-tags {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .case-study-page .project-tags li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: 6px 8px;
+    font-size: clamp(10px, 2.8vw, 12px);
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .case-study-page .cover-gallery { aspect-ratio: 3 / 2; }
+  .case-study-page .cover-phone--welcome,
+  .case-study-page .cover-phone--success { top: 12%; }
+  .case-study-page .cover-phone--eligibility { top: 6%; }
+
+  .case-study-page .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  .case-study-page .facts > div {
+    justify-self: center;
+    width: 100%;
+    max-width: 140px;
+    text-align: left;
+  }
+  .case-study-page .facts span { font-size: 14px; line-height: 1.5; }
+  .case-study-page .study-facts {
+    grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.2fr);
+    column-gap: 8px;
+    row-gap: 0;
+    text-align: center;
+  }
+  .case-study-page .study-facts dt,
+  .case-study-page .study-facts dd { text-align: center; }
+  .case-study-page .study-facts dt {
+    min-height: 2.8em;
+    font-size: clamp(10px, 2.7vw, 12px);
+    line-height: 1.4;
+  }
+  .case-study-page .study-label-second { display: block; white-space: nowrap; }
+  .case-study-page .study-sample-desktop { display: none; }
+  .case-study-page .study-sample-mobile { display: grid; gap: 2px; }
+  .case-study-page .study-sample-mobile > span { display: block; white-space: nowrap; }
+  .case-study-page .reading-guide-content { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .case-study-page .reading-guide-column { row-gap: 24px; }
+  .case-study-page .findings-evidence,
+  .case-study-page .voices-summary { width: 100%; max-width: none; margin-inline: 0; }
+  .case-study-page .findings-evidence .findings-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .case-study-page .findings-evidence .finding { min-width: 0; padding: 15px; }
+  .case-study-page :is(.voices-list, .impact-voices-list) { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .case-study-page .voices-summary { margin-top: 20px; }
+  .case-study-page .solution-showcase { --phone-width: 48%; flex-wrap: wrap; gap: 24px 3%; }
+  .case-study-page .solution-phone--screen { margin-left: 0; }
+  .case-study-page .solution-steps { gap: 24px; margin-top: 32px; }
+  .case-study-page .solution-steps > li { grid-template-columns: 40px minmax(0, 1fr); column-gap: 16px; }
+  .case-study-page .solution-step-number { font-size: 48px; }
+  .case-study-page .closing-card { padding: 24px 20px; }
+  .case-study-page .closing-actions { flex-direction: column; width: 100%; }
+  .case-study-page .closing-button { width: 100%; min-height: 52px; padding: 14px 18px; font-size: 17px; }
+
+  /* Match the approved top-positioned, horizontal disclosure menu. */
+  .case-study-page .chapter-rail {
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    width: calc(100% - 32px);
+    max-height: none;
+    margin: 12px 16px 0;
+    padding: 12px 4px;
+    border-radius: 18px;
+    background: var(--paper);
+    overflow-y: auto;
+  }
+  :is(.chapter-menu-pending, .chapter-menu-ready) .case-study-page .chapter-rail {
+    position: fixed;
+    top: 12px;
+    right: 72px;
+    left: 16px;
+    width: auto;
+    max-height: calc(100svh - 24px);
+    margin: 0;
+    transform: translateY(-6px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(16, 43, 99, .08);
+    transition: transform 500ms cubic-bezier(.45, 0, .55, 1), opacity 500ms cubic-bezier(.45, 0, .55, 1), visibility 0s 500ms;
+  }
+  .chapter-menu-ready .case-study-page .chapter-rail[data-menu-open] {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+  /* Never animate a load/history/tab-return reset: only a user tap animates. */
+  .chapter-menu-pending .case-study-page .chapter-rail,
+  .case-study-page .chapter-rail[data-menu-reset] { transition: none !important; }
+  .case-study-page .chapter-rail::before,
+  .case-study-page .chapter-rail::after {
+    top: 23px;
+    bottom: auto;
+    left: calc(10% + 3px);
+    right: calc(10% + 3px);
+    width: auto;
+    height: 3px;
+  }
+  .case-study-page .chapter-rail::after { transform: scaleX(var(--chapter-progress)); transform-origin: left; }
+  .case-study-page .chapter-link {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 22px 30px;
+    gap: 2px;
+    height: 54px;
+  }
+  .case-study-page .chapter-dot { grid-row: 1; grid-column: 1; width: 10px; height: 10px; }
+  .case-study-page .chapter-label {
+    grid-row: 2;
+    grid-column: 1;
+    justify-self: center;
+    font-size: clamp(9px, 2.6vw, 12px);
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+  }
+  .chapter-menu-ready .case-study-page .mobile-menu-toggle {
+    position: fixed;
+    z-index: 40;
+    top: 28px;
+    right: 16px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid #d1d5dc;
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--navy);
+    box-shadow: 0 3px 12px rgba(16, 43, 99, .08);
+    cursor: pointer;
+  }
+  .mobile-menu-toggle span {
+    position: absolute;
+    width: 19px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 200ms ease, opacity 160ms ease;
+  }
+  .mobile-menu-toggle span:first-child { transform: translateY(-6px); }
+  .mobile-menu-toggle span:last-child { transform: translateY(6px); }
+  .mobile-menu-toggle[aria-expanded="true"] span:first-child { transform: rotate(45deg); }
+  .mobile-menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .mobile-menu-toggle[aria-expanded="true"] span:last-child { transform: rotate(-45deg); }
+  .case-study-page .mobile-home-link {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #d1d5dc;
+    border-radius: 50%;
+    color: var(--navy);
+    text-decoration: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-study-page .chapter-rail,
+  .mobile-menu-toggle span { transition: none !important; }
+}
+@media print {
+  .case-study-page .chapter-rail,
+  .mobile-menu-toggle,
+  .mobile-home-link { display: none !important; }
+}

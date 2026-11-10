@@ -1,0 +1,109 @@
+/* Mentor review, 08:24–10:20: give separate ideas breathing room without
+ * expanding card interiors or changing the approved reading widths/type. */
+.case-study-page {
+  --chapter-gap: 112px;
+  --subsection-gap: 64px;
+  --content-gap: 40px;
+}
+
+/* Split the major gap across each existing divider. Keep hero top padding. */
+.case-study-page main > .section {
+  padding-bottom: calc(var(--chapter-gap) / 2);
+}
+
+.case-study-page main > .section + .section {
+  padding-top: 0;
+}
+
+.case-study-page main > .section + .section > .inner {
+  padding-top: calc(var(--chapter-gap) / 2);
+}
+
+/* Project details and the reading guide form one introduction, not two chapters. */
+.case-study-page main > .hero {
+  padding-bottom: 16px;
+}
+
+.case-study-page main > .hero + .problem-section > .inner {
+  padding-top: 16px;
+}
+
+.case-study-page .case-study-footer {
+  padding-top: calc(var(--chapter-gap) / 2);
+}
+
+/* Cover and project facts remain related, but no longer run into each other. */
+.case-study-page .cover-intro {
+  margin-bottom: var(--content-gap);
+}
+
+.case-study-page .facts {
+  margin-top: var(--content-gap);
+}
+
+/* The always-open context guide needs its own boundary before the Problem. */
+.case-study-page .reading-guide {
+  margin-bottom: calc(var(--chapter-gap) / 2);
+}
+
+.case-study-page .reading-guide-content {
+  row-gap: var(--content-gap);
+  padding-bottom: calc(var(--chapter-gap) / 2);
+}
+
+.case-study-page .reading-guide-column {
+  row-gap: var(--content-gap);
+}
+
+/* Give evidence blocks room; keep the approved card grid gaps/padding intact. */
+.case-study-page .study-facts,
+.case-study-page .findings-evidence,
+.case-study-page .solution-showcase {
+  margin-top: var(--content-gap);
+}
+
+.case-study-page .findings-evidence {
+  row-gap: var(--content-gap);
+}
+
+.case-study-page .voices-summary {
+  margin-top: var(--subsection-gap);
+}
+
+.case-study-page .student-voices {
+  margin-top: 24px;
+  padding-top: 24px;
+}
+
+.case-study-page .impact-voices,
+.case-study-page .results-summary,
+.case-study-page .learning {
+  margin-top: calc(var(--subsection-gap) / 2);
+  padding-top: calc(var(--subsection-gap) / 2);
+}
+
+.case-study-page .solution-steps {
+  margin-top: var(--subsection-gap);
+  row-gap: var(--content-gap);
+}
+
+@media (max-width: 900px) {
+  .case-study-page {
+    --chapter-gap: 88px;
+    --subsection-gap: 56px;
+    --content-gap: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .case-study-page {
+    --chapter-gap: 64px;
+    --subsection-gap: 40px;
+    --content-gap: 24px;
+  }
+
+  .case-study-page .student-voices {
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+}
