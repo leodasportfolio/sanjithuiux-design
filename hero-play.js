@@ -575,14 +575,16 @@
       hideSling();
       if (!tile.el) return; // (sent home while in the hand: a mode switch)
       tile.el.classList.remove('is-held');
-      const dx = tile.x - tile.anchorX;
-      const dy = tile.y - tile.anchorY;
+      // The pull is how far the pointer drew him back, not where he happens to be: a
+      // sticker drifting into him while he is held still must not count as a pull.
+      const dx = tile.aimX - tile.anchorX;
+      const dy = tile.aimY - tile.anchorY;
       const len = Math.hypot(dx, dy);
       tile.pull = 0;
       if (len < PULL_MIN) {
         // Not really pulled: he just goes back to where he belongs.
         onRelease(false);
-        sendTileHome();
+        sendTileHome('lower'); // (put straight back down: he lowers his hands and calms)
         return;
       }
       const speed = 650 + (len / PULL_MAX) * 1550;
@@ -619,7 +621,8 @@
     mood.sick = mood.flight = mood.knocked = mood.shook = false;
     mood.hurtAt = mood.holdUntil = mood.shake = 0;
     mood.gentleFace = '';
-    el.querySelector('img').src = face ? 'assets/faces/' + face + '.jpg?v=2' : portraitImg.currentSrc || portraitImg.src;
+    el.querySelector('img').src = face && face !== 'lower' ? 'assets/faces/' + face + '.jpg?v=2' : portraitImg.currentSrc || portraitImg.src;
+    if (face === 'lower') lowerHands(el);
     el.classList.remove('is-giggling');
     tile.el = null;
     const heroRect = hero.getBoundingClientRect();
@@ -698,6 +701,25 @@
     });
     CLIPS[name].el = clip;
   });
+  // Picked up and put straight back: the startled clip run backwards, so his hands come
+  // down off the screen and his face settles into his portrait, instead of a cut.
+  const downClip = document.createElement('video');
+  downClip.className = 'tile-clip';
+  downClip.muted = true;
+  downClip.playsInline = true;
+  downClip.preload = 'auto';
+  downClip.setAttribute('aria-hidden', 'true');
+  fetch('assets/clips/startled-down.mp4?v=1').then((reply) => reply.blob()).then((file) => { downClip.src = URL.createObjectURL(file); }).catch(() => {});
+  function lowerHands(el) {
+    const wasScared = CLIPS.startled.el.isConnected;
+    showScare('');
+    if (!wasScared || !downClip.src || calm.matches) return;
+    el.append(downClip);
+    downClip.currentTime = 0;
+    downClip.playbackRate = 1.15; // (done just before his tile has finished settling back)
+    const going = downClip.play();
+    if (going && going.catch) going.catch(() => {});
+  }
   function showScare(face) {
     Object.keys(CLIPS).forEach((name) => {
       const clip = CLIPS[name].el;
@@ -864,16 +886,14 @@
     if (going && going.catch) going.catch(() => {});
   };
   let waveSettle = 0;
-  // He waves every time the pointer comes onto him, and while it stays on him he waves
-  // again after a short breath, for as long as it is there.
+  // He waves every time the pointer comes onto him: once per visit, however long it stays.
   let waveOver = false;
   let waveAgain = 0;
   waveClip.addEventListener('playing', () => { if (!tile.el && playing()) waveClip.classList.add('is-on'); else stopWave(); });
   const waveDone = () => {
     if (!waveClip.classList.contains('is-on')) return;
-    stopWave();
+    stopWave(); // one wave per visit: he waves again only when the pointer leaves and comes back
     window.clearTimeout(waveAgain);
-    if (waveOver) waveAgain = window.setTimeout(() => { if (waveOver) startWave(); }, 500);
   };
   waveClip.addEventListener('ended', waveDone);
   waveClip.addEventListener('timeupdate', () => { if (waveClip.currentTime >= WAVE_END) waveDone(); });
