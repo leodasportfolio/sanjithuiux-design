@@ -420,6 +420,16 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
   /* In Fun mode the switch itself turns a light lemon yellow, so the mode shows at a glance;
      in Normal mode it stays the quiet grey. Its knob is the full yellow of his portrait. */
   html[data-mode="fun"] .mode-switch { background: #fff3a6; } /* (the light lemon of the About Me notification) */
+  /* Switched to Normal further down the page: the switch shows "normal" straight away while
+     the page glides up to the top, where the change itself happens. */
+  html[data-mode="fun"] .mode-switch.is-pending { background: rgba(25, 29, 33, .06); }
+  html[data-mode="fun"] .mode-switch.is-pending .mode-switch-thumb { background: #c9cccf; transform: translateX(14px); }
+  html[data-mode="fun"] .mode-switch.is-pending [data-mode-label="fun"] { color: #8a8f94; }
+  html[data-mode="fun"] .mode-switch.is-pending [data-mode-label="normal"] { color: var(--ink); }
+  html:not([data-mode="fun"]) .mode-switch.is-pending { background: #fff3a6; }
+  html:not([data-mode="fun"]) .mode-switch.is-pending .mode-switch-thumb { background: #ffcb05; transform: translateX(0); }
+  html:not([data-mode="fun"]) .mode-switch.is-pending [data-mode-label="fun"] { color: var(--ink); }
+  html:not([data-mode="fun"]) .mode-switch.is-pending [data-mode-label="normal"] { color: #8a8f94; }
   html[data-mode="fun"] .mode-switch [data-mode-label="normal"] { color: rgba(25, 29, 33, .62); }
 
   html[data-mode="fun"] .hero {
@@ -504,7 +514,7 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
   html[data-mode="fun"] .hero-bubble {
     opacity: 1;
     transform: translate(-62%, 0) scale(1);
-    transition-delay: 1s;
+    transition-delay: .35s;
   }
   html[data-mode="fun"].is-back .hero-bubble { transition-delay: 0s; }
 }
@@ -1188,4 +1198,60 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
     transform: rotate(var(--photo-tilt, -3deg));
     box-shadow: 0 0 0 1px rgba(25, 29, 33, .08), 0 18px 34px -16px rgba(25, 29, 33, .4);
   }
+}
+
+/* ---------- Scroll cue ----------
+   Under the hero's frame: "Scroll" and a down arrow inside a small outlined disc, drawn
+   like the stickers (ink outline, white fill, soft shadow) so it reads against the dots.
+   The disc bobs gently: a cue that there is more below, not decoration. It is not a
+   control. Fun mode on wide screens only; it takes no room in the page. */
+.scroll-cue { display: none; }
+@media (min-width: 1101px) {
+  html[data-mode="fun"] .scroll-cue {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    height: 0;
+    margin: 20px 0 0;
+    overflow: visible;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity .3s ease;
+  }
+  /* (The cue is given no height of its own, so its parts must not be squashed to fit.) */
+  html[data-mode="fun"] .scroll-cue > * { flex: none; }
+  html[data-mode="fun"] .scroll-cue b {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 6px 10px rgba(25, 29, 33, .16);
+    animation: scroll-cue-bob 1.8s ease-in-out infinite;
+  }
+  html[data-mode="fun"] .scroll-cue i {
+    display: block;
+    width: 11px;
+    height: 11px;
+    margin-top: -5px;
+    border-right: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    transform: rotate(45deg);
+  }
+  html[data-mode="fun"].is-scrolled .scroll-cue { opacity: 0; }
+}
+@keyframes scroll-cue-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue b { animation: none !important; }
 }

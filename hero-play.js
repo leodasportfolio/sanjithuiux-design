@@ -1731,7 +1731,26 @@
     });
   }
 
-  modeSwitch.addEventListener('click', () => setMode(root.dataset.mode === 'fun' ? 'normal' : 'fun', true));
+  // Either mode begins at the top of the page: switched further down (About Me, say), the
+  // page first glides up to the hero with everything held as it is, and the switch itself
+  // happens once it is there, so the two layouts never swap mid-page.
+  let switchPending = false;
+  modeSwitch.addEventListener('click', () => {
+    if (switchPending) return;
+    const next = root.dataset.mode === 'fun' ? 'normal' : 'fun';
+    if (wide.matches && window.scrollY > 2 && !calm.matches) {
+      switchPending = true;
+      modeSwitch.classList.add('is-pending'); // (the switch shows the new mode at once)
+      modeSwitch.setAttribute('aria-checked', String(next === 'fun'));
+      glideTo(0, false, () => {
+        switchPending = false;
+        modeSwitch.classList.remove('is-pending');
+        setMode(next, true);
+      });
+      return;
+    }
+    setMode(next, true);
+  });
   copy.addEventListener('animationend', (event) => {
     if (event.animationName === 'copy-sharpen' && event.target.tagName === 'P') copy.classList.remove('is-switching');
   });
@@ -2692,19 +2711,21 @@
   // One quick, direct glide for every nav link. It is driven here rather than left to the
   // browser, so it is short, it cannot be dragged off course by trackpad momentum left over
   // from before the click, and the staged pieces stay "in place" until it has arrived.
-  const glide = { frame: 0, until: 0 };
-  const glideTo = (top, toAbout) => {
+  const glide = { frame: 0, until: 0, began: 0 };
+  const glideTo = (top, toAbout, then) => {
     const end = document.documentElement.scrollHeight - window.innerHeight;
     const to = Math.round(Math.max(0, Math.min(end, top)));
     const from = window.scrollY;
     const far = Math.abs(to - from);
-    const took = toAbout ? Math.max(1100, Math.min(1500, 900 + far * 0.08)) // ms: About Me unfolds on the way, so it gets more time
+    const took = then ? Math.max(1500, Math.min(2300, 1100 + far * 0.2)) // ms: the trip up to switch modes is a calm, unhurried ride
+      : toAbout ? Math.max(1100, Math.min(1500, 900 + far * 0.08)) // ms: About Me unfolds on the way, so it gets more time
       : Math.max(650, Math.min(1100, 520 + far * 0.08)); // ms: unhurried, and longer for a longer trip
     const began = performance.now();
     window.cancelAnimationFrame(glide.frame);
     wheel.target = null;
     dockPop.skip = true;
     pop.jump = Boolean(toAbout);
+    glide.began = began;
     const openFrom = pop.on ? 1 : pop.k; // (already open, coming from further down: it stays open)
     glide.until = began + took + 160; // (the wheel is ignored until just after it lands)
     const step = (now) => {
@@ -2720,13 +2741,13 @@
         pop.k = open;
         stage.k = open;
       }
-      queuePage();
+      paintPage();
       if (t < 1) { glide.frame = window.requestAnimationFrame(step); return; }
       if (toAbout) { pop.k = 1; stage.k = 1; }
       window.scrollTo({ top: to, behavior: 'instant' });
       glide.frame = 0;
       // Two more frames with everything held in place, then the page is its usual self.
-      window.requestAnimationFrame(() => window.requestAnimationFrame(() => { dockPop.skip = false; pop.jump = false; queuePage(); }));
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => { dockPop.skip = false; pop.jump = false; queuePage(); if (then) then(); }));
     };
     glide.frame = window.requestAnimationFrame(step);
   };
@@ -2778,6 +2799,11 @@
     });
   });
 
+  // The scroll cue under the hero: gone once the page has moved, back at the very top.
+  const syncCue = () => root.classList.toggle('is-scrolled', window.scrollY > 40);
+  syncCue();
+  window.addEventListener('scroll', syncCue, { passive: true });
+
   let pageFrame = 0;
   let pointerX = -999;
   let pointerY = -999;
@@ -2812,20 +2838,35 @@
     const left = wheel.target - wheel.at;
     // Arrived: rest exactly on the spot (a whole pixel), so the page never sits between two
     // positions and trembles.
-    if (Math.abs(left) < 0.75) { window.scrollTo({ top: wheel.target, behavior: 'instant' }); wheel.target = null; return; }
+    if (Math.abs(left) < 0.75) { window.scrollTo({ top: wheel.target, behavior: 'instant' }); wheel.target = null; paintPage(); return; }
     // Ease towards where the hand has asked for, never faster than the limit.
     // (A short catch-up, so it follows the hand closely and never feels heavy.)
     const want = left * (1 - Math.exp(-dt / 0.032));
     const most = MAX_SCROLL * dt;
     wheel.at += Math.max(-most, Math.min(most, want));
     window.scrollTo({ top: wheel.at, behavior: 'instant' });
+    // Drawn now, in the same frame the page moves: waiting for the scroll event would put
+    // every scroll-driven piece (and the dots under the cursor) one frame behind the page,
+    // a faint shimmer while scrolling.
+    paintPage();
     wheel.frame = window.requestAnimationFrame(wheelStep);
   };
   window.addEventListener('wheel', (event) => {
     if (!playing() || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
     if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
     event.preventDefault();
-    if (performance.now() < glide.until) return; // a nav link is carrying the page: momentum left over from before is dropped
+    // A nav link carrying the page: for its first moment the wheel is dropped (momentum left
+    // over from before the click); after that the visitor's own scrolling takes over at once.
+    if (performance.now() < glide.began + 250) return;
+    if (glide.frame && switchPending) return; // (on its way to the top to switch modes: not interrupted)
+    if (glide.frame) {
+      window.cancelAnimationFrame(glide.frame);
+      glide.frame = 0;
+      glide.until = 0;
+      dockPop.skip = false;
+      pop.jump = false;
+      queuePage();
+    } else if (performance.now() < glide.until) return;
     const line = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? window.innerHeight : 1;
     const end = document.documentElement.scrollHeight - window.innerHeight;
     // Already at the very top and still scrolling up (or at the very bottom, scrolling
