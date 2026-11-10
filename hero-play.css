@@ -544,7 +544,6 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
    the two project cards exactly as they were. */
 
 .dot-glow { display: none; }
-.project-card--soon { display: none; }
 .reel { display: none; }
 .notice, .pointer, .reel-heading, .dock, .genie { display: none; }
 /* (The Motion Graphics link is in the nav bar in both modes; its card has a plain form
@@ -680,7 +679,6 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
      for half a screen; only then does the second folder begin to come in (which it does
      when its tab is 85% of the way down the screen). */
   html[data-mode="fun"] .project-card:nth-child(2) { margin-top: max(calc(var(--tab-h) + 44px), calc(300px + 135vh - var(--stack-top) - var(--card-h))); }
-  html[data-mode="fun"] .project-card--soon { display: grid; }
   html[data-mode="fun"] .project-card::after {
     content: "";
     position: absolute;
@@ -787,7 +785,9 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
     border-radius: 22px;
     box-shadow: 0 22px 44px -22px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .14);
   }
-  /* The single Drexel screen is fitted inside its panel whatever the folder's height. */
+  /* The single Drexel screen, and the Brandroom library picture, are fitted inside their
+     panels whatever the folder's height. */
+  html[data-mode="fun"] .project-image--brandroom img,
   html[data-mode="fun"] .project-image--drexel img {
     position: absolute;
     inset: 34px;
@@ -796,18 +796,6 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
     object-fit: contain;
   }
   html[data-mode="fun"] .project-card:focus-visible { outline: 3px solid #ff5a1f; outline-offset: 4px; }
-
-  /* Folders still to come: the same folder, an empty picture, and no invented details. */
-  html[data-mode="fun"] .project-image--soon {
-    display: grid;
-    place-items: center;
-    background: rgba(255, 255, 255, .26);
-    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .4);
-    color: inherit;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: .04em;
-  }
 
   /* Motion Graphics is not a folder. It is a dark screening card, like a video player,
      and it arrives differently: once the folders are stacked, scrolling on builds the
