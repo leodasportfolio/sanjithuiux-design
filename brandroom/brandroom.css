@@ -1,0 +1,79 @@
+/* Brandroom page additions on top of the shared Drexel Works case study styles. */
+
+/* Hero: one wide desktop screen instead of three phones */
+.br-hero-shot { margin: 32px 0 0; padding: 28px; border-radius: 20px; background: #ecebe6; }
+.br-hero-shot img,
+.br-shot img,
+.br-figure img { display: block; width: 100%; height: auto; border-radius: 10px; box-shadow: 0 8px 24px rgba(16, 43, 99, .08); }
+
+/* Approach: positioning map */
+.br-figure { margin: 32px 0 0; }
+.br-figure img { box-shadow: none; border: 1px solid #dddbd5; }
+
+/* Timeline: how Brandroom came together */
+.br-timeline { margin-top: 40px; }
+.br-timeline > h3 { margin: 0 0 24px; color: #102b63; font-size: clamp(18px, 2vw, 22px); font-weight: 800; }
+.br-timeline-group + .br-timeline-group { margin-top: 28px; }
+.br-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 14px 0 0; padding: 0; list-style: none; }
+.br-step-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.br-step-top::after { content: ""; flex: 1; height: 2px; background: #d1d5dc; }
+.br-steps li:last-child .br-step-top::after { opacity: 0; }
+.br-num { display: inline-grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #102b63; color: #fff; font-size: 20px; font-weight: 800; }
+.br-steps h4 { margin: 0 0 6px; color: #102b63; font-size: 18px; font-weight: 800; }
+.br-steps p { margin: 0; color: #62625d; font-size: 15px; line-height: 1.55; }
+.br-result { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-top: 28px; padding: 18px 24px; border: 1px solid #d1d5dc; border-radius: 16px; background: #fff; font-size: 16px; line-height: 1.5; }
+.br-result strong { color: #102b63; }
+
+/* Solution: numbered screens with a wide image under each */
+.br-screens { margin: 40px 0 0; padding: 0; list-style: none; }
+.br-screens > li + li { margin-top: 56px; }
+.br-screen-head { display: flex; gap: 16px; align-items: flex-start; }
+.br-screen-head h3 { margin: 4px 0 6px; color: #102b63; font-size: clamp(18px, 2.2vw, 26px); font-weight: 800; }
+.br-screen-head p { margin: 0; max-width: 700px; color: #62625d; font-size: 17px; line-height: 1.6; }
+.br-shot { margin: 20px 0 0; padding: 28px; border-radius: 20px; background: #ecebe6; }
+
+/* Design system: Brandroom tokens and components */
+.br-ds { margin-top: 24px; padding: 32px; border: 1px solid #d1d5dc; border-radius: 16px; background: #fff; }
+.br-ds h4 { margin: 28px 0 14px; color: #102b63; font-size: 18px; font-weight: 800; }
+.br-ds h4:first-child { margin-top: 0; }
+.br-swatches { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.br-swatches li { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; min-height: 84px; padding: 12px; border: 1px solid #d1d5dc; border-radius: 8px; background: var(--swatch); color: #1c1b1a; font-size: 13px; font-weight: 700; }
+.br-swatches li.is-dark { color: #fff; }
+.br-swatches code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13px; font-weight: 500; }
+.br-type { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; }
+.br-type strong { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 56px; font-weight: 600; line-height: 1; color: #1c1b1a; }
+.br-type b { display: block; color: #102b63; font-size: 18px; font-weight: 800; }
+.br-type span { color: #62625d; font-size: 15px; }
+.br-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+.br-buttons + .br-buttons { margin-top: 12px; }
+.br-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #e4e2de; border-radius: 6px; background: #fff; color: #1c1b1a; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 14px; font-weight: 500; }
+.br-btn--primary { border-color: #135e5a; background: #135e5a; color: #fff; }
+.br-btn--ghost { border-color: transparent; }
+.br-btn--danger { color: #b42318; }
+.br-btn--off { opacity: .45; }
+.br-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 20px; padding: 24px; border: 1px solid #d1d5dc; border-radius: 8px; }
+.br-field span { display: block; margin-bottom: 6px; color: #1c1b1a; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 13px; font-weight: 500; }
+.br-field div { display: flex; align-items: center; min-height: 44px; padding: 0 12px; border: 1px solid #8c8a85; border-radius: 6px; background: #fff; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 13px; }
+.br-field--focus div { border: 2px solid #135e5a; }
+.br-field--error div { border: 2px solid #b42318; }
+.br-field small { display: block; margin-top: 6px; color: #b42318; font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 13px; line-height: 1.4; }
+
+@media (max-width: 760px) {
+  .br-hero-shot, .br-shot { padding: 12px; border-radius: 14px; }
+  .br-steps { grid-template-columns: 1fr; gap: 18px; }
+  .br-steps li { display: grid; grid-template-columns: 36px 1fr; column-gap: 12px; }
+  .br-step-top { grid-row: span 2; margin: 0; }
+  .br-step-top::after { display: none; }
+  .br-num { width: 36px; height: 36px; font-size: 16px; }
+  .br-steps h4 { font-size: 16px; }
+  .br-steps p { font-size: 14.4px; }
+  .br-screen-head p { font-size: 14.4px; }
+  .br-num--screen { width: 36px; height: 36px; font-size: 16px; }
+  .br-ds { padding: 16px; }
+  .br-swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .br-fields { grid-template-columns: 1fr; padding: 16px; }
+  .br-type strong { font-size: 40px; }
+}
+
+/* Keep tag text at the 12px minimum on phones */
+@media (max-width: 760px) { .project-tags li { font-size: 12px; } }
