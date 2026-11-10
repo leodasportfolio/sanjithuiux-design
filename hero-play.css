@@ -600,10 +600,11 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
   html[data-mode="fun"] .contact { min-height: 100vh; padding-top: 32px; }
   /* (The copyright line keeps to the bottom of the screen; the rest sits in the middle of what is left.) */
   html[data-mode="fun"] .contact-eyebrow { margin-top: auto; }
-  /* The hero's frame starts just above the nav bar, so the bar sits inside the frame
-     rather than across its top line. (The bar itself is not moved: the scroll animations
-     further down are measured from where it is.) */
-  html[data-mode="fun"] .hero { margin-top: 4px; }
+  /* The hero's frame sits a little down from the top of the window, and starts just above
+     the nav bar, so the bar sits inside the frame rather than across its top line. The
+     bar comes down with it by the same amount. */
+  html[data-mode="fun"] .site-header { top: 30px; }
+  html[data-mode="fun"] .hero { margin-top: 22px; }
 
   /* The hero's dotted canvas carries on down the whole page and scrolls with it. */
   html[data-mode="fun"] body {

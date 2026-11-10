@@ -5,6 +5,10 @@
 (() => {
   const reel = document.querySelector('.reel');
   const card = reel && reel.querySelector('.reel-card');
+  const plain = reel && reel.querySelector('.reel-plain');
+  // Whichever of the two cards is on show (the dark screen in Fun mode, the plain card
+  // otherwise) is the one the panel grows out of, and the one the clip plays in.
+  const shown = () => (plain && plain.offsetParent ? plain : card);
   const panel = document.querySelector('.reel-panel');
   const veil = document.querySelector('.reel-veil');
   if (!card || !panel || !veil) return;
@@ -105,7 +109,7 @@
   let openTimer = 0;
   const isOpen = () => !panel.hidden;
   const fitToCard = () => {
-    const r = card.getBoundingClientRect(); // (as drawn: moved or shrunk by the hero staging too)
+    const r = shown().getBoundingClientRect(); // (as drawn: moved or shrunk by the hero staging too)
     const sx = r.width / panel.offsetWidth;
     const sy = r.height / panel.offsetHeight;
     panel.style.transform = 'translate(' + r.left + 'px, ' + r.top + 'px) scale(' + sx + ', ' + sy + ')';
@@ -143,11 +147,23 @@
       veil.hidden = true;
       reel.classList.remove('is-showing');
       root.classList.remove('reel-open');
-      card.focus({ preventScroll: true });
+      shown().focus({ preventScroll: true });
     }, Math.round(DUR * 0.8));
   };
-  card.addEventListener('click', open);
-  card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  // One Vimeo clip, moved into whichever card is on show, so it is never loaded twice.
+  const video = reel.querySelector('.reel-video');
+  const placeVideo = () => {
+    if (!video) return;
+    const into = plain && plain.offsetParent ? plain.querySelector('.reel-image') : card.querySelector('.reel-stage');
+    if (into && video.parentElement !== into) into.prepend(video);
+  };
+  placeVideo();
+  window.addEventListener('resize', placeVideo);
+  [card, plain].forEach((el) => {
+    if (!el) return;
+    el.addEventListener('click', open);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
   panel.querySelector('.reel-close').addEventListener('click', close);
   veil.addEventListener('click', close);
   window.addEventListener('keydown', (e) => {
@@ -163,5 +179,10 @@
   panel.addEventListener('touchmove', keep, { passive: true });
   // Switching modes rebuilds the page around the card, so the panel closes first.
   const modeSwitch = document.querySelector('.mode-switch');
-  if (modeSwitch) modeSwitch.addEventListener('click', close, true);
+  if (modeSwitch) {
+    modeSwitch.addEventListener('click', close, true);
+    modeSwitch.addEventListener('click', () => window.setTimeout(placeVideo, 0));
+    // (The switch may first glide the page to the top and change mode a moment later.)
+    new MutationObserver(placeVideo).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
+  }
 })();

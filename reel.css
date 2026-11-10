@@ -17,14 +17,26 @@ html:not([data-mode="fun"]) .reel-stage { min-height: min(440px, 52vw); }
 /* A little shade so the title and play button stay readable over the picture. */
 .reel-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, .45), rgba(0, 0, 0, .08) 45%, rgba(0, 0, 0, .4)); }
 .reel-stage > .reel-title, .reel-stage > .reel-play, .reel-stage > .reel-note { position: relative; z-index: 1; }
-/* The plain card (Normal mode, phones) lifts a little under the hand. */
-html:not([data-mode="fun"]) .reel-card { transition: translate .35s cubic-bezier(.16, 1, .3, 1), box-shadow .35s ease; }
-@media (hover: hover) {
-  html:not([data-mode="fun"]) .reel-card:hover { translate: 0 -8px; box-shadow: 0 46px 70px -36px rgba(24, 31, 36, .62); border-radius: 28px; }
-}
 /* While the panel is open the card's screen is blank: the panel is the card, grown. */
 .reel.is-showing .reel-screen { opacity: 0; }
 html.reel-open { overflow: hidden; }
+
+/* ---------- Normal mode and phones: the card is laid out like the case-study cards ---------- */
+.reel-plain { display: none; min-width: 0; border-radius: 28px 28px 12px 12px; cursor: pointer; }
+.reel-plain:focus-visible { outline: 3px solid #315b67; outline-offset: 7px; }
+.reel-image { position: relative; background: #16181d; }
+.reel-image .reel-video { transition: transform .55s cubic-bezier(.16, 1, .3, 1); }
+.reel-image .reel-video::after { background: none; }
+.reel-plain:hover .reel-image .reel-video, .reel-plain:focus-visible .reel-image .reel-video { transform: scale(1.025); }
+html:not([data-mode="fun"]) .reel-plain { display: block; }
+html:not([data-mode="fun"]) .reel-card { display: none; }
+html:not([data-mode="fun"]) .reel { grid-column: auto; margin-top: 0; }
+@media (max-width: 1100px) {
+  .reel-plain { display: block; }
+  .reel-card { display: none; }
+  html .reel { grid-column: auto; margin-top: 0; }
+}
+.reel.is-showing .reel-plain { opacity: 0; }
 
 /* ---------- The panel ---------- */
 .reel-veil { position: fixed; inset: 0; z-index: 60; background: rgba(25, 29, 33, .28); opacity: 0; transition: opacity .45s ease; }
