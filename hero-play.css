@@ -556,11 +556,12 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
   }
 
   /* The hero stays a box, a frame sitting on that canvas: the dots run straight through
-     it, and a thin outline and soft shadow mark the edges things bounce off. */
+     it, and one plain thin line with rounded corners marks the edges things bounce off.
+     No shadow: it is a drawn rectangle on the page, not a card lifted off it. */
   html[data-mode="fun"] .hero {
     background-color: transparent;
     background-image: none;
-    box-shadow: 0 0 0 1px rgba(25, 29, 33, .1), 0 30px 60px -36px rgba(24, 31, 36, .3);
+    box-shadow: 0 0 0 1.5px rgba(25, 29, 33, .78);
   }
 
   /* The dots softly brighten around the cursor. It only ever responds to the pointer:
