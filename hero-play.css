@@ -51,6 +51,10 @@
 .w { display: inline-block; transition: transform .75s cubic-bezier(.3, 1, .3, 1); }
 .w.is-live { position: relative; transition: none; }
 .sticker.is-live { transition: opacity .4s ease, filter .25s ease, scale .2s ease; transition-delay: 0s; }
+/* While the modes are switching, hero-play.js carries each sticker itself (transform only),
+   so the stylesheet's position and size moves stand down; only its turn and fade remain. */
+html.is-switching-mode .sticker,
+html.is-switching-mode .sticker.is-live { transition: rotate .3s cubic-bezier(.16, 1, .3, 1), opacity .3s ease, filter .2s ease !important; transition-delay: 0s !important; }
 /* A sticker hopping clear of his tile passes in front of him. */
 .sticker.is-hopping { z-index: 6; }
 
@@ -384,6 +388,7 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
+    transition: background-color .3s ease;
   }
 
   .mode-switch-track {
@@ -412,7 +417,10 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
 
   html[data-mode="fun"] .mode-switch-thumb { background: #ffcb05; transform: translateX(0); }
   html[data-mode="fun"] .mode-switch [data-mode-label="fun"] { color: var(--ink); }
-  html[data-mode="fun"] .mode-switch [data-mode-label="normal"] { color: #8a8f94; }
+  /* In Fun mode the switch itself turns a light lemon yellow, so the mode shows at a glance;
+     in Normal mode it stays the quiet grey. Its knob is the full yellow of his portrait. */
+  html[data-mode="fun"] .mode-switch { background: #fff3a6; } /* (the light lemon of the About Me notification) */
+  html[data-mode="fun"] .mode-switch [data-mode-label="normal"] { color: rgba(25, 29, 33, .62); }
 
   html[data-mode="fun"] .hero {
     padding-top: 196px;
@@ -536,8 +544,8 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
   html[data-mode="fun"] .site-nav .nav-reel { display: inline-flex; }
   /* With that extra link the bar needs more room; and no link ever breaks onto two lines. */
   html[data-mode="fun"] .site-header {
-    left: max(20px, calc((100vw - 1030px) / 2));
-    right: max(20px, calc((100vw - 1030px) / 2));
+    left: max(20px, calc((100vw - 940px) / 2));
+    right: max(20px, calc((100vw - 940px) / 2));
   }
   html[data-mode="fun"] .site-nav a { white-space: nowrap; }
   /* The last screen: "Let's Connect" has the whole window to itself, in the middle, once
@@ -545,8 +553,10 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
   html[data-mode="fun"] .contact { min-height: 100vh; padding-top: 32px; }
   /* (The copyright line keeps to the bottom of the screen; the rest sits in the middle of what is left.) */
   html[data-mode="fun"] .contact-eyebrow { margin-top: auto; }
-  /* The hero's frame sits a little lower, clear of the top edge of the window. */
-  html[data-mode="fun"] .hero { margin-top: 26px; }
+  /* The hero's frame starts just above the nav bar, so the bar sits inside the frame
+     rather than across its top line. (The bar itself is not moved: the scroll animations
+     further down are measured from where it is.) */
+  html[data-mode="fun"] .hero { margin-top: 4px; }
 
   /* The hero's dotted canvas carries on down the whole page and scrolls with it. */
   html[data-mode="fun"] body {

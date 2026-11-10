@@ -602,7 +602,7 @@
   }
 
   // Put him back in the headline (used when leaving Fun mode).
-  const sendTileHome = (face) => {
+  const sendTileHome = (face, follow) => {
     dropBand();
     if (!tile.el) return;
     window.cancelAnimationFrame(tile.frame);
@@ -625,6 +625,36 @@
     if (face === 'lower') lowerHands(el);
     el.classList.remove('is-giggling');
     tile.el = null;
+    if (follow && !calm.matches) {
+      showScare(''); // (he is his calm portrait on the way: no clip left playing over it)
+      // A mode switch moves the headline while he travels (the hero changes height), so
+      // he is steered every frame towards where his place is at that moment, and lands
+      // exactly on it. One motion, transform only, easing out: no stall, no jump at the end.
+      const from = { x: tile.x, y: tile.y, angle: ((tile.angle + 180) % 360 + 360) % 360 - 180, size: el.offsetWidth };
+      const size0 = portraitImg.offsetWidth;
+      el.style.transition = 'none';
+      el.style.width = el.style.height = size0 + 'px';
+      el.style.margin = -size0 / 2 + 'px 0 0 ' + -size0 / 2 + 'px';
+      el.style.borderRadius = size0 * 0.146 + 'px';
+      const began = performance.now();
+      const TOOK = 600; // ms (longer than a chrome transition on purpose: he crosses the hero)
+      const steer = (now) => {
+        const t = Math.min(1, (now - began) / TOOK);
+        const k = 1 - Math.pow(1 - t, 3);
+        const heroBox = hero.getBoundingClientRect();
+        const spot = portraitImg.getBoundingClientRect();
+        const toX = spot.left + spot.width / 2 - heroBox.left;
+        const toY = spot.top + spot.height / 2 - heroBox.top;
+        const grow = from.size / size0;
+        el.style.transform = 'translate(' + (from.x + (toX - from.x) * k).toFixed(1) + 'px, ' + (from.y + (toY - from.y) * k).toFixed(1) + 'px) rotate(' + (from.angle + (4 - from.angle) * k).toFixed(2) + 'deg) scale(' + (grow + (1 - grow) * k).toFixed(4) + ')';
+        if (t < 1) { window.requestAnimationFrame(steer); return; }
+        el.remove();
+        root.classList.add('is-back');
+        root.classList.remove('is-out');
+      };
+      window.requestAnimationFrame(steer);
+      return;
+    }
     const heroRect = hero.getBoundingClientRect();
     const rect = portraitImg.getBoundingClientRect();
     const size = portraitImg.offsetWidth;
@@ -1080,7 +1110,19 @@
       measure(body);
       body.yielded = false;
       // A sticker is never at rest in Fun mode: it is always on its loop.
-      if (body.kind === 'sticker' && body.state === 'home') { wake(body); body.state = 'free'; body.orbit = null; }
+      if (body.kind === 'sticker' && body.state === 'home') {
+        wake(body);
+        body.state = 'free';
+        // Starting up (the page opening, or Fun mode switched back on) it takes its place on
+        // the loop at once, rather than drifting there across the headline from wherever
+        // it last sat.
+        body.orbit = orbitOf(body);
+        body.spin = ORBIT_TURN;
+        const spot = orbitSpot(body);
+        body.x = spot.x;
+        body.y = spot.y;
+        body.vx = body.vy = 0;
+      }
       if (body.kind === 'sticker' && !body.orbit) { body.orbit = orbitOf(body); body.spin = ORBIT_TURN; }
 
       // His tile against this word or sticker.
@@ -1607,12 +1649,46 @@
     }
   };
 
+  // Switching modes, the stickers travel in one smooth move between the row along the
+  // bottom (Normal) and their places round the headline (Fun). Each is put straight into
+  // its new place and then carried there from where it was, by transform alone, easing
+  // out, a beat after the one before. No overshoot, and nothing is left half-way.
+  const SWITCH_MS = 600; // (longer than a chrome transition on purpose: they cross the hero)
+  let switchMoves = [];
+  let switchTimer = 0;
+  const stickerSpots = () => bodies.filter((body) => body.kind === 'sticker').map((body) => {
+    const box = body.el.getBoundingClientRect();
+    return { el: body.el, x: box.left + box.width / 2, y: box.top + box.height / 2, w: body.el.offsetWidth || 1 };
+  });
+  const carryStickers = (before) => {
+    switchMoves.forEach((move) => move.cancel());
+    switchMoves = [];
+    void hero.offsetWidth;
+    const after = stickerSpots();
+    after.forEach((now, i) => {
+      const was = before[i];
+      if (!was || !now.el.animate) return;
+      const timing = { duration: SWITCH_MS, delay: i * 30, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'backwards' };
+      switchMoves.push(now.el.animate(
+        [{ translate: (was.x - now.x).toFixed(1) + 'px ' + (was.y - now.y).toFixed(1) + 'px' }, { translate: '0px 0px' }],
+        Object.assign({ composite: 'add' }, timing)));
+      switchMoves.push(now.el.animate([{ scale: (was.w / now.w).toFixed(4) }, { scale: 1 }], timing));
+    });
+    window.clearTimeout(switchTimer);
+    switchTimer = window.setTimeout(() => root.classList.remove('is-switching-mode'), SWITCH_MS + 260);
+  };
+
   const setMode = (mode, announce) => {
+    const carry = Boolean(announce) && !calm.matches && heroVisible && wide.matches;
+    const before = carry ? stickerSpots() : null;
+    if (carry) root.classList.add('is-switching-mode'); // (the stylesheet's own moves stand down)
     // Release everything loose while the page is still in its current layout, so each
     // piece starts its glide from exactly where it is.
-    if (mode !== 'fun') { sendTileHome(); sendAllHome(); }
+    if (mode !== 'fun') { sendTileHome(undefined, true); sendAllHome(); }
     root.dataset.mode = mode;
     syncReset();
+    if (mode === 'fun' && carry && !tile.frame) worldTick(0.001); // (each sticker takes its place on the loop now)
+    if (carry) carryStickers(before);
     if (mode === 'fun') runWorld(); // (the stickers set off on their loop)
     modeSwitch.setAttribute('aria-checked', String(mode === 'fun'));
     if (!announce) return;
@@ -2592,22 +2668,81 @@
   // "Motion Graphics" in the nav bar goes straight to the finished card. The page is
   // carried there in one go, so the things on the way (the Dock, the folders) are simply
   // in place when it arrives instead of each playing its entrance.
+  // One quick, direct glide for every nav link. It is driven here rather than left to the
+  // browser, so it is short, it cannot be dragged off course by trackpad momentum left over
+  // from before the click, and the staged pieces stay "in place" until it has arrived.
+  const glide = { frame: 0, until: 0 };
+  const glideTo = (top) => {
+    const end = document.documentElement.scrollHeight - window.innerHeight;
+    const to = Math.round(Math.max(0, Math.min(end, top)));
+    const from = window.scrollY;
+    const far = Math.abs(to - from);
+    const took = Math.max(260, Math.min(520, 220 + far * 0.06)); // ms
+    const began = performance.now();
+    window.cancelAnimationFrame(glide.frame);
+    wheel.target = null;
+    dockPop.skip = true;
+    glide.until = began + took + 160; // (the wheel is ignored until just after it lands)
+    const step = (now) => {
+      const t = Math.min(1, (now - began) / took);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      window.scrollTo({ top: from + (to - from) * eased, behavior: 'instant' });
+      queuePage();
+      if (t < 1) { glide.frame = window.requestAnimationFrame(step); return; }
+      window.scrollTo({ top: to, behavior: 'instant' });
+      glide.frame = 0;
+      // Two more frames with everything held in place, then the page is its usual self.
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => { dockPop.skip = false; queuePage(); }));
+    };
+    glide.frame = window.requestAnimationFrame(step);
+  };
+
   const reelLink = document.querySelector('.site-nav a[href="#motion-graphics"]');
   if (reelLink && reel && reelCard) {
     reelLink.addEventListener('click', (event) => {
       if (!playing()) return;
       event.preventDefault();
-      dockPop.skip = true;
-      // Back to normal as soon as the page has arrived (or the visitor scrolls for themselves).
-      const arrived = () => { if (!dockPop.skip) return; dockPop.skip = false; queuePage(); };
-      window.addEventListener('scrollend', arrived, { once: true });
-      window.addEventListener('wheel', arrived, { once: true, passive: true });
-      window.setTimeout(arrived, 3200);
       const stick = parseFloat(window.getComputedStyle(reelCard).top) || 134;
-      window.scrollTo({ top: reel.getBoundingClientRect().top + window.scrollY - stick + 0.64 * window.innerHeight + 170, behavior: 'smooth' });
-      queuePage();
+      glideTo(reel.getBoundingClientRect().top + window.scrollY - stick + 0.64 * window.innerHeight + 170);
     });
   }
+
+  // The other nav links land the same way: each one carries the page to the moment its
+  // section is properly on show, with everything on the way already in place.
+  //   Home          the very top
+  //   Case Studies  the first folder open, before the second one starts to arrive
+  //   About Me      its window fully open
+  const secondFolder = document.querySelectorAll('.project-card')[1];
+  let secondFolderTop = 0; // where the second folder sits in the page when nothing is stuck
+  const measureFolders = () => {
+    if (!secondFolder || window.scrollY > 200) return; // (only while the folders are in their natural places)
+    secondFolderTop = secondFolder.getBoundingClientRect().top + window.scrollY;
+  };
+  measureFolders();
+  window.addEventListener('load', measureFolders);
+  window.addEventListener('resize', measureFolders);
+  const landings = {
+    '#home': () => 0,
+    '#case-studies': () => {
+      const section = document.querySelector('#case-studies');
+      const fallback = section ? section.getBoundingClientRect().top + window.scrollY + 0.95 * window.innerHeight : 0;
+      // (The second folder is still just below the bottom edge here, so the first has the screen.)
+      return secondFolderTop ? secondFolderTop - 1.02 * window.innerHeight : fallback;
+    },
+    '#about-me': () => {
+      const section = document.querySelector('#about-me');
+      return section ? section.getBoundingClientRect().top + window.scrollY - 0.25 * window.innerHeight : 0;
+    },
+  };
+  Object.keys(landings).forEach((hash) => {
+    document.querySelectorAll('.site-header a[href="' + hash + '"]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        if (!playing()) return;
+        event.preventDefault();
+        glideTo(landings[hash]());
+      });
+    });
+  });
 
   let pageFrame = 0;
   let pointerX = -999;
@@ -2656,6 +2791,7 @@
     if (!playing() || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
     if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
     event.preventDefault();
+    if (performance.now() < glide.until) return; // a nav link is carrying the page: momentum left over from before is dropped
     const line = event.deltaMode === 1 ? 32 : event.deltaMode === 2 ? window.innerHeight : 1;
     const end = document.documentElement.scrollHeight - window.innerHeight;
     // Already at the very top and still scrolling up (or at the very bottom, scrolling
