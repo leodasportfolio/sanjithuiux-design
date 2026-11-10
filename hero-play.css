@@ -537,17 +537,54 @@ html.is-recovering .hero-bubble { opacity: 0 !important; transform: translate(-6
 .project-card--soon { display: none; }
 .reel { display: none; }
 .notice, .pointer, .reel-heading, .dock, .genie { display: none; }
-/* The Motion Graphics card only exists in Fun mode on wide screens, and so does its nav link. */
-.site-nav .nav-reel { display: none; }
+/* (The Motion Graphics link is in the nav bar in both modes; its card has a plain form
+   outside Fun mode, further down.) */
+
+/* ---------- Motion Graphics outside Fun mode ----------
+   The same card, plain: a dark screening card that sits in the page after the case studies.
+   Nothing is staged or animated here; Fun mode on a wide screen has its own version below. */
+  html:not([data-mode="fun"]) .reel { display: block; grid-column: 1 / -1; margin-top: 24px; scroll-margin-top: 110px; }
+  html:not([data-mode="fun"]) .reel-screen { overflow: hidden; border-radius: 28px; background: #16181d; color: #fff; }
+  html:not([data-mode="fun"]) .reel-bar { display: flex; align-items: center; gap: 10px; padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, .08); font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+  html:not([data-mode="fun"]) .reel-rec { width: 10px; height: 10px; border-radius: 50%; background: #ff5a1f; }
+  html:not([data-mode="fun"]) .reel-status { margin-left: auto; font-weight: 500; opacity: .6; }
+  html:not([data-mode="fun"]) .reel-stage { display: grid; justify-items: center; gap: 18px; padding: 56px 24px 48px; text-align: center; }
+  html:not([data-mode="fun"]) .reel-title { margin: 0; font-family: "Bricolage Grotesque", sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 1.1; letter-spacing: -.02em; }
+  html:not([data-mode="fun"]) .reel-play { position: relative; width: 84px; height: 84px; border-radius: 50%; background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .28); }
+  html:not([data-mode="fun"]) .reel-play::after { content: ""; position: absolute; left: 50%; top: 50%; margin: -15px 0 0 -9px; border-style: solid; border-width: 15px 0 15px 25px; border-color: transparent transparent transparent #fff; }
+  html:not([data-mode="fun"]) .reel-note { margin: 0; font-size: 15px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+  html:not([data-mode="fun"]) .reel-timeline { position: relative; display: grid; gap: 7px; padding: 18px 24px 24px; border-top: 1px solid rgba(255, 255, 255, .08); }
+  html:not([data-mode="fun"]) .reel-ruler { height: 8px; background: repeating-linear-gradient(to right, rgba(255, 255, 255, .28) 0 1px, transparent 1px 14px); }
+  html:not([data-mode="fun"]) .reel-track { position: relative; height: 13px; border-radius: 5px; background: rgba(255, 255, 255, .05); }
+  html:not([data-mode="fun"]) .reel-track i { position: absolute; left: var(--a); right: calc(100% - var(--b)); top: 0; bottom: 0; border-radius: 5px; background: var(--c); }
+  html:not([data-mode="fun"]) .reel-playhead { position: absolute; left: 39%; top: 14px; bottom: 20px; width: 1.5px; background: #ff5a1f; }
+
+@media (max-width: 1100px) {
+  html[data-mode="fun"] .reel { display: block; grid-column: 1 / -1; margin-top: 24px; scroll-margin-top: 110px; }
+  html[data-mode="fun"] .reel-screen { overflow: hidden; border-radius: 28px; background: #16181d; color: #fff; }
+  html[data-mode="fun"] .reel-bar { display: flex; align-items: center; gap: 10px; padding: 16px 24px; border-bottom: 1px solid rgba(255, 255, 255, .08); font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+  html[data-mode="fun"] .reel-rec { width: 10px; height: 10px; border-radius: 50%; background: #ff5a1f; }
+  html[data-mode="fun"] .reel-status { margin-left: auto; font-weight: 500; opacity: .6; }
+  html[data-mode="fun"] .reel-stage { display: grid; justify-items: center; gap: 18px; padding: 56px 24px 48px; text-align: center; }
+  html[data-mode="fun"] .reel-title { margin: 0; font-family: "Bricolage Grotesque", sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 1.1; letter-spacing: -.02em; }
+  html[data-mode="fun"] .reel-play { position: relative; width: 84px; height: 84px; border-radius: 50%; background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .28); }
+  html[data-mode="fun"] .reel-play::after { content: ""; position: absolute; left: 50%; top: 50%; margin: -15px 0 0 -9px; border-style: solid; border-width: 15px 0 15px 25px; border-color: transparent transparent transparent #fff; }
+  html[data-mode="fun"] .reel-note { margin: 0; font-size: 15px; font-weight: 600; color: rgba(255, 255, 255, .72); }
+  html[data-mode="fun"] .reel-timeline { position: relative; display: grid; gap: 7px; padding: 18px 24px 24px; border-top: 1px solid rgba(255, 255, 255, .08); }
+  html[data-mode="fun"] .reel-ruler { height: 8px; background: repeating-linear-gradient(to right, rgba(255, 255, 255, .28) 0 1px, transparent 1px 14px); }
+  html[data-mode="fun"] .reel-track { position: relative; height: 13px; border-radius: 5px; background: rgba(255, 255, 255, .05); }
+  html[data-mode="fun"] .reel-track i { position: absolute; left: var(--a); right: calc(100% - var(--b)); top: 0; bottom: 0; border-radius: 5px; background: var(--c); }
+  html[data-mode="fun"] .reel-playhead { position: absolute; left: 39%; top: 14px; bottom: 20px; width: 1.5px; background: #ff5a1f; }
+}
 
 @media (min-width: 1101px) {
-  html[data-mode="fun"] .site-nav .nav-reel { display: inline-flex; }
-  /* With that extra link the bar needs more room; and no link ever breaks onto two lines. */
-  html[data-mode="fun"] .site-header {
+  /* One nav bar for both modes: the same links, the same width; only the switch differs.
+     No link ever breaks onto two lines. */
+  .site-header {
     left: max(20px, calc((100vw - 940px) / 2));
     right: max(20px, calc((100vw - 940px) / 2));
   }
-  html[data-mode="fun"] .site-nav a { white-space: nowrap; }
+  .site-nav a { white-space: nowrap; }
   /* The last screen: "Let's Connect" has the whole window to itself, in the middle, once
      About Me has scrolled up and away. */
   html[data-mode="fun"] .contact { min-height: 100vh; padding-top: 32px; }
