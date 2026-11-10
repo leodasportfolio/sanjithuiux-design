@@ -115,12 +115,6 @@ h2 { font-size: 28px; font-weight: 800; line-height: 1.2; letter-spacing: -.03em
 /* Closing */
 .learned { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
 .learned h3 { color: var(--navy); font-size: 20px; font-weight: 800; }
-.thanks { display: flex; flex-direction: column; gap: 16px; padding: 40px; border-radius: 24px; background: var(--navy); color: #fff; }
-.thanks h2 { color: #fff; font-size: 24px; letter-spacing: 0; }
-.thanks-actions { display: flex; gap: 16px; }
-.thanks-actions a { flex: 1; display: flex; justify-content: center; align-items: center; gap: 10px; padding: 16px 24px; border: 1.5px solid #fff; border-radius: 12px; font-size: 20px; font-weight: 800; text-decoration: none; }
-.thanks-actions a:first-child { background: #fff; color: var(--navy); }
-.thanks-actions a:hover { text-decoration: underline; }
 
 .m-header { display: none; }
 
@@ -165,11 +159,7 @@ h2 { font-size: 28px; font-weight: 800; line-height: 1.2; letter-spacing: -.03em
   .ds { max-width: none; }
   .learned h3 { font-size: 16px; }
   .learned p { font-size: 14.4px; }
-  .thanks { padding: 24px 20px; }
-  .thanks h2 { font-size: 18px; }
-  .thanks-actions { flex-direction: column; gap: 12px; }
-  .thanks-actions a { font-size: 16px; padding: 14px 24px; }
-}
+        }
 
 @media (max-width: 760px) { .block--wide-gap { gap: 35px; } }
 
@@ -300,3 +290,22 @@ h2 { font-size: 28px; font-weight: 800; line-height: 1.2; letter-spacing: -.03em
 }
 @media (prefers-reduced-motion: reduce) { .chapter-rail, .chapter-rail::after, .mobile-menu-toggle span { transition: none !important; } }
 @media print { .chapter-rail, .mobile-menu-toggle { display: none !important; } }
+
+/* Closing bar: same as Drexel Works and GLOWM. */
+.closing-card { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; padding: 16px 24px; border-radius: 22px; background: var(--navy); color: #fff; }
+.closing-copy { flex: 1 1 280px; min-width: 0; }
+.closing-card h2 { color: #fff; font-size: clamp(25px, 2.22vw, 32px); line-height: 1.2; letter-spacing: 0; }
+.closing-navigation { flex: 0 1 auto; max-width: 100%; min-width: 0; }
+.closing-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.closing-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; max-width: 100%; min-height: 52px; padding: 14px 18px; border: 1px solid #fff; border-radius: 12px; font-size: 17px; font-weight: 800; line-height: 1.35; text-decoration: none; }
+.closing-button--primary { background: #fff; color: var(--navy); }
+.closing-button--secondary { background: transparent; color: #fff; }
+.closing-button:hover { text-decoration: underline; }
+.closing-button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .closing-card { gap: 28px; padding: 24px 20px; }
+  .closing-card h2 { font-size: 18px; }
+  .closing-navigation { flex: 1 1 100%; }
+  .closing-actions { flex-direction: column; width: 100%; }
+  .closing-button { width: 100%; }
+}

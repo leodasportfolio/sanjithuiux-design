@@ -6,6 +6,13 @@
   const sections = links.map(link => document.getElementById(link.hash.slice(1)));
   const rail = document.querySelector('.chapter-rail');
   let frame = 0;
+  let pinned = -1;
+  links.forEach((link, i) => link.addEventListener('click', () => { pinned = i; }));
+  const unpin = () => { if (pinned >= 0) { pinned = -1; if (!frame) frame = requestAnimationFrame(updateSection); } };
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(type => window.addEventListener(type, (e) => {
+    if (type === 'mousedown' && e.target.closest('.chapter-rail')) return;
+    unpin();
+  }, { passive: true }));
   const updateSection = () => {
     frame = 0;
     const readingLine = window.innerHeight * .35;
@@ -14,6 +21,8 @@
     bounds.forEach((rect, i) => {
       if (rect && rect.top <= readingLine) current = i;
     });
+    // A clicked section stays lit even when the next short section also reaches the reading line.
+    if (pinned >= 0) current = pinned;
     const atEnd = current >= 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
     links.forEach((link, i) => {
       if (i === current) link.setAttribute('aria-current', 'location');
