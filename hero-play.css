@@ -447,7 +447,15 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
 
   html[data-mode="fun"] .pen-path { opacity: 1; }
   html[data-mode="fun"] .pen-path .wire { stroke-dashoffset: 0; transition-delay: .35s; }
-  html[data-mode="fun"] .pen-path .sling { opacity: 1; transition-delay: 1.3s; }
+  /* The wire's handle is no longer a slingshot and the Reset button is gone: he is slung
+     from wherever he is grabbed, and everything finds its own way back. */
+  html[data-mode="fun"] .pen-path .sling, .reset-dock { display: none; }
+  html[data-mode="fun"] .sticker { cursor: default; }
+  html[data-mode="fun"] .sticker:hover { scale: 1; }
+  /* The band from the slingshot's post to him while he is pulled back. */
+  /* The aimer: a dotted line (small squares) the way he will fly, from the spot he was grabbed. */
+  html[data-mode="fun"] .sling-band { position: absolute; left: 0; top: 0; height: 6px; margin-top: -3px; background: repeating-linear-gradient(to right, transparent 0 10px, #ff5a1f 10px 16px, transparent 16px 20px); transform-origin: 0 50%; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .15s ease; }
+  html[data-mode="fun"] .sling-band::before { content: ""; position: absolute; left: -5px; top: -2px; width: 10px; height: 10px; background: #fff; box-shadow: 0 0 0 1.5px var(--ink); }
 
   html[data-mode="fun"] .spark {
     scale: 1;
@@ -459,7 +467,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 8px
   html[data-mode="fun"] .name-box { opacity: 1; transform: scale(1); transition-delay: .55s; }
 
   /* The box can be moved by the word and resized by its handles; hero-play.js springs it back. */
-  html[data-mode="fun"] .name-select { z-index: 4; cursor: move; user-select: none; -webkit-user-select: none; touch-action: none; }
+  html[data-mode="fun"] .name-select { z-index: 4; cursor: default; user-select: none; -webkit-user-select: none; touch-action: none; }
   html[data-mode="fun"] .name-box i { pointer-events: auto; touch-action: none; }
   html[data-mode="fun"] .name-box .tl, html[data-mode="fun"] .name-box .br { cursor: nwse-resize; }
   html[data-mode="fun"] .name-box .tr, html[data-mode="fun"] .name-box .bl { cursor: nesw-resize; }

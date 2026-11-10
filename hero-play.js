@@ -76,6 +76,8 @@
 
   nameSelect.addEventListener('pointerdown', (event) => {
     if (!playing() || event.button !== 0) return;
+    // "Sanjith!" stays where it is: only its handles do anything, and they only stretch it.
+    if (!event.target.closest('.name-box i')) return;
     event.preventDefault();
     window.cancelAnimationFrame(box.frame);
     box.frame = 0;
@@ -130,15 +132,15 @@
   const portrait = hero.querySelector('.hero-portrait');
   const portraitImg = portrait.querySelector('img');
   const header = document.querySelector('.site-header');
-  const HELD_SCALE = 2;
-  const FREE_SCALE = 1.6;
+  const HELD_SCALE = 1.35; // a little bigger in the hand, not huge
+  const FREE_SCALE = 1.3;
   const SLING_SPEED = 1150;
-  const GRAVITY = 330;
-  const AIR_DRAG = 1.5;
-  const WALL_BOUNCE = 0.55;
+  const GRAVITY = 40;   // barely any: he flies straight and fast, like something in space
+  const AIR_DRAG = 0.85;
+  const WALL_BOUNCE = 0.72;
   const FLOOR_BOUNCE = 0.4;
   const BOX_BOUNCE = 1.15;
-  const MAX_SPEED = 1500;
+  const MAX_SPEED = 2000;
   const tile = {
     el: null, x: 0, y: 0, vx: 0, vy: 0, angle: 4, spin: 0, size: 96, heldSize: 192, freeSize: 154,
     held: false, frame: 0, last: 0, hits: 0, grabX: 0, grabY: 0, trail: [], lean: 0, sling: '', release: null, carryX: 0, carryY: 0, touch: null, pushedAt: 0, aimX: 0, aimY: 0, shownX: 0, shownY: 0,
@@ -160,7 +162,7 @@
   // is hooked: pulling back stretches the handle like a rubber band, up to a limit, and
   // letting go launches him the opposite way, harder the further he was pulled. Only
   // he can be launched; stickers pass it by.
-  const bandGroup = hero.querySelector('.pen-path .sling');
+  const bandGroup = null; // (the handle on the wire is no longer a slingshot: he is slung from wherever he is grabbed)
   const bandLine = bandGroup && bandGroup.querySelector('.handle');
   const BAND = { ax: 1302, ay: 477, k1: [1316, 426], k2: [1288, 528] }; // in the drawing's own units
   const BAND_REACH = 44; // how close his centre must come to be hooked
@@ -239,7 +241,7 @@
     tile.angle = 4;
     renderTile();
     root.classList.add('is-out');
-    el.addEventListener('pointerdown', grabTile);
+    // (Out of the headline he cannot be grabbed: only once he is back in his place.)
   };
 
   // Push the tile out of a rectangle it overlaps. Returns true when it was touching.
@@ -408,31 +410,10 @@
         if (Math.abs(tile.angle - upright) > 7) { tile.angle = upright + Math.sign(tile.angle - upright) * 7; tile.spin = 0; }
       }
 
-      // The orange box is a trampoline: it throws him back harder and flexes.
-      const boxed = bounceOffRect(boxRect(), BOX_BOUNCE, dt, (nx, ny, closing) => {
-        feelBox('bounce');
-        if (box.held) return;
-        box.vel.x -= nx * closing * 0.35;
-        box.vel.y -= ny * closing * 0.35;
-        springBox();
-      });
-      if (boxed === 'shove' && box.held) feelBox(tile.shoved > 650 ? 'slam' : 'push');
+      // The nav bar is the one solid thing he can meet up there; the orange box is not
+      // his to bump (it only stretches for the visitor), so he passes straight through it.
       const nav = navRect();
-      if (nav && bounceOffRect(nav, WALL_BOUNCE, dt)) {
-        // Wedged between the nav bar and the box: squeeze out sideways.
-        const rect = boxRect();
-        const reachNow = tileReach();
-        if (tile.x + reachNow > rect.left && tile.x - reachNow < rect.right && tile.y + reachNow > rect.top && tile.y - reachNow < rect.bottom) {
-          const way = tile.x < (rect.left + rect.right) / 2 ? -1 : 1;
-          tile.x += way * 520 * dt;
-          tile.vx = way * 260;
-          tile.vy = 0;
-        }
-      }
-
-      // The reset button is solid too, and wobbles when he hits it.
-      const resetBox = resetRect();
-      if (resetBox) bounceOffRect(resetBox, WALL_BOUNCE, dt, wobbleReset);
+      if (nav) bounceOffRect(nav, WALL_BOUNCE, dt);
 
       const reach = tileReach();
       if (tile.x - reach < 0) { tile.x = reach; if (tile.vx < 0) { if (tile.vx < -60) tile.hits += 1; tile.spin += tile.vy * 0.06; tile.vx *= -WALL_BOUNCE; } }
@@ -459,18 +440,6 @@
         }
       }
     }
-    if (!tile.held) {
-      const rect = boxRect();
-      const reachNow = tileReach();
-      if (tile.x + reachNow > rect.left + 1 && tile.x - reachNow < rect.right - 1 && tile.y + reachNow > rect.top + 1 && tile.y - reachNow < rect.bottom - 1) {
-        // Pinned between the box and the floor or a wall: squeeze out sideways.
-        const way = tile.x < (rect.left + rect.right) / 2 ? -1 : 1;
-        const room = way < 0 ? rect.left - reachNow > reachNow : rect.right + reachNow < width - reachNow;
-        const go = room ? way : -way;
-        tile.x += go * 620 * dt;
-        tile.vx = go * 220;
-      }
-    }
     worldTick(dt);
     tile.blocked = tile.held && tile.yielded;
     if (tile.blocked) tile.catching = true;
@@ -495,88 +464,71 @@
     if (tile.x + reach > rect.left && tile.x - reach < rect.right && tile.y + reach > rect.top && tile.y - reach < rect.bottom) runTile();
   }
 
+  const PULL_MAX = 120; // the furthest he can be pulled back
+  const PULL_MIN = 14;  // a shorter pull than this is just letting go of him
+  let slingLine = null;
+  // The aimer: from where he was grabbed, a dotted line points the way he will fly, longer
+  // the harder the pull, with a small white square marking the spot he was grabbed from.
+  const drawSling = (fromX, fromY, toX, toY) => {
+    if (!slingLine) {
+      slingLine = document.createElement('div');
+      slingLine.className = 'sling-band';
+      playLayer.append(slingLine);
+    }
+    const pull = Math.hypot(toX - fromX, toY - fromY);
+    slingLine.style.transform = 'translate(' + fromX.toFixed(1) + 'px, ' + fromY.toFixed(1) + 'px) rotate(' + Math.atan2(fromY - toY, fromX - toX).toFixed(4) + 'rad)';
+    slingLine.style.width = (pull * 2.4).toFixed(1) + 'px';
+    slingLine.style.opacity = pull > 6 ? '1' : '0';
+  };
+  const hideSling = () => { if (slingLine) slingLine.style.opacity = '0'; };
+
+  // Grab him anywhere, pull back, let go: he flies the opposite way, harder the further
+  // he was pulled. Where he was grabbed is the slingshot's post, and a band stretches
+  // from it to him while he is held. A pull too short to count just lets him go home.
   function grabTile(event) {
-    if (!playing() || event.button !== 0) return;
+    if (!playing() || event.button !== 0 || tile.held) return;
     event.preventDefault();
     if (!tile.el) makeTile();
+    window.clearTimeout(mood.homeTimer);
+    mood.homeTimer = 0;
     const point = heroPoint(event);
     tile.held = true;
     tile.hits = 0;
-    tile.vx = tile.vy = 0;
+    tile.vx = tile.vy = tile.spin = 0;
     tile.carryX = tile.carryY = 0;
     tile.lean = 0;
     tile.angle = ((tile.angle + 180) % 360 + 360) % 360 - 180;
+    tile.anchorX = tile.x;
+    tile.anchorY = tile.y;
     tile.grabX = point.x - tile.x;
     tile.grabY = point.y - tile.y;
     tile.aimX = tile.shownX = tile.x;
     tile.aimY = tile.shownY = tile.y;
     tile.blocked = tile.catching = false;
-    tile.trail = [{ t: performance.now(), x: tile.x, y: tile.y }];
+    tile.pull = 0;
     tile.el.classList.add('is-held');
     document.documentElement.classList.add('is-dragging');
-    syncReset();
     loadFaces();
     onGrab();
 
     const drag = (move) => {
       const at = heroPoint(move);
+      let dx = at.x - tile.grabX - tile.anchorX;
+      let dy = at.y - tile.grabY - tile.anchorY;
+      const len = Math.hypot(dx, dy);
+      // The band gives easily at first and stiffens towards its limit.
+      const give = len > 0 ? PULL_MAX * Math.tanh(len / PULL_MAX) : 0;
+      if (len > 0) { dx *= give / len; dy *= give / len; }
       const reach = tileReach();
-      const before = tile.aimX;
-      let wantX = at.x - tile.grabX;
-      let wantY = at.y - tile.grabY;
-      if (bandGroup) {
-        const anchor = bandFit();
-        const away = Math.hypot(wantX - anchor.x, wantY - anchor.y);
-        if (!band.hooked && away < BAND_REACH) {
-          // Carried onto the handle: he is hooked.
-          band.hooked = true;
-          window.cancelAnimationFrame(band.frame);
-          band.frame = 0;
-          band.velX = band.velY = 0;
-          bandGroup.classList.add('is-loaded');
-        }
-        if (band.hooked) {
-          // He goes only as far as the band stretches, however far the cursor goes.
-          const pull = Math.min(away, BAND_PULL);
-          wantX = anchor.x + (away ? (wantX - anchor.x) / away * pull : 0);
-          wantY = anchor.y + (away ? (wantY - anchor.y) / away * pull : 0);
-        } else bandGroup.classList.toggle('is-ready', away < BAND_NEAR);
-        tile.aimX = Math.min(hero.clientWidth - reach, Math.max(reach, wantX));
-        tile.aimY = Math.min(hero.clientHeight - reach, Math.max(reach, wantY));
-        if (band.hooked) {
-          band.offX = tile.aimX - anchor.x;
-          band.offY = tile.aimY - anchor.y;
-          band.pull = Math.min(1, Math.hypot(band.offX, band.offY) / BAND_PULL);
-          drawBand();
-        }
-      } else {
-        tile.aimX = Math.min(hero.clientWidth - reach, Math.max(reach, wantX));
-        tile.aimY = Math.min(hero.clientHeight - reach, Math.max(reach, wantY));
-      }
+      tile.aimX = Math.min(hero.clientWidth - reach, Math.max(reach, tile.anchorX + dx));
+      tile.aimY = Math.min(hero.clientHeight - reach, Math.max(reach, tile.anchorY + dy));
       tile.x = tile.aimX;
       tile.y = tile.aimY;
-      // He tips a little toward the way he is being carried.
-      if (!tile.blocked && !band.hooked) tile.lean = Math.max(-16, Math.min(16, tile.lean + (tile.x - before) * 0.5));
-      const prior = tile.trail[tile.trail.length - 1];
-      const since = Math.max(0.008, (performance.now() - prior.t) / 1000);
-      tile.carryX = (tile.x - prior.x) / since;
-      tile.carryY = (tile.y - prior.y) / since;
-      // Held off, he is not really travelling however fast the cursor moves.
-      if (tile.blocked) { tile.carryX *= 0.25; tile.carryY *= 0.25; }
-      const pace = Math.hypot(tile.carryX, tile.carryY);
-      if (pace > 300) {
-        // A sharp reversal of direction is one beat of a shake, whichever way it goes.
-        const dirX = tile.carryX / pace;
-        const dirY = tile.carryY / pace;
-        if (mood.dirX * dirX + mood.dirY * dirY < -0.3) mood.flips.push(performance.now());
-        mood.dirX = dirX;
-        mood.dirY = dirY;
-      }
-      tile.trail.push({ t: performance.now(), x: tile.x, y: tile.y });
-      if (tile.trail.length > 8) tile.trail.shift();
-      if (!band.hooked) slingTile();
+      tile.pull = Math.hypot(tile.x - tile.anchorX, tile.y - tile.anchorY);
+      tile.lean = Math.max(-14, Math.min(14, -(tile.x - tile.anchorX) * 0.06)); // he leans back against the pull
+      drawSling(tile.anchorX, tile.anchorY, tile.x, tile.y);
     };
-    const release = (fired) => {
+    const release = () => {
       window.removeEventListener('pointermove', drag);
       window.removeEventListener('pointerup', release);
       window.removeEventListener('pointercancel', release);
@@ -584,28 +536,24 @@
       tile.release = null;
       tile.blocked = tile.catching = false;
       document.documentElement.classList.remove('is-dragging');
-      // He was sent home while still in the hand (reset or a mode switch): nothing to let go of.
-      if (!tile.el) { dropBand(); return; }
+      hideSling();
+      if (!tile.el) return; // (sent home while in the hand: a mode switch)
       tile.el.classList.remove('is-held');
-      const stretch = Math.hypot(band.offX, band.offY);
-      const slung = band.hooked && fired !== true && stretch >= BAND_MIN;
-      if (slung) {
-        // The slingshot lets go: he flies the opposite way to the pull, harder the further it was.
-        const speed = 380 + (stretch - BAND_MIN) / (BAND_PULL - BAND_MIN) * 1070;
-        tile.vx = -band.offX / stretch * speed;
-        tile.vy = -band.offY / stretch * speed;
-        tile.spin = Math.max(-170, Math.min(170, tile.vx * 0.12));
-      } else if (fired !== true) {
-        const now = performance.now();
-        const from = tile.trail.find((point) => now - point.t < 110) || tile.trail[tile.trail.length - 1];
-        const span = Math.max(0.016, (now - from.t) / 1000);
-        tile.vx = (tile.x - from.x) / span;
-        tile.vy = (tile.y - from.y) / span;
-        tile.spin = Math.max(-170, Math.min(170, tile.vx * 0.12));
-        if (tile.sling) { tile.sling = ''; springBox(); }
+      const dx = tile.x - tile.anchorX;
+      const dy = tile.y - tile.anchorY;
+      const len = Math.hypot(dx, dy);
+      tile.pull = 0;
+      if (len < PULL_MIN) {
+        // Not really pulled: he just goes back to where he belongs.
+        onRelease(false);
+        sendTileHome();
+        return;
       }
-      dropBand();
-      onRelease(fired === true || slung);
+      const speed = 650 + (len / PULL_MAX) * 1550;
+      tile.vx = -dx / len * speed;
+      tile.vy = -dy / len * speed;
+      tile.spin = Math.max(-170, Math.min(170, tile.vx * 0.12));
+      onRelease(true);
       runTile();
     };
     tile.release = release;
@@ -622,6 +570,9 @@
     window.cancelAnimationFrame(tile.frame);
     tile.frame = 0;
     tile.held = false;
+    window.clearTimeout(mood.homeTimer);
+    mood.homeTimer = 0;
+    hideSling();
     const el = tile.el;
     mood.face = '';
     mood.was = 'home';
@@ -638,7 +589,7 @@
     const heroRect = hero.getBoundingClientRect();
     const rect = portraitImg.getBoundingClientRect();
     const size = portraitImg.offsetWidth;
-    el.style.transition = 'transform .65s cubic-bezier(.3, 1, .3, 1), width .65s cubic-bezier(.3, 1, .3, 1), height .65s cubic-bezier(.3, 1, .3, 1), margin .65s cubic-bezier(.3, 1, .3, 1), border-radius .65s ease';
+    el.style.transition = 'transform 1.1s cubic-bezier(.3, 1, .3, 1), width 1.1s cubic-bezier(.3, 1, .3, 1), height 1.1s cubic-bezier(.3, 1, .3, 1), margin 1.1s cubic-bezier(.3, 1, .3, 1), border-radius 1.1s ease';
     el.style.width = el.style.height = size + 'px';
     el.style.margin = -size / 2 + 'px 0 0 ' + -size / 2 + 'px';
     el.style.borderRadius = size * 0.146 + 'px';
@@ -646,25 +597,16 @@
     const finish = () => { el.remove(); root.classList.remove('is-out'); };
     runWorld();
     el.addEventListener('transitionend', finish, { once: true });
-    window.setTimeout(finish, 800);
+    window.setTimeout(finish, 1250);
   };
 
   // ---------- His face ----------
-  // He wears one drawing at a time, chosen from what is actually happening to him, and
-  // each one stays on for at least a second so it can be read. He remembers how he has
-  // been treated: after rough handling the next grab frightens him; after gentle
-  // handling he trusts the hand and smiles.
-  const FACES = ['calm', 'smile', 'startled', 'scared', 'panic', 'dizzy', 'tired', 'queasy', 'ouch', 'coffee', 'nervous', 'relieved', 'asleep', 'annoyed', 'wave', 'refreshed'];
-  const MIN_SHOW = 1000;
-  const ROUGH_CARRY = 700;
-  const THROW_SPEED = 350;
-  const mood = {
-    face: '', changedAt: 0, was: 'home', wary: true, grabAt: 0, grabX: 0, grabY: 0,
-    roughHold: false, flight: false, landedAt: 0, rough: false, crashes: 0, gentleRuns: 0,
-    lastTouch: 0, clicks: [], loaded: false, slowSince: 0, activeAt: 0,
-    contacts: {}, reacted: {}, felt: {}, stung: {}, gentleFace: '', gentleAt: 0, gentleUntil: 0, hurtAt: 0, flightHit: false, knocked: false, boxAt: 0,
-    holdUntil: 0, flips: [], dirX: 0, dirY: 0, shake: 0, shakeAt: 0, shook: false, sick: false, flightLock: false, tick: 0,
-  };
+  // Four faces, and only these: calm at home (his own portrait), startled while he is
+  // held and pulled back, cheeks-out panic while he flies, dizzy when he lands. A few
+  // seconds after landing he floats back to his place in the headline by himself.
+  const FACES = ['calm', 'startled', 'panic', 'dizzy'];
+  const REST_HOME_MS = 3000; // how long he lies where he landed before floating home
+  const mood = { face: '', changedAt: 0, was: 'home', flight: false, landedAt: 0, slowSince: 0, activeAt: 0, contacts: {}, homeTimer: 0, tick: 0 };
   const placeBubble = () => {};
   const hush = () => {};
 
@@ -674,334 +616,68 @@
     FACES.forEach((name) => { new Image().src = 'assets/faces/' + name + '.jpg?v=2'; });
   };
 
-  // Wear a face. Unless `now` is forced, the current face is left on until it has been
-  // showing for at least a second.
-  const wear = (face, force) => {
+  const wear = (face) => {
     if (!tile.el || mood.face === face) return false;
-    const now = performance.now();
-    if (!force && now - mood.changedAt < MIN_SHOW) return false;
     mood.face = face;
-    mood.changedAt = now;
+    mood.changedAt = performance.now();
     tile.el.querySelector('img').src = 'assets/faces/' + face + '.jpg?v=2';
-    // Temporary recorder for tracking down a stuck face. It changes nothing on screen.
-    (window.__faceLog = window.__faceLog || []).push({ t: Math.round(now), face, forced: Boolean(force), held: tile.held, moving: Boolean(tile.frame), speed: Math.round(Math.hypot(tile.vx, tile.vy)), carry: Math.round(Math.hypot(tile.carryX, tile.carryY)), flight: mood.flight, rough: mood.rough, was: mood.was, x: Math.round(tile.x), y: Math.round(tile.y) });
-    if (window.__faceLog.length > 400) window.__faceLog.shift();
-    tile.el.classList.remove('is-giggling');
     return true;
   };
 
-  const mugNear = () => {
-    const mug = bodies.find((body) => body.el.dataset.sticker === 'mug');
-    if (!mug) return false;
-    measure(mug);
-    // The coffee counts only when someone brings the two together, not when it happens to be nearby.
-    const brought = tile.held || mug.held;
-    return brought && Math.hypot(mug.x - tile.x, mug.y - tile.y) < tile.size / 2 + 120;
-  };
-
-  // A hit: it hurts, he is wary afterwards, and at rest he works through
-  // startled -> nervous -> relieved -> calm.
-  const hurt = (now) => {
-    const moving = !tile.held && Math.hypot(tile.vx, tile.vy) > 140;
-    mood.hurtAt = now;
-    mood.wary = true;
-    mood.activeAt = now;
-    mood.holdUntil = now + (moving ? 1000 : 1500);
-    wear('ouch', true);
-  };
-
-  // What a sticker does to him, the instant it touches him. One rule everywhere:
-  // fast hurts, slow is gentle. It applies to a sticker in the hand, one that was just
-  // thrown (first contact only), and to him being thrown or carried into one.
-  // A sticker that is merely drifting does nothing.
-  const HURT_SPEED = 500;
-  const feelTouch = (touch) => {
-    if (!tile.el) return;
-    const now = touch.at;
-    const name = touch.sticker;
-    mood.contacts[name] = now;
-    const flying = !tile.held && mood.flight;
-    if (!(touch.thrown || touch.pushed || tile.held || flying)) return;
-
-    if (touch.force > HURT_SPEED) {
-      const himMoving = flying && !touch.thrown && !touch.pushed;
-      if (himMoving) {
-        // Thrown into stickers: only the first one he meets on that throw hurts.
-        if (mood.flightHit) return;
-        mood.flightHit = true;
-      } else if (now - (mood.reacted[name] || 0) < 1200) return;
-      mood.reacted[name] = now;
-      (window.__hurtLog = window.__hurtLog || []).push({ name, thrown: touch.thrown, pushed: touch.pushed, himMoving, force: Math.round(touch.force), t: Math.round(now) });
-      mood.gentleFace = '';
-      mood.stung[name] = now;
-      hurt(now);
-      if (name === 'clapper' && !himMoving) {
-        // The clapperboard also leaves him seeing stars once the pain has passed.
-        mood.hurtAt = 0;
-        mood.rough = true;
-        mood.flight = false;
-        mood.landedAt = mood.holdUntil;
-      }
-      return;
-    }
-
-    // Gentle. Not while he is mid-Ouch, and not while he is being whipped around.
-    if (now < mood.holdUntil) return;
-    // A sticker that has just hurt him gets no second, gentle reaction while it is still
-    // against him.
-    if (now - (mood.stung[name] || 0) < 2500) return;
-    if (tile.held && Math.hypot(tile.carryX, tile.carryY) > HURT_SPEED) return;
-    // Nor while he is being shaken: the shaking wins, he gets dizzy whatever is beside him.
-    if (tile.held && (mood.flips.filter((time) => now - time < 900).length >= 3 || now - (mood.shakeAt || 0) < 500)) return;
-    const unwell = ['dizzy', 'tired', 'queasy', 'annoyed'].includes(mood.face);
-    const stillRefreshing = mood.gentleFace === 'refreshed' && now - mood.gentleAt < 600;
-    let face = '';
-    if (name === 'mug') face = unwell || stillRefreshing ? 'refreshed' : 'coffee';
-    else if (name === 'razor' || name === 'wacom') face = 'scared'; // sharp things scare him even when unwell
-    else if (!unwell) face = 'nervous';
-    if (!face) return;
-    // Two stickers on him at once: the scarier one decides his face. Sharp beats coffee,
-    // coffee beats the rest.
-    const rank = face === 'scared' ? 3 : name === 'mug' ? 2 : 1;
-    const ruled = mood.gentleFace && mood.gentleFrom !== name && mood.gentleRank > rank && now - mood.gentleAt < 350;
-    if (ruled) { mood.felt[name] = now; mood.activeAt = now; return; }
-    if (now - (mood.felt[name] || 0) > 600) {
-      // A new meeting: show the reaction for at least a moment.
-      mood.gentleUntil = now + 1200;
-      mood.reacted[name] = now;
-      // Coffee brings him round completely, shaking included.
-      if (face === 'refreshed') { mood.rough = false; mood.crashes = 0; mood.sick = false; mood.hurtAt = 0; mood.landedAt = now - 2000; mood.shake = 0; mood.shook = false; mood.roughHold = false; }
-    }
-    (window.__gentleLog = window.__gentleLog || []).push({ name, face, thrown: touch.thrown, pushed: touch.pushed, held: tile.held, flying, force: Math.round(touch.force), t: Math.round(now) });
-    // The reaction stays for as long as the sticker is against him.
-    mood.felt[name] = now;
-    mood.gentleRank = rank;
-    mood.gentleFrom = name;
-    mood.gentleFace = face;
-    mood.gentleAt = now;
-    mood.activeAt = now;
-  };
-
-  // The orange box meeting him: pushed in slowly, slammed in, or launching him.
-  const feelBox = (how) => {
-    if (!tile.el || tile.held) return;
-    const now = performance.now();
-    if (now - (mood.boxAt || 0) < 700) return;
-    mood.boxAt = now;
-    mood.activeAt = now;
-    mood.wary = true;
-    if (how === 'bounce') {
-      // The trampoline (or slingshot) sends him off hard.
-      mood.flight = true;
-      mood.rough = true;
-      mood.flightLock = false;
-      mood.flightFace = 'panic';
-      mood.panicAt = now;
-      // If he is mid-Ouch, let that finish; the flight face takes over straight after.
-      if (now >= mood.holdUntil) wear('panic', true);
-    } else if (how === 'slam') {
-      hurt(now);
-    } else if (now >= mood.holdUntil) {
-      wear('startled', true);
-      mood.holdUntil = now + 1200;
-    }
-  };
+  // Stickers have no powers any more: touching one does nothing to him.
+  const feelTouch = () => {};
+  const feelBox = () => {};
 
   const onGrab = () => {
-    const now = performance.now();
-    mood.grabAt = now;
-    mood.grabX = tile.x;
-    mood.grabY = tile.y;
-    mood.roughHold = false;
     mood.flight = false;
-    mood.flightLock = false;
-    mood.holdUntil = 0;
-    mood.gentleFace = '';
-    mood.flips = [];
-    mood.shake = 0;
-    mood.shook = false;
-    // Being grabbed always registers at once: frightened if he has reason to be.
-    wear(mood.wary ? 'startled' : 'smile', true);
+    mood.struck = false;
+    mood.activeAt = performance.now();
+    wear('startled');
   };
 
   const onRelease = (fired) => {
-    const now = performance.now();
-    const speed = Math.hypot(tile.vx, tile.vy);
-    const moved = Math.hypot(tile.x - mood.grabX, tile.y - mood.grabY);
-    if (!fired && now - mood.grabAt < 320 && moved < 4) {
-      // A click with no carrying at all. Three in a row tickle him, but only when he is well.
-      mood.clicks = mood.clicks.filter((time) => now - time < 1300);
-      mood.clicks.push(now);
-      const well = !mood.rough || now - mood.landedAt > 10600;
-      if (mood.clicks.length >= 3 && well) {
-        mood.clicks = [];
-        mood.wary = false;
-        wear('smile', true);
-        tile.el.classList.add('is-giggling');
-        window.setTimeout(() => tile.el && tile.el.classList.remove('is-giggling'), 1400);
-      }
-      return;
-    }
-    if (fired || speed > THROW_SPEED || mood.roughHold || mood.shake > 1.5) {
-      // Thrown, or carried roughly: he has been handled badly. How hard he was thrown
-      // decides his face for the whole flight, so it shows the instant he leaves the hand.
-      mood.flight = true;
-      mood.flightHit = false;
-      mood.rough = true;
-      mood.wary = true;
-      mood.gentleRuns = 0;
-      if (mood.shake > 1.5) {
-        // Let go after a good shaking: he falls already dizzy or queasy.
-        mood.sick = mood.shake > 3.5;
-        mood.flightLock = true;
-        mood.flightFace = mood.sick ? 'queasy' : 'dizzy';
-      } else {
-        mood.flightFace = fired || speed > 650 ? 'panic' : 'scared';
-        mood.panicAt = now;
-      }
-      wear(mood.flightFace, true);
-    } else {
-      // Set down gently.
-      mood.flight = true;
-      mood.rough = false;
-      mood.gentleRuns += 1;
-      if (mood.gentleRuns >= 2) mood.wary = false;
-    }
+    mood.flight = Boolean(fired);
+    if (fired) wear('panic');
+  };
+
+  const goHomeSoon = () => {
+    if (mood.homeTimer || tile.held || !tile.el) return;
+    mood.homeTimer = window.setTimeout(() => {
+      mood.homeTimer = 0;
+      if (tile.el && !tile.held) sendTileHome('dizzy');
+    }, REST_HOME_MS);
   };
 
   const updateFace = (now) => {
     if (!tile.el) return;
-    const dt = Math.min(0.25, Math.max(0, (now - (mood.tick || now)) / 1000));
     mood.tick = now;
-    const speed = tile.held ? Math.hypot(tile.carryX, tile.carryY) : Math.hypot(tile.vx, tile.vy);
-    // He is flying only while he is really moving. Slow and on the floor, or slow for a
-    // while, means he is at rest whatever is still settling.
+    const speed = tile.held ? 0 : Math.hypot(tile.vx, tile.vy);
     const slow = speed < 60;
     if (!slow) mood.slowSince = 0; else if (!mood.slowSince) mood.slowSince = now;
     const onFloor = tile.y + tileReach() >= hero.clientHeight - 8;
     const settled = !tile.frame || (slow && (onFloor || now - mood.slowSince > 700));
     const state = tile.held ? 'held' : settled ? 'rest' : 'air';
-
-    if (state === 'rest' && mood.was !== 'rest' && mood.flight) {
-      // He has just come to rest after being thrown or set down.
-      mood.flight = false;
+    if (state !== 'rest') { mood.activeAt = now; window.clearTimeout(mood.homeTimer); mood.homeTimer = 0; }
+    if (state === 'held') { wear('startled'); mood.was = state; return; }
+    if (state === 'air') {
+      // Cheeks out while he flies clean; the first knock (a wall, the nav bar, a sticker) and he is dizzy from then on.
+      if (mood.flight) wear(tile.hits > 0 || mood.struck ? 'dizzy' : 'panic');
+      mood.was = state;
+      return;
+    }
+    // At rest.
+    if (mood.was !== 'rest') {
       mood.landedAt = now;
-      if (mood.rough && tile.hits > 0) mood.crashes += 1;
-      // The landing shows at once, not a second later (unless he is mid-reaction).
-      if (mood.rough && mood.face === 'tired') mood.landedAt = now - 2600; // already past the dizziness: carry on from tired
-      else if (now >= mood.holdUntil) wear(mood.rough ? (mood.crashes >= 4 || mood.sick ? 'queasy' : 'dizzy') : (mood.wary ? 'calm' : 'smile'), true);
+      if (mood.flight) { mood.flight = false; wear('dizzy'); }
     }
     mood.was = state;
-
-    if (state !== 'rest') mood.activeAt = now;
-    // A reaction to being hit stays on screen long enough to be seen.
-    if (now < mood.holdUntil) return;
-    // Loaded in the slingshot: scared as it stretches, cheeks out at full stretch.
-    if (tile.held && band.hooked) { mood.activeAt = now; wear(band.pull > 0.9 ? 'panic' : 'scared', true); return; }
-    // A sticker being held against him: his reaction lasts as long as it is there.
-    if (mood.gentleFace) {
-      if (now < mood.gentleUntil || now - mood.gentleAt < 350) { wear(mood.gentleFace, true); return; }
-      mood.gentleFace = '';
-    }
-    if (state === 'held') {
-      // Shaking him, in any direction, makes him dizzy and then queasy. It wears off
-      // slowly once the shaking stops.
-      mood.flips = mood.flips.filter((time) => now - time < 900);
-      const shaking = mood.flips.length >= 3;
-      if (shaking) { mood.shake += dt; mood.shakeAt = now; mood.roughHold = true; mood.wary = true; }
-      else if (now - mood.shakeAt > 500) mood.shake = Math.max(0, mood.shake - dt * 0.9);
-      if (mood.shake > 1.5) mood.shook = true;
-      if (mood.shake <= 0) mood.shook = false;
-      if (mood.shake > 3.5) { wear('queasy', true); return; }
-      if (mood.shake > 1.5) { wear('dizzy', mood.face !== 'queasy'); return; }
-      if (mood.shook) { wear('tired'); return; }
-      if (shaking) { wear('scared', true); return; }
-      if (speed > ROUGH_CARRY) { mood.roughHold = true; mood.wary = true; }
-      // Whipped around very fast in the hand, his cheeks go too.
-      if (speed > 1300) { mood.panicAt = now; wear('panic', true); }
-      else if (speed > ROUGH_CARRY) { if (mood.face !== 'panic' || now - (mood.panicAt || 0) > 450) wear('scared', true); }
-      else if (mood.roughHold) { if (mood.face !== 'panic' || now - (mood.panicAt || 0) > 450) wear(mood.face === 'panic' ? 'scared' : 'nervous', mood.face === 'panic'); }
-      else if (!mood.wary) wear(mugNear() ? 'coffee' : 'calm'); // eyes open while he is carried
-      else if (now - mood.grabAt > 2200) wear('nervous');
-      return;
-    }
-
-    if (state === 'air') {
-      // Only a real throw counts. Sliding or rocking after he has landed does not.
-      if (!mood.flight) {
-        // Knocked along by a sticker or the box: his hands go up while he slides.
-        const recovering = mood.rough && now - mood.landedAt < 5600;
-        if (!recovering && speed > 140) { wear('scared', true); mood.knocked = true; }
-        return;
-      }
-      if (!mood.rough) return;
-      // The cheeks-out panic face follows his real speed: on while he is truly fast,
-      // off as soon as he has slowed to a drift. After a shaking he just stays sick.
-      if (mood.flightLock) { /* keep the dizzy or queasy face */ }
-      else if (speed > 650) { mood.flightFace = 'panic'; mood.panicAt = now; }
-      else if (speed < 430 && now - (mood.panicAt || 0) > 350) mood.flightFace = 'scared';
-      wear(mood.flightFace || 'scared', true);
-      return;
-    }
-
-    // At rest. He is never scared or panicking while lying still.
-    const since = now - mood.landedAt;
-    // He dozes off only once nothing at all has happened in the hero for a while.
-    const sleepy = now - mood.activeAt > 18000;
-    const unwell = mood.rough && since < 5600;
-    if (mood.knocked) {
-      // He has stopped sliding: carry on as someone who has just had a fright.
-      mood.knocked = false;
-      if (!mood.hurtAt) mood.hurtAt = now - 1500;
-    }
-    if (mood.hurtAt) {
-      const sinceHurt = now - mood.hurtAt;
-      const recovering = mood.rough && since >= 0 && since < 5600;
-      if (recovering || sinceHurt > 7500) mood.hurtAt = 0; // back to feeling unwell, or over it
-      else {
-        wear(sinceHurt < 3500 ? 'startled' : sinceHurt < 5500 ? 'nervous' : 'relieved', mood.face === 'ouch' || mood.face === 'scared');
-        return;
-      }
-    }
-    if (mugNear() && since > 500) {
-      if (unwell || mood.face === 'queasy') {
-        // Coffee brings him round.
-        if (wear('refreshed')) { mood.rough = false; mood.crashes = 0; mood.landedAt = now - 2000; }
-        return;
-      }
-      if (since < 16000 && wear('coffee')) return;
-      if (mood.face === 'coffee' && since < 16000) return;
-    }
-    if (mood.rough) {
-      const sideways = Math.abs((((tile.angle % 360) + 540) % 360) - 180) > 30;
-      if (since < 2600) wear(mood.crashes >= 4 || mood.sick ? 'queasy' : 'dizzy');
-      else if (since < 5600) wear(sideways ? 'annoyed' : 'tired');
-      else if (since < 8600) wear('nervous');
-      else if (since < 10600) wear('relieved');
-      else if (!sleepy) { if (wear('calm') || mood.face === 'calm') { mood.wary = false; mood.crashes = 0; mood.sick = false; } }
-      else wear('asleep');
-    } else if (since < 3200) wear(mood.wary ? 'calm' : 'smile');
-    else if (!sleepy) wear('calm');
-    else wear('asleep');
+    goHomeSoon();
   };
 
   // While he is lying still nothing else runs, so check on him a few times a second.
-  // A safety net as well: if he has not actually moved for half a second, he cannot be
-  // wearing a flying face, whatever the rest of the logic believes.
-  const watch = { x: 0, y: 0, stillFor: 0 };
   window.setInterval(() => {
     if (!tile.el || !heroVisible) return;
-    const now = performance.now();
-    const moved = Math.hypot(tile.x - watch.x, tile.y - watch.y);
-    watch.x = tile.x;
-    watch.y = tile.y;
-    watch.stillFor = moved < 3 && !tile.held ? watch.stillFor + 160 : 0;
-    if (watch.stillFor >= 480 && (mood.face === 'panic' || mood.face === 'scared')) {
-      mood.flight = false;
-      mood.landedAt = now;
-      wear(mood.rough ? (mood.crashes >= 4 || mood.sick ? 'queasy' : 'dizzy') : 'calm', true);
-    }
-    if (!tile.frame) updateFace(now);
+    if (!tile.frame) updateFace(performance.now());
   }, 160);
 
   hero.addEventListener('pointerdown', () => { mood.activeAt = performance.now(); }, true);
@@ -1034,8 +710,31 @@
   const addBody = (el, kind) => bodies.push({
     el, kind, state: 'home', x: 0, y: 0, homeX: 0, homeY: 0, hw: 0, hh: 0, vx: 0, vy: 0, angle: 0, spin: 0,
     held: false, measured: false, thrownAt: 0, baseAngle: 0, pressed: 0, side: -1, armed: false, phase: Math.random() * 6.28, lift: 4 + Math.random() * 10,
-    grabX: 0, grabY: 0, trail: [],
+    grabX: 0, grabY: 0, trail: [], orbit: null, kickAt: -99,
   });
+  // The stickers drift round the headline on one big loop, each turning gently as it goes.
+  const ORBIT_LAP = 32;        // seconds for one full lap
+  const ORBIT_TURN = 360 / 60; // degrees a second a sticker turns on its own
+  const ORBIT_PULL = 14;       // how firmly a sticker is drawn back to its place on the loop
+  const ORBIT_DRAG = 5;
+  const ORBIT_RX = 0.37; // the loop, as a share of the hero's width and height
+  const ORBIT_RY = 0.34;
+  const orbitOf = (body) => {
+    // The stickers share one loop round the headline, evenly spaced, so there is never a
+    // wide gap for him to fly through without hitting one.
+    const ring = bodies.filter((item) => item.kind === 'sticker');
+    const slot = ring.indexOf(body);
+    return { rho: 1, theta: slot * (2 * Math.PI / ring.length) - Math.PI / 2 - clock * (2 * Math.PI / ORBIT_LAP) };
+  };
+  const orbitSpot = (body) => {
+    const width = hero.clientWidth;
+    const height = hero.clientHeight;
+    const t = body.orbit.theta + clock * (2 * Math.PI / ORBIT_LAP);
+    return {
+      x: Math.min(width - body.hw, Math.max(body.hw, width / 2 + body.orbit.rho * width * ORBIT_RX * Math.cos(t))),
+      y: Math.min(height - body.hh - body.lift, Math.max(body.hh, height / 2 + 8 + body.orbit.rho * height * ORBIT_RY * Math.sin(t))),
+    };
+  };
 
   // Split the copy into words so each can give way on its own. "Sanjith!" stays whole and safe.
   const hiWord = copy.querySelector('h1 > span:first-child');
@@ -1051,7 +750,8 @@
   }
   const paragraph = copy.querySelector(':scope > p');
   paragraph.innerHTML = paragraph.textContent.trim().split(/\s+/).map((word) => '<span class="w">' + word + '</span>').join(' ');
-  copy.querySelectorAll('.w').forEach((el) => addBody(el, 'word'));
+  // Only the paragraph's words give way to him. "Hi," and "I'm" stay as still as "Sanjith!".
+  paragraph.querySelectorAll('.w').forEach((el) => addBody(el, 'word'));
   playLayer.querySelectorAll('.sticker').forEach((el) => addBody(el, 'sticker'));
 
   // Where a piece rests, measured once and remembered until the layout changes.
@@ -1150,6 +850,9 @@
     for (const body of bodies) {
       measure(body);
       body.yielded = false;
+      // A sticker is never at rest in Fun mode: it is always on its loop.
+      if (body.kind === 'sticker' && body.state === 'home') { wake(body); body.state = 'free'; body.orbit = null; }
+      if (body.kind === 'sticker' && !body.orbit) { body.orbit = orbitOf(body); body.spin = ORBIT_TURN; }
 
       // His tile against this word or sticker.
       if (tileOut) {
@@ -1248,6 +951,7 @@
               }
             }
             tile.touch = { sticker: body.el.dataset.sticker, at: performance.now(), thrown, pushed: body.held, force: Math.max(0, closing) };
+            if (closing > 150 && !tile.held) mood.struck = true; // he has hit a sticker: he feels it
             feelTouch(tile.touch);
           } else if ((body.held || tile.held) && overlap > -48 && performance.now() - (mood.contacts[body.el.dataset.sticker] || 0) < 700) {
             // Held right beside each other after touching (the sticker in the hand, or him):
@@ -1292,41 +996,24 @@
         continue;
       }
 
-      const quiet = body.pressed > 0;
-      if (quiet) body.pressed -= 1;
-      if (!quiet) body.vy += FLOAT_GRAVITY * dt;
-      // Jammed with nowhere to go: it does not move or turn at all.
-      if (body.pressed >= 5) body.vx = body.vy = body.spin = 0;
-      if (quiet) {
-        // Pressed against him or another sticker: it holds still rather than jiggling.
-        body.vx *= 1 - Math.min(1, dt * 14);
-        body.vy *= 1 - Math.min(1, dt * 14);
-        body.spin *= 1 - Math.min(1, dt * 14);
-      } else {
-        body.vx += Math.sin(clock * 0.7 + body.phase) * 7 * dt;
-        body.vx *= 1 - 1.1 * dt;
-        body.vy *= 1 - 1.1 * dt;
-        body.spin *= 1 - 0.6 * dt;
-      }
+      // A sticker on its loop: drawn to its moving place on it, so when he knocks it off
+      // course it tumbles away and then drifts back on its own. It turns gently all the
+      // while, and ambles back to that gentle turn after a tumble.
+      if (body.pressed > 0) body.pressed -= 1;
+      const spot = orbitSpot(body);
+      body.vx += ((spot.x - body.x) * ORBIT_PULL - body.vx * ORBIT_DRAG) * dt;
+      body.vy += ((spot.y - body.y) * ORBIT_PULL - body.vy * ORBIT_DRAG) * dt;
+      body.spin += (ORBIT_TURN - body.spin) * 1.6 * dt;
       const pace = Math.hypot(body.vx, body.vy);
-      // Only a sticker someone has just thrown may travel fast; one he merely bumps drifts.
-      const limit = performance.now() - body.thrownAt < 3500 ? 950 : 340;
+      const limit = clock - body.kickAt < 2.5 ? 1100 : 420;
       if (pace > limit) { body.vx *= limit / pace; body.vy *= limit / pace; }
       body.x += body.vx * dt;
       body.y += body.vy * dt;
       body.angle += body.spin * dt;
-
-      const spring = quiet ? 0 : 0.5;
-      if (body.x - body.hw < 0) { body.x = body.hw; body.vx = Math.abs(body.vx) * spring; }
-      if (body.x + body.hw > width) { body.x = width - body.hw; body.vx = -Math.abs(body.vx) * spring; }
-      if (body.y - body.hh < 0) { body.y = body.hh; body.vy = Math.abs(body.vy) * spring; }
-      const floor = height - body.hh - body.lift;
-      if (body.y > floor) {
-        body.y = floor;
-        // Moon gravity: it touches down softly and keeps bobbing instead of lying still.
-        body.vy = quiet ? 0 : body.vy > 45 ? -body.vy * 0.45 : -(14 + Math.random() * 24);
-        body.spin *= 0.7;
-      }
+      if (body.x - body.hw < 0) { body.x = body.hw; body.vx = Math.abs(body.vx) * 0.5; }
+      if (body.x + body.hw > width) { body.x = width - body.hw; body.vx = -Math.abs(body.vx) * 0.5; }
+      if (body.y - body.hh < 0) { body.y = body.hh; body.vy = Math.abs(body.vy) * 0.5; }
+      if (body.y + body.hh + body.lift > height) { body.y = height - body.hh - body.lift; body.vy = -Math.abs(body.vy) * 0.5; }
       busy = true;
       renderBody(body);
     }
@@ -1544,7 +1231,7 @@
       if (body.held) body.blocked = body.yielded;
       if (body.kick) {
         // The nudge from bumping into him: a trapped sticker takes none.
-        if (body.jamAt !== clock && !body.held) { body.vx += body.kick[0]; body.vy += body.kick[1]; body.spin += body.kick[2]; }
+        if (body.jamAt !== clock && !body.held) { body.vx += body.kick[0]; body.vy += body.kick[1]; body.spin += body.kick[2]; body.kickAt = clock; }
         body.kick = null;
       }
       body.prevX = body.x;
@@ -1560,7 +1247,8 @@
     if (tile.frame || !heroVisible || !playing()) return;
     const dt = Math.min(0.032, Math.max(0.001, (now - worldLast) / 1000));
     worldLast = now;
-    if (worldTick(dt)) worldFrame = window.requestAnimationFrame(worldLoop);
+    worldTick(dt);
+    worldFrame = window.requestAnimationFrame(worldLoop);
   };
 
   // His tile drives the world while it is moving; otherwise the world runs itself.
@@ -1633,15 +1321,10 @@
     window.addEventListener('pointercancel', release);
     runWorld();
   };
-  bodies.forEach((body) => { if (body.kind === 'sticker') body.el.addEventListener('pointerdown', grabSticker); });
+  // (The stickers are not for grabbing any more: only he moves them, by hitting them.)
+  void grabSticker;
 
-  const syncReset = () => {
-    if (!resetButton) return;
-    const on = playing() && heroVisible && (Boolean(tile.el) || bodies.some((body) => body.kind === 'sticker' && body.state !== 'home'));
-    if (on === resetButton.classList.contains('is-on')) return;
-    resetButton.classList.toggle('is-on', on);
-    resetButton.disabled = !on;
-  };
+  const syncReset = () => {}; // (there is no Reset button any more: everything finds its own way back)
 
   // Everything loose glides back to where it belongs.
   const sendAllHome = () => {
@@ -1664,19 +1347,6 @@
       else body.el.style.transform = '';
     }
   };
-
-  // Scrolling the page sloshes whatever is loose, like shaking a container.
-  let sloshY = window.scrollY;
-  window.addEventListener('scroll', () => {
-    const moved = window.scrollY - sloshY;
-    sloshY = window.scrollY;
-    if (!playing() || Math.abs(moved) < 2) return; // (a pixel of settling is not a shake)
-    const kick = Math.max(-520, Math.min(520, moved * 7));
-    let any = false;
-    for (const body of bodies) { if (body.state === 'free' && !body.held) { body.vy -= kick * (0.6 + Math.random() * 0.6); body.vx += (Math.random() - 0.5) * Math.abs(kick) * 0.3; any = true; } }
-    if (tile.el && !tile.held) { tile.vy -= kick; runTile(); }
-    if (any) runWorld();
-  }, { passive: true });
 
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(([entry]) => { heroVisible = entry.isIntersecting; syncReset(); if (heroVisible) runWorld(); }).observe(hero);
@@ -1712,6 +1382,7 @@
     if (mode !== 'fun') { sendTileHome(); sendAllHome(); }
     root.dataset.mode = mode;
     syncReset();
+    if (mode === 'fun') runWorld(); // (the stickers set off on their loop)
     modeSwitch.setAttribute('aria-checked', String(mode === 'fun'));
     if (!announce) return;
     try { window.localStorage.setItem('hero-mode', mode); } catch (error) { /* storage is optional */ }
