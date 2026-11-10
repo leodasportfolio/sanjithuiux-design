@@ -636,7 +636,9 @@
       const bubble = hero.querySelector('.hero-bubble');
       if (bubble && root.classList.contains('is-out')) bubble.textContent = 'Don\u2019t touch me!';
       root.classList.add('is-back');
+      const arrived = root.classList.contains('is-out');
       root.classList.remove('is-out');
+      if (arrived && face === 'dizzy') shakeItOff(); // (back in his place, he shakes the dizziness out)
     };
     runWorld();
     el.addEventListener('transitionend', finish, { once: true });
@@ -808,9 +810,48 @@
   waveClip.preload = 'auto';
   waveClip.setAttribute('aria-hidden', 'true');
   portrait.insertBefore(waveClip, portraitImg.nextSibling);
-  const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); };
+  const stopWave = () => { waveClip.classList.remove('is-on'); waveClip.pause(); stopShake(); };
+
+  // Home again after a throw, he shakes the dizziness out of his head and breaks into a
+  // smile: one acted clip in his box. It ends on a frame of the wave clip (smiling, hand
+  // already down), so the wave clip takes over from there and settles him into his portrait.
+  const WAVE_SMILE = 3.42; // the frame of the wave clip the head shake ends on
+  const shakeClip = document.createElement('video');
+  shakeClip.className = 'wave-clip';
+  fetch('assets/clips/head-shake.mp4?v=1').then((reply) => reply.blob()).then((clip) => { shakeClip.src = URL.createObjectURL(clip); }).catch(() => {});
+  shakeClip.muted = true;
+  shakeClip.playsInline = true;
+  shakeClip.preload = 'auto';
+  shakeClip.setAttribute('aria-hidden', 'true');
+  portrait.insertBefore(shakeClip, portraitImg.nextSibling);
+  let shaking = false;
+  let shakeGuard = 0;
+  function stopShake() { shaking = false; shakeClip.classList.remove('is-on'); shakeClip.pause(); }
+  function shakeItOff() {
+    if (!playing() || calm.matches || tile.el || !shakeClip.src) return;
+    waveClip.classList.remove('is-on');
+    waveClip.pause();
+    shaking = true;
+    shakeClip.currentTime = 0;
+    shakeClip.classList.add('is-on'); // (its first frame is the dizzy drawing he arrived wearing)
+    window.clearTimeout(shakeGuard);
+    shakeGuard = window.setTimeout(() => { if (shaking) stopShake(); }, 6000); // (never leave him stuck if the clip stalls)
+    const going = shakeClip.play();
+    if (going && going.catch) going.catch(() => {});
+  }
+  shakeClip.addEventListener('ended', () => {
+    if (!shaking) return;
+    shaking = false;
+    // Hand over to the end of the wave clip, shown first so there is never a bare frame.
+    waveClip.currentTime = WAVE_SMILE;
+    waveClip.playbackRate = 1;
+    waveClip.classList.add('is-on');
+    const going = waveClip.play();
+    if (going && going.catch) going.catch(() => {});
+    window.setTimeout(() => shakeClip.classList.remove('is-on'), 80);
+  });
   const startWave = () => {
-    if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src) return;
+    if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src || shaking) return;
     const running = waveClip.classList.contains('is-on') && !waveClip.paused && !waveClip.ended;
     if (running && waveClip.currentTime < WAVE_DOWN) return; // already waving, hand up
     // Not waving, or caught lowering his hand: either way he answers at once. Caught
