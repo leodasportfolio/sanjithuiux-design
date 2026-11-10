@@ -395,9 +395,14 @@
       tile.carryX *= 1 - Math.min(1, dt * 6);
       tile.carryY *= 1 - Math.min(1, dt * 6);
     } else {
-      tile.vy += GRAVITY * dt;
-      tile.vx *= 1 - AIR_DRAG * dt;
-      tile.vy *= 1 - AIR_DRAG * dt;
+      // Once he has slowed right down he stops soon after, instead of creeping along at
+      // walking pace for seconds (his faint gravity alone would keep him drifting).
+      const before = Math.hypot(tile.vx, tile.vy);
+      const coasting = before < 160;
+      if (!coasting) tile.vy += GRAVITY * dt;
+      const drag = coasting ? 4.5 : AIR_DRAG;
+      tile.vx *= 1 - Math.min(1, drag * dt);
+      tile.vy *= 1 - Math.min(1, drag * dt);
       const speed = Math.hypot(tile.vx, tile.vy);
       if (speed > MAX_SPEED) { tile.vx *= MAX_SPEED / speed; tile.vy *= MAX_SPEED / speed; }
       tile.x += tile.vx * dt;
@@ -602,6 +607,10 @@
   }
 
   // Put him back in the headline (used when leaving Fun mode).
+  // While he floats home he is out of reach: he can be pulled again only once he is back
+  // in his place. (Grabbing him on the way made a second copy: the one floating home
+  // landed and showed him in his place while the new one flew.)
+  let homingTile = null;
   const sendTileHome = (face, follow) => {
     dropBand();
     if (!tile.el) return;
@@ -625,6 +634,7 @@
     if (face === 'lower') lowerHands(el);
     el.classList.remove('is-giggling');
     tile.el = null;
+    homingTile = el;
     if (follow && !calm.matches) {
       showScare(''); // (he is his calm portrait on the way: no clip left playing over it)
       // A mode switch moves the headline while he travels (the hero changes height), so
@@ -649,6 +659,8 @@
         el.style.transform = 'translate(' + (from.x + (toX - from.x) * k).toFixed(1) + 'px, ' + (from.y + (toY - from.y) * k).toFixed(1) + 'px) rotate(' + (from.angle + (4 - from.angle) * k).toFixed(2) + 'deg) scale(' + (grow + (1 - grow) * k).toFixed(4) + ')';
         if (t < 1) { window.requestAnimationFrame(steer); return; }
         el.remove();
+        if (homingTile === el) homingTile = null;
+        if (tile.el) return; // (already out again: leave him be)
         root.classList.add('is-back');
         root.classList.remove('is-out');
       };
@@ -665,7 +677,10 @@
     el.style.transform = 'translate(' + (rect.left + rect.width / 2 - heroRect.left) + 'px, ' + (rect.top + rect.height / 2 - heroRect.top) + 'px) rotate(4deg)';
     // The moment he is back in his place he says so: the bubble pops straight up.
     const finish = () => {
+      if (!el.isConnected) return; // (already finished)
       el.remove();
+      if (homingTile === el) homingTile = null;
+      if (tile.el) return; // (already out again: leave him be)
       root.classList.add('is-back');
       const arrived = root.classList.contains('is-out');
       root.classList.remove('is-out');
@@ -681,7 +696,7 @@
   // held and pulled back, cheeks-out panic while he flies, dizzy when he lands. A few
   // seconds after landing he floats back to his place in the headline by himself.
   const FACES = ['calm', 'startled', 'panic', 'dizzy'];
-  const REST_HOME_MS = 3000;
+  const REST_HOME_MS = 2000;
   const SCREAM_ON_MS = 500; // how long he keeps screaming after the first knock // how long he lies where he landed before floating home
   const mood = { face: '', changedAt: 0, was: 'home', flight: false, landedAt: 0, slowSince: 0, activeAt: 0, contacts: {}, homeTimer: 0, tick: 0 };
   const placeBubble = () => {};
@@ -794,7 +809,7 @@
     const slow = speed < 60;
     if (!slow) mood.slowSince = 0; else if (!mood.slowSince) mood.slowSince = now;
     const onFloor = tile.y + tileReach() >= hero.clientHeight - 8;
-    const settled = !tile.frame || (slow && (onFloor || now - mood.slowSince > 700));
+    const settled = !tile.frame || (slow && (onFloor || now - mood.slowSince > 350));
     const state = tile.held ? 'held' : settled ? 'rest' : 'air';
     if (state !== 'rest') { mood.activeAt = now; window.clearTimeout(mood.homeTimer); mood.homeTimer = 0; }
     if (state === 'held') { wear('startled'); mood.was = state; return; }
@@ -839,7 +854,7 @@
   });
 
   window.__probe = { tile, mood, band, get bodies() { return bodies; } };
-  portrait.addEventListener('pointerdown', (event) => { if (!tile.el) grabTile(event); });
+  portrait.addEventListener('pointerdown', (event) => { if (!tile.el && !homingTile) grabTile(event); });
 
   // ---------- The wave ----------
   // Hovering him in his place plays one acted clip inside his box: he smiles, raises his
@@ -1144,9 +1159,9 @@
           // slip under one of its corners.
           const contact = tileOverlap(body);
           const overlap = contact.depth;
-          // Loaded in the slingshot he passes over the stickers, so they cannot spoil the
-          // pull. Any he is over stay out of it until he has flown clear of them.
-          if (band.hooked && overlap > 0) body.under = true;
+          // In the hand he passes over the stickers, so they cannot spoil the pull. Any he
+          // is over stay out of it until he has flown clear of them.
+          if ((band.hooked || tile.held) && overlap > 0) body.under = true;
           else if (body.under && overlap <= 0) body.under = false;
           if (body.under) {
             // nothing: they do not touch
@@ -1276,7 +1291,7 @@
       const spot = orbitSpot(body);
       body.vx += ((spot.x - body.x) * ORBIT_PULL - body.vx * ORBIT_DRAG) * dt;
       body.vy += ((spot.y - body.y) * ORBIT_PULL - body.vy * ORBIT_DRAG) * dt;
-      body.spin += (ORBIT_TURN - body.spin) * 1.6 * dt;
+      body.spin += (ORBIT_TURN - body.spin) * (body.pressed > 0 ? 8 : 1.6) * dt; // (pressed against something, it stops turning fast)
       const pace = Math.hypot(body.vx, body.vy);
       const limit = clock - body.kickAt < 2.5 ? 1100 : 420;
       if (pace > limit) { body.vx *= limit / pace; body.vy *= limit / pace; }
@@ -1309,9 +1324,13 @@
         for (const body of [a, b]) { if (body.state === 'home') { wake(body); body.state = 'free'; } body.pressed = Math.max(body.pressed, 3); }
         const closing = Math.min(480, (a.vx - b.vx) * nx + (a.vy - b.vy) * ny);
         if (closing > 0) {
-          const push = closing * 0.8;
-          if (!a.held) { a.vx -= nx * push * (b.held ? 1.3 : 1); a.vy -= ny * push * (b.held ? 1.3 : 1); a.spin -= closing * 0.3; }
-          if (!b.held) { b.vx += nx * push * (a.held ? 1.3 : 1); b.vy += ny * push * (a.held ? 1.3 : 1); b.spin += closing * 0.3; }
+          // Drifting into each other they simply stop against each other: no bounce and no
+          // spin, so a few piled in a corner lie still instead of buzzing. Only a real knock
+          // bounces them apart and sets them turning.
+          const knock = closing > 90;
+          const push = closing * (knock ? 0.8 : 0.5);
+          if (!a.held) { a.vx -= nx * push * (b.held ? 1.3 : 1); a.vy -= ny * push * (b.held ? 1.3 : 1); if (knock) a.spin -= closing * 0.2; }
+          if (!b.held) { b.vx += nx * push * (a.held ? 1.3 : 1); b.vy += ny * push * (a.held ? 1.3 : 1); if (knock) b.spin += closing * 0.2; }
         }
         busy = true;
       }
@@ -1964,7 +1983,7 @@
       + '<svg class="hand" viewBox="0 0 24 24" fill="#fff" stroke="#111" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.2a1.7 1.7 0 0 1 3.4 0V10l5.2 1.1a2.4 2.4 0 0 1 1.9 2.6l-.7 4.9A3.9 3.9 0 0 1 14.9 22H12a4.4 4.4 0 0 1-3.5-1.7l-3.6-4.6a1.6 1.6 0 0 1 2.4-2.1L9 15.200z"/></svg>';
     document.body.append(notice, pointer);
   }
-  const pop = { on: false, k: 0, pressAt: 0, frame: 0, last: 0 };
+  const pop = { on: false, k: 0, pressAt: 0, frame: 0, last: 0, jump: false }; // (jump: the About Me nav link is carrying the page)
   if (window.__probe) window.__probe.pop = pop; // temporary, for testing: remove with the other debug hooks
   const PRESS = 150; // the click itself
   const runPop = () => {
@@ -1975,7 +1994,7 @@
       const dt = Math.min(48, now - pop.last);
       pop.last = now;
       const pressing = pop.on && now < pop.pressAt + PRESS;
-      if (!pressing) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 300);
+      if (!pressing && !pop.jump) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 300);
       paintAbout();
       if (pressing || (pop.on ? pop.k < 1 : pop.k > 0)) pop.frame = window.requestAnimationFrame(step);
     };
@@ -2009,7 +2028,9 @@
 
     // The click happens once the scroll has brought the pointer all the way over; scrolling
     // back above that point closes the window again.
-    if (!pop.on && homeY <= viewTall + 40) {
+    if (pop.jump) {
+      // (The About Me nav link is carrying the page: the glide opens the window as it goes.)
+    } else if (!pop.on && homeY <= viewTall + 40) {
       pop.on = true;
       pop.pressAt = now;
       if (homeY < viewTall * 0.6) { pop.k = 1; pop.pressAt = 0; } // arrived by a jump: already open
@@ -2581,7 +2602,7 @@
       stage.frame = 0;
       const dt = Math.min(100, now - stage.last);
       stage.last = now;
-      stage.k = pop.on ? Math.min(1, stage.k + dt / STAGE_IN_MS) : Math.max(0, stage.k - dt / STAGE_OUT_MS);
+      if (!pop.jump) stage.k = pop.on ? Math.min(1, stage.k + dt / STAGE_IN_MS) : Math.max(0, stage.k - dt / STAGE_OUT_MS);
       paintAbout(); // (About Me opens out beside the card as the card clears)
       paintStage();
       paintAbout();
@@ -2672,27 +2693,40 @@
   // browser, so it is short, it cannot be dragged off course by trackpad momentum left over
   // from before the click, and the staged pieces stay "in place" until it has arrived.
   const glide = { frame: 0, until: 0 };
-  const glideTo = (top) => {
+  const glideTo = (top, toAbout) => {
     const end = document.documentElement.scrollHeight - window.innerHeight;
     const to = Math.round(Math.max(0, Math.min(end, top)));
     const from = window.scrollY;
     const far = Math.abs(to - from);
-    const took = Math.max(260, Math.min(520, 220 + far * 0.06)); // ms
+    const took = toAbout ? Math.max(1100, Math.min(1500, 900 + far * 0.08)) // ms: About Me unfolds on the way, so it gets more time
+      : Math.max(650, Math.min(1100, 520 + far * 0.08)); // ms: unhurried, and longer for a longer trip
     const began = performance.now();
     window.cancelAnimationFrame(glide.frame);
     wheel.target = null;
     dockPop.skip = true;
+    pop.jump = Boolean(toAbout);
+    const openFrom = pop.on ? 1 : pop.k; // (already open, coming from further down: it stays open)
     glide.until = began + took + 160; // (the wheel is ignored until just after it lands)
     const step = (now) => {
       const t = Math.min(1, (now - began) / took);
       const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       window.scrollTo({ top: from + (to - from) * eased, behavior: 'instant' });
+      if (toAbout) {
+        // About Me opens out and the Motion Graphics card steps aside in the second half of
+        // the glide, in step with it, so the page arrives with everything already settled.
+        const open = Math.max(openFrom, unit((t - 0.45) / 0.55));
+        pop.on = true;
+        pop.pressAt = 0;
+        pop.k = open;
+        stage.k = open;
+      }
       queuePage();
       if (t < 1) { glide.frame = window.requestAnimationFrame(step); return; }
+      if (toAbout) { pop.k = 1; stage.k = 1; }
       window.scrollTo({ top: to, behavior: 'instant' });
       glide.frame = 0;
       // Two more frames with everything held in place, then the page is its usual self.
-      window.requestAnimationFrame(() => window.requestAnimationFrame(() => { dockPop.skip = false; queuePage(); }));
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => { dockPop.skip = false; pop.jump = false; queuePage(); }));
     };
     glide.frame = window.requestAnimationFrame(step);
   };
@@ -2739,7 +2773,7 @@
       link.addEventListener('click', (event) => {
         if (!playing()) return;
         event.preventDefault();
-        glideTo(landings[hash]());
+        glideTo(landings[hash](), hash === '#about-me');
       });
     });
   });

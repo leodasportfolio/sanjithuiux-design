@@ -103,16 +103,19 @@ function sectionOnScreen() {
 }
 
 // A click on a link sends the pill straight to that link, in one slide, and holds it there
-// while the page travels: it does not hop across the links in between.
+// for as long as the page is travelling: it does not hop across the links in between.
+// (The About Me glide is the longest, about a second and a half; the hold outlasts it. As
+// soon as the visitor scrolls for themselves the hold is dropped.)
 let pillHeldUntil = 0;
 let pillHeldFor = null;
 sectionLinks.forEach((item) => {
   item.link.addEventListener('click', () => {
     pillHeldFor = item;
-    pillHeldUntil = performance.now() + 900;
+    pillHeldUntil = performance.now() + 2000;
     updateSelected();
   });
 });
+['wheel', 'touchstart', 'keydown'].forEach((type) => window.addEventListener(type, () => { pillHeldUntil = 0; }, { passive: true }));
 
 // The selected section is the one filling most of the screen.
 function updateSelected() {
