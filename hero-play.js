@@ -2811,7 +2811,7 @@
     paintReelHeading();
     paintAbout();
     paintStage();
-    if (glow) {
+    if (glow && glow.classList.contains('is-on')) { // (nothing to keep up while it is dark)
       glow.style.setProperty('--mx', pointerX + 'px');
       glow.style.setProperty('--my', pointerY + 'px');
       glow.style.setProperty('--sy', (window.scrollY % 24) + 'px');
