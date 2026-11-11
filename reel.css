@@ -7,6 +7,8 @@
 .reel-stage { position: relative; overflow: hidden; }
 html:not([data-mode="fun"]) .reel-stage { min-height: min(440px, 52vw); }
 .reel-video { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #0b0c10; }
+/* The still: upright (9:16), the whole picture, centred on the dark screen. */
+.reel-video::before { content: ""; position: absolute; left: 50%; top: 0; translate: -50% 0; height: 100%; aspect-ratio: 9 / 16; background: var(--poster) center / cover no-repeat; }
 /* The clip's first picture shows at once; the video takes over when it has loaded. */
 .reel-video::before { content: ""; position: absolute; left: 50%; top: 0; translate: -50% 0; height: 100%; aspect-ratio: 9 / 16; background: var(--poster) center / cover no-repeat; }
 /* The clip is upright (9:16) and stays upright: the whole picture, centred on the screen,
