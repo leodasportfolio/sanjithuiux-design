@@ -121,10 +121,13 @@ function sectionOnScreen() {
 let pillHeldUntil = 0;
 let pillHeldFor = null;
 sectionLinks.forEach((item) => {
-  item.link.addEventListener('click', () => {
+  item.link.addEventListener('click', (event) => {
     pillHeldFor = item;
     pillHeldUntil = performance.now() + 2000;
     updateSelected();
+    // A mouse click leaves the link focused, which would keep the bar from sliding away on
+    // the next scroll down; the focus is let go. (Keyboard users keep theirs.)
+    if (event.detail > 0) item.link.blur();
   });
 });
 ['wheel', 'touchstart', 'keydown'].forEach((type) => window.addEventListener(type, () => { pillHeldUntil = 0; }, { passive: true }));
