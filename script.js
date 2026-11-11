@@ -131,8 +131,9 @@ function updateSelected() {
     best = pillHeldFor;
   } else if (document.documentElement.dataset.mode === 'fun' && wideScreen.matches) {
     best = sectionOnScreen();
-  } else sectionLinks.forEach((item, index) => {
-    const next = sectionLinks[index + 1];
+  } else sectionLinks.filter((item) => item.link.offsetParent !== null).forEach((item, index, shown) => {
+    // (Only the links on show: in Normal mode the Motion Graphics link is folded into Case Studies.)
+    const next = shown[index + 1];
     const top = item.section.getBoundingClientRect().top;
     const bottom = next ? next.section.getBoundingClientRect().top : document.documentElement.getBoundingClientRect().bottom;
     const visible = Math.min(bottom, viewport) - Math.max(top, 0);
@@ -170,6 +171,21 @@ siteHeader.addEventListener('focusin', () => siteHeader.classList.remove('is-hid
 window.addEventListener('resize', placeIndicator);
 menuButton.addEventListener('click', placeIndicator);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeIndicator);
+// In Normal mode the Motion Graphics videos sit inside the case-study grid, so the nav shows
+// one link for both, "Case Studies & Motion Graphics". Fun mode keeps the two links as they are.
+const caseLink = siteNav.querySelector('a[href="#case-studies"]');
+const reelNavLink = siteNav.querySelector('a[href="#motion-graphics"]');
+function syncNavForMode() {
+  if (!caseLink || !reelNavLink) return;
+  const plain = document.documentElement.dataset.mode !== 'fun';
+  caseLink.textContent = plain ? 'Case Studies & Motion Graphics' : 'Case Studies';
+  reelNavLink.hidden = plain;
+  currentItem = null;
+  updateSelected();
+  placeIndicator();
+}
+syncNavForMode();
+new MutationObserver(syncNavForMode).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode'] });
 updateSelected();
 // The staged pieces keep moving for a moment after the wheel stops, so the pill is also
 // checked a few times a second; it costs four measurements.

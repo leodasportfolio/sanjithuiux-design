@@ -590,3 +590,6 @@ button { font: inherit; }
 @media (prefers-reduced-transparency: reduce) {
   .site-header { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* A nav link folded away (Normal mode folds Motion Graphics into Case Studies). */
+.site-nav a[hidden] { display: none; }
