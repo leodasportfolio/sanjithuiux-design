@@ -81,6 +81,11 @@ function shareOfScreen(selector) {
   return (wide * tall) / (window.innerWidth * window.innerHeight);
 }
 function sectionOnScreen() {
+  // With the Motion Graphics panel open, that is what is on screen (the card under it is blanked).
+  if (document.documentElement.classList.contains('reel-open')) {
+    const reelItem = sectionLinks.find((item) => item.link.getAttribute('href') === '#motion-graphics');
+    if (reelItem) return reelItem;
+  }
   // The furthest-along section that has properly arrived wins: the pieces are stacked in
   // page order, so a later one that covers a good part of the screen is the one in front.
   let front = null;

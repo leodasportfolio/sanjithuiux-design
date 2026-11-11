@@ -2838,7 +2838,7 @@
     // Ease towards where the hand has asked for, never faster than the limit.
     // (A short, smooth catch-up: wheel events come in bursts, and this evens them into
     // one steady motion instead of a run of small steps.)
-    const want = left * (1 - Math.exp(-dt / 0.09));
+    const want = left * (1 - Math.exp(-dt / 0.025)); // (a short catch-up: close to the hand, still even)
     const most = MAX_SCROLL * dt;
     wheel.at += Math.max(-most, Math.min(most, want));
     window.scrollTo({ top: wheel.at, behavior: 'instant' });
