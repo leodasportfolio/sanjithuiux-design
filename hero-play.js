@@ -853,7 +853,6 @@
     wear('startled', true);
   });
 
-  window.__probe = { tile, mood, band, get bodies() { return bodies; } };
   portrait.addEventListener('pointerdown', (event) => { if (!tile.el && !homingTile) grabTile(event); });
 
   // ---------- The wave ----------
@@ -2003,7 +2002,6 @@
     document.body.append(notice, pointer);
   }
   const pop = { on: false, k: 0, pressAt: 0, frame: 0, last: 0, jump: false }; // (jump: the About Me nav link is carrying the page)
-  if (window.__probe) window.__probe.pop = pop; // temporary, for testing: remove with the other debug hooks
   const PRESS = 150; // the click itself
   const runPop = () => {
     if (pop.frame) return;
@@ -2021,7 +2019,6 @@
   };
   const ABOUT_FLOAT = 76; // how far from the top of the screen the open About Me window floats
   let aboutEdge = null;
-  if (window.__probe) window.__probe.aboutEdge = () => aboutEdge; // temporary, for testing: remove with the other debug hooks
   function paintAbout() {
     if (!aboutWindow) return;
     const style = aboutWindow.style;
@@ -2288,7 +2285,6 @@
   // Scrolling back up, the folder stays open until it starts to leave that place (the hero
   // is coming back); then the Dock pops up and the folder minimises into it.
   const dockPop = { skip: false, open: false, seen: false, back: false, wantBack: false, pressed: false, liftAt: -1e9, reelShift: null, reelAt: -1e9, allStacked: false, away: 1, awayWant: 1, returning: false, speed: 0, movedAt: 0, far: 0, doneAt: Infinity, nextDue: 0, lastY: 0, upRun: 0, downRun: 0, titleTop: 0, titleRest: 80, k: 0, up: 0, want: 0, pressAt: -1e9, frame: 0, last: 0 };
-  if (window.__probe) window.__probe.dock = dockPop; // temporary, for testing: remove with the other debug hooks
   // Motion rules for this piece. The Dock and the pointer are positions on the scroll: move
   // the page and they move with it at once, both ways, and stop when it stops. Only the
   // folder's warp runs on a clock, and it starts on the very frame the click point is
@@ -2840,8 +2836,9 @@
     // positions and trembles.
     if (Math.abs(left) < 0.75) { window.scrollTo({ top: wheel.target, behavior: 'instant' }); wheel.target = null; paintPage(); return; }
     // Ease towards where the hand has asked for, never faster than the limit.
-    // (A short catch-up, so it follows the hand closely and never feels heavy.)
-    const want = left * (1 - Math.exp(-dt / 0.032));
+    // (A short, smooth catch-up: wheel events come in bursts, and this evens them into
+    // one steady motion instead of a run of small steps.)
+    const want = left * (1 - Math.exp(-dt / 0.09));
     const most = MAX_SCROLL * dt;
     wheel.at += Math.max(-most, Math.min(most, want));
     window.scrollTo({ top: wheel.at, behavior: 'instant' });

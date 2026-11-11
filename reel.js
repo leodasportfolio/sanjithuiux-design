@@ -159,6 +159,24 @@
   };
   placeVideo();
   window.addEventListener('resize', placeVideo);
+  // The clip's first picture is on the card from the start; the video itself only loads
+  // once the card is on show (in Fun mode, once it has built over the folders), so no video
+  // runs while the folders stack, and it is unloaded again once the card is out of sight.
+  const clip = video && video.querySelector('iframe');
+  let clipSeen = false;
+  const syncClip = () => {
+    if (!clip) return;
+    const built = !(card && card.offsetParent) || reel.classList.contains('is-open');
+    const want = clipSeen && built;
+    if (want && !clip.src) clip.src = clip.dataset.src;
+    else if (!want && clip.src) clip.removeAttribute('src');
+  };
+  if (clip && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => { clipSeen = entries.some((e) => e.isIntersecting); syncClip(); }, { rootMargin: '400px 0px' }).observe(video);
+    new MutationObserver(syncClip).observe(reel, { attributes: true, attributeFilter: ['class'] });
+  } else if (clip) {
+    clip.src = clip.dataset.src;
+  }
   [card, plain].forEach((el) => {
     if (!el) return;
     el.addEventListener('click', open);
