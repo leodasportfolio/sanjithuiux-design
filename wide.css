@@ -70,6 +70,10 @@
   /* Each folder and the card get their own compositor layer, so moving them is a
      transform on a cached picture rather than a redraw of a large area every frame. */
   html[data-mode="fun"] .project-card, html[data-mode="fun"] .reel-card { will-change: transform; }
+  /* The card's shadow eases in as the card starts to build and eases out as it goes,
+     rather than appearing and vanishing with the card's first and last blocks. */
+  html[data-mode="fun"] .reel-card { filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, 0)); transition: filter .7s ease; }
+  html[data-mode="fun"] .reel.is-out .reel-card { filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, .3)); }
 
   /* About Me and the rest. */
   .about-inner { width: min(100%, calc(852px * var(--big))); }
