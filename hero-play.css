@@ -1079,7 +1079,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   html[data-mode="fun"] .about-inner.is-moving { will-change: transform, clip-path; }
   /* A stay: once the open window has settled, it holds its place near the top for a
      further 400px of scrolling before the page carries it away to the last screen. */
-  html[data-mode="fun"] .about-inner { position: sticky; top: 76px; }
+  html[data-mode="fun"] .about-inner { position: sticky; top: 106px; } /* (a clear gap under the nav bar) */
   html[data-mode="fun"] .about::after { content: ""; display: block; height: 400px; }
 
   /* The first folder's entrance. A Mac Dock pops up at the bottom of the screen, a pointer

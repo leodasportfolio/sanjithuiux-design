@@ -2017,7 +2017,7 @@
     };
     pop.frame = window.requestAnimationFrame(step);
   };
-  const ABOUT_FLOAT = 76; // how far from the top of the screen the open About Me window floats
+  const ABOUT_FLOAT = 106; // how far from the top of the screen the open About Me window floats (a clear gap under the nav bar)
   let aboutEdge = null;
   function paintAbout() {
     if (!aboutWindow) return;
@@ -2825,12 +2825,15 @@
   // need and the site never has to race to keep up. Below the limit it follows the hand
   // as usual. (Keyboard, the scrollbar and the nav links are left alone.)
   const MAX_SCROLL = 1200; // px a second
-  const wheel = { target: null, at: 0, frame: 0, last: 0 };
+  const wheel = { target: null, at: 0, frame: 0, last: 0, input: 0 };
   const wheelStep = (now) => {
     wheel.frame = 0;
     if (wheel.target === null) return;
     const dt = Math.min(50, now - wheel.last) / 1000;
     wheel.last = now;
+    // Once the hand has stopped, whatever is still queued drains away smoothly (an ease-out
+    // over a fraction of a second) instead of running on at full speed and then stopping dead.
+    if (now - wheel.input > 90) wheel.target = wheel.at + (wheel.target - wheel.at) * Math.exp(-dt / 0.16);
     const left = wheel.target - wheel.at;
     // Arrived: rest exactly on the spot (a whole pixel), so the page never sits between two
     // positions and trembles.
@@ -2874,9 +2877,10 @@
     }
     if (wheel.target === null) wheel.at = wheel.target = window.scrollY;
     // No backlog: at most half a second of travel is ever queued, so it stops when the hand stops.
-    const reach = MAX_SCROLL * 0.5;
+    const reach = MAX_SCROLL * 1.2; // (a longer queue than before: a flick is not cut off and refilled in steps)
     wheel.target = Math.round(Math.max(0, Math.min(end, Math.max(wheel.at - reach, Math.min(wheel.at + reach, wheel.target + event.deltaY * line)))));
-    if (!wheel.frame) { wheel.last = performance.now(); wheel.frame = window.requestAnimationFrame(wheelStep); }
+    wheel.input = performance.now();
+    if (!wheel.frame) { wheel.last = wheel.input; wheel.frame = window.requestAnimationFrame(wheelStep); }
   }, { passive: false });
   window.addEventListener('resize', queuePage);
   // The first measure can happen before fonts and images have set the final positions,
