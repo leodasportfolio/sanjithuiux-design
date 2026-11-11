@@ -91,10 +91,12 @@ function sectionOnScreen() {
   let front = null;
   let most = null;
   let mostShare = 0;
+  let currentShare = 0;
   sectionLinks.forEach((item) => {
     const pieces = stagedPieces[item.link.getAttribute('href')];
     if (!pieces) return;
     let share = Math.max(...pieces.map(shareOfScreen));
+    if (item === currentItem) currentShare = share;
     // (The Case Studies heading is small, but once it is up the section has begun.)
     if (item.link.getAttribute('href') === '#case-studies' && shareOfScreen('#case-title') > 0) {
       const title = document.querySelector('#case-title').getBoundingClientRect();
@@ -103,8 +105,13 @@ function sectionOnScreen() {
     if (share >= 0.3) front = item;
     if (share > mostShare) { most = item; mostShare = share; }
   });
-  // Nothing has arrived (the last screen, "Let's Connect"): keep what was selected.
-  return front || (mostShare > 0.12 ? most : null) || currentItem || sectionLinks[0];
+  // Between two pieces (one shrinking away, the next still opening), the selected section
+  // keeps the pill as long as its piece is still on screen at all: no hop to whatever shows
+  // behind them. Nothing on screen at all (the last screen, "Let's Connect"): keep what was selected.
+  // (Nor back to an earlier section while the selected one's piece is still on screen:
+  // the Case Studies title can show again behind the card as it shrinks aside.)
+  if (front && currentItem && currentShare > 0 && sectionLinks.indexOf(front) < sectionLinks.indexOf(currentItem)) return currentItem;
+  return front || (currentItem && currentShare > 0 ? currentItem : null) || (mostShare > 0.12 ? most : null) || currentItem || sectionLinks[0];
 }
 
 // A click on a link sends the pill straight to that link, in one slide, and holds it there
@@ -183,8 +190,13 @@ function syncNavForMode(animate) {
     caseLink.textContent = plain ? 'Case Studies & Motion Graphics' : 'Case Studies';
     reelNavLink.hidden = plain;
     currentItem = null;
+    // The pill is moved to its new place while it is faded out, in one go, so it fades
+    // back in already there rather than sliding across the swapped links.
+    navIndicator.classList.add('is-jumping');
     updateSelected();
     placeIndicator();
+    void navIndicator.offsetWidth;
+    navIndicator.classList.remove('is-jumping');
     siteNav.classList.remove('is-swapping');
   };
   window.clearTimeout(navSwapTimer);

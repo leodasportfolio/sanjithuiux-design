@@ -130,7 +130,7 @@ button { font: inherit; }
 
 .nav-indicator.is-ready {
   /* A gentle start and finish: the old curve did nearly all its travel in the first instant. */
-  transition: transform .55s cubic-bezier(.45, 0, .2, 1), width .55s cubic-bezier(.45, 0, .2, 1), height .55s cubic-bezier(.45, 0, .2, 1);
+  transition: transform .55s cubic-bezier(.45, 0, .2, 1), width .55s cubic-bezier(.45, 0, .2, 1), height .55s cubic-bezier(.45, 0, .2, 1), opacity .24s ease;
 }
 
 .site-nav a {
@@ -596,3 +596,5 @@ button { font: inherit; }
 /* While the mode changes, the links fade out, swap while unseen, and fade back in. */
 .site-nav a { transition: background-color .25s ease, color .4s ease, transform .25s ease, opacity .24s ease; }
 .site-nav.is-swapping a { opacity: 0; }
+.site-nav.is-swapping .nav-indicator { opacity: 0; transition: opacity .24s ease; }
+.site-nav .nav-indicator.is-jumping { transition: none; }
