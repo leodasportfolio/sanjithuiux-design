@@ -61,6 +61,15 @@
   .reel-info h4 { font-size: calc(30px * var(--big)); }
   .reel-info p { font-size: calc(15px * var(--big)); }
 
+  /* The costly shadows. At this size the About section's filter shadow (re-drawn every
+     frame while the window moves) and the card's filter shadow (re-drawn as it builds)
+     are the expensive parts, so here they are plain box shadows, and the card's comes
+     once it is built. */
+  html[data-mode="fun"] .about { filter: none; }
+  html[data-mode="fun"] .about-inner { box-shadow: 0 26px 38px rgba(20, 24, 30, .24), 0 3px 9px rgba(20, 24, 30, .12); }
+  html[data-mode="fun"] .reel-card { filter: none; }
+  html[data-mode="fun"] .reel.is-open .reel-card { filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, .3)); }
+
   /* About Me and the rest. */
   .about-inner { width: min(100%, calc(852px * var(--big))); }
   html[data-mode="fun"] .about-inner { width: min(100%, calc(980px * var(--big))); }
