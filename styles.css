@@ -593,3 +593,6 @@ button { font: inherit; }
 
 /* A nav link folded away (Normal mode folds Motion Graphics into Case Studies). */
 .site-nav a[hidden] { display: none; }
+/* While the mode changes, the links fade out, swap while unseen, and fade back in. */
+.site-nav a { transition: background-color .25s ease, color .4s ease, transform .25s ease, opacity .24s ease; }
+.site-nav.is-swapping a { opacity: 0; }

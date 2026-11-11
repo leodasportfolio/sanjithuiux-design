@@ -175,17 +175,26 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeIndic
 // one link for both, "Case Studies & Motion Graphics". Fun mode keeps the two links as they are.
 const caseLink = siteNav.querySelector('a[href="#case-studies"]');
 const reelNavLink = siteNav.querySelector('a[href="#motion-graphics"]');
-function syncNavForMode() {
+let navSwapTimer = 0;
+function syncNavForMode(animate) {
   if (!caseLink || !reelNavLink) return;
   const plain = document.documentElement.dataset.mode !== 'fun';
-  caseLink.textContent = plain ? 'Case Studies & Motion Graphics' : 'Case Studies';
-  reelNavLink.hidden = plain;
-  currentItem = null;
-  updateSelected();
-  placeIndicator();
+  const apply = () => {
+    caseLink.textContent = plain ? 'Case Studies & Motion Graphics' : 'Case Studies';
+    reelNavLink.hidden = plain;
+    currentItem = null;
+    updateSelected();
+    placeIndicator();
+    siteNav.classList.remove('is-swapping');
+  };
+  window.clearTimeout(navSwapTimer);
+  if (!animate) { apply(); return; }
+  // The links fade out, swap while unseen, and fade back in: no snap.
+  siteNav.classList.add('is-swapping');
+  navSwapTimer = window.setTimeout(apply, 240);
 }
-syncNavForMode();
-new MutationObserver(syncNavForMode).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode'] });
+syncNavForMode(false);
+new MutationObserver(() => syncNavForMode(true)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-mode'] });
 updateSelected();
 // The staged pieces keep moving for a moment after the wheel stops, so the pill is also
 // checked a few times a second; it costs four measurements.
