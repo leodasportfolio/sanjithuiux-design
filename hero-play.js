@@ -2011,7 +2011,7 @@
       const dt = Math.min(48, now - pop.last);
       pop.last = now;
       const pressing = pop.on && now < pop.pressAt + PRESS;
-      if (!pressing && !pop.jump) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 300);
+      if (!pressing && !pop.jump) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 520); // (it closes nearly as slowly as it opens)
       paintAbout();
       if (pressing || (pop.on ? pop.k < 1 : pop.k > 0)) pop.frame = window.requestAnimationFrame(step);
     };
@@ -2066,7 +2066,7 @@
     const noticeTop = parseFloat(noticeStyle.top) || 0;
     const noticeRight = parseFloat(noticeStyle.right) || 0;
     // (It arrives 400px of scrolling before the pointer sets off, so it sits there a while on its own first.)
-    const slide = smooth(unit((viewTall + 1040 - homeY) / 130));
+    const slide = smooth(unit((viewTall + 1040 - homeY) / 260)); // (it slides in over 260px of scrolling)
     const noticeGone = (1 - slide) + away;
     notice.style.visibility = slide > 0 && noticeGone < 1 ? 'visible' : 'hidden';
     notice.style.transform = 'translate3d(' + (Math.min(1, noticeGone) * (noticeWide + noticeRight + 30)).toFixed(2) + 'px, 0, 0) scale(' + (1 - 0.04 * press).toFixed(4) + ')';
@@ -2290,13 +2290,13 @@
   // folder's warp runs on a clock, and it starts on the very frame the click point is
   // crossed. Entering eases out, leaving eases in, nothing bounces. The warp is a
   // full-screen move, so it gets longer than the usual 300ms (the one stated exception).
-  const POUR_MS = 880;      // the folder pouring out (a Mac takes 0.4s; slowed so it can be watched)
+  const POUR_MS = 1240;     // the folder pouring out (a Mac takes 0.4s; slowed so it can be watched)
   const MINIMISE_MS = 820;  // the folder going back in
   const CLOSE_PAST = 200;   // scrolling back up, the folder is clicked shut when the page is back to here
   const SETTLE = 650;       // the first folder rests this long, fully out, before anything stacks on it
   const REEL_CATCH = 700;   // a Motion Graphics card that was kept waiting takes this long to build
   const FOLLOW = 1000;       // a later folder that was kept waiting takes this long to slide up into the stack
-  const DOCK_CATCH_MS = 280; // the Dock's own rise or fall, and the most it may lag behind a very fast scroll
+  const DOCK_CATCH_MS = 420; // the Dock's own rise or fall, and the most it may lag behind a very fast scroll
   const CLICK_PAST = 300;   // the click comes this far after the folder's place is reached (matches hero-play.css)
   const REOPEN_GAP = 20;    // scrolling back up, the second click comes this much earlier
   const DOCK_HIDE = 260;    // how far below its place the Dock waits, out of sight
@@ -2450,13 +2450,13 @@
     dockPop.far = Math.max(dockPop.far, along);
     const toured = dockPop.far;
 
-    // The Dock. Its place is read straight off the scroll: it rises over the first 170px,
+    // The Dock. Its place is read straight off the scroll: it rises over the first 300px,
     // stays while the pointer works and the folder comes out, and sinks over 130px once
     // the page has moved on. Scroll back and the same happens in reverse.
     const easeOut = (t) => 1 - (1 - t) ** 3;
     const easeIn = (t) => t ** 3;
     const closing = !dockPop.open && k > 0;
-    const rise = easeOut(unit(along / 150));
+    const rise = easeOut(unit(along / 300)); // (the Dock rises over 300px of scrolling: unhurried)
     const drop = easeIn(unit((past - CLICK_PAST - 110) / 130));
     // Up whenever the folder is coming out or going in. Otherwise: on the first way down it
     // follows the scroll; once the folder has been minimised it stays away until wanted.
