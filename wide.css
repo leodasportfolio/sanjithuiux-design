@@ -67,7 +67,7 @@
      once it is built. */
   html[data-mode="fun"] .about { filter: none; }
   html[data-mode="fun"] .about-inner { box-shadow: 0 26px 38px rgba(20, 24, 30, .24), 0 3px 9px rgba(20, 24, 30, .12); }
-  html[data-mode="fun"] .reel-card { filter: none; }
+  html[data-mode="fun"] .reel-card { filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, 0)); transition: filter .45s ease; }
   html[data-mode="fun"] .reel.is-open .reel-card { filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, .3)); }
 
   /* Each folder and the card get their own compositor layer, so moving them is a
