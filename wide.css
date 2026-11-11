@@ -1,0 +1,70 @@
+/* Wide screens. The layout is drawn around a 1440px window; on a big display it is
+   scaled up by --big so it keeps those proportions instead of sitting small in the middle.
+   Only sizes change (widths, type, pictures): the nav bar's height and the spots the hero
+   script measures from stay as they are, and every moving piece measures the page as
+   drawn, so nothing in the motion needs to know about this. */
+@media (min-width: 1700px) {
+  :root { --big: 1.12; }
+}
+@media (min-width: 1900px) {
+  :root { --big: 1.25; }
+}
+@media (min-width: 1700px) {
+  /* The page's columns. */
+  /* The hero's frame runs almost edge to edge, as it does on a laptop. */
+  .page-panel { width: min(calc(100% - 40px), calc(1600px * var(--big))); }
+  .case-studies { width: min(calc(100% - 88px), calc(var(--content) * var(--big))); }
+  .site-header {
+    left: max(20px, calc((100vw - 940px * var(--big)) / 2));
+    right: max(20px, calc((100vw - 940px * var(--big)) / 2));
+  }
+  .site-nav a { font-size: calc(16px * var(--big)); }
+  .brand span { font-size: calc(20px * var(--big)); }
+
+  /* The hero. */
+  .hero { padding-left: calc(32px * var(--big)); padding-right: calc(32px * var(--big)); }
+  html[data-mode="fun"] .hero { padding-top: calc(196px * var(--big)); padding-bottom: calc(150px * var(--big)); }
+  .hero-copy { max-width: calc(850px * var(--big)); }
+  .hero h1 { font-size: clamp(64px, 6.35vw, calc(96px * var(--big))); }
+  .hero h1 img, .hero-portrait .wave-clip { width: calc(96px * var(--big)); height: calc(96px * var(--big)); }
+  .hero h1 img { flex-basis: calc(96px * var(--big)); }
+  .hero-copy > p { max-width: calc(760px * var(--big)); font-size: calc(20px * var(--big)); }
+  .hero-bubble { font-size: calc(15px * var(--big)); }
+  html[data-mode="fun"] .sticker { width: calc(var(--w) * var(--big)); }
+  html[data-mode="fun"] .hero-copy > p { margin-top: calc(34px * var(--big)); }
+
+  /* Case studies: the title, the folders and what is on them. */
+  .section-title { font-size: calc(48px * var(--big)); }
+  html[data-mode="fun"] .project-grid {
+    --tab-w: calc(328px * var(--big));
+    --tab-step: calc(284px * var(--big));
+    --card-h: clamp(430px, calc(100vh - var(--stack-top) - var(--tab-h) - 24px), calc(620px * var(--big)));
+    width: min(100%, calc(1344px * var(--big)));
+  }
+  html[data-mode="fun"] .project-type { font-size: calc(13px * var(--big)); }
+  html[data-mode="fun"] .project-copy h3 { font-size: clamp(46px, 4.7vw, calc(72px * var(--big))); }
+  html[data-mode="fun"] .project-description { max-width: calc(500px * var(--big)); font-size: calc(19px * var(--big)); }
+  html:not([data-mode="fun"]) .project-copy h3 { font-size: calc(36px * var(--big)); }
+  html:not([data-mode="fun"]) .project-description { font-size: calc(16px * var(--big)); }
+  html:not([data-mode="fun"]) .project-image { height: calc(428px * var(--big)); }
+
+  /* Motion Graphics: the card and the panel it opens into. */
+  html[data-mode="fun"] .reel-title { font-size: clamp(40px, 4.2vw, calc(64px * var(--big))); }
+  html[data-mode="fun"] .reel-note { font-size: calc(15px * var(--big)); }
+  .reel-panel { width: min(calc(1480px * var(--big)), calc(100vw - 48px)); height: min(calc(680px * var(--big)), calc(100vh - 48px)); }
+  .reel-group-head h3 { font-size: calc(28px * var(--big)); }
+  .reel-tile-label { font-size: calc(14px * var(--big)); }
+  .reel-tile-label small { font-size: calc(12px * var(--big)); }
+  .reel-holder { width: min(calc(880px * var(--big)), calc(100% - 392px * var(--big)), calc((100vh - 200px) * 16 / 9)); }
+  .reel-frame.is-tall { height: min(calc(100vh - 200px), calc(600px * var(--big))); }
+  .reel-info { width: calc(320px * var(--big)); }
+  .reel-info h4 { font-size: calc(30px * var(--big)); }
+  .reel-info p { font-size: calc(15px * var(--big)); }
+
+  /* About Me and the rest. */
+  .about-inner { width: min(100%, calc(852px * var(--big))); }
+  html[data-mode="fun"] .about-inner { width: min(100%, calc(980px * var(--big))); }
+  .about h2 { font-size: calc(48px * var(--big)); }
+  .about p { font-size: calc(20px * var(--big)); }
+  html[data-mode="fun"] .about-intro { grid-template-columns: minmax(0, 1fr) calc(300px * var(--big)); }
+}

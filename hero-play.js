@@ -2011,7 +2011,7 @@
       const dt = Math.min(48, now - pop.last);
       pop.last = now;
       const pressing = pop.on && now < pop.pressAt + PRESS;
-      if (!pressing && !pop.jump) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 300);
+      if (!pressing && !pop.jump) pop.k = pop.on ? Math.min(1, pop.k + dt / 560) : Math.max(0, pop.k - dt / 560); // (it closes at the pace it opened)
       paintAbout();
       if (pressing || (pop.on ? pop.k < 1 : pop.k > 0)) pop.frame = window.requestAnimationFrame(step);
     };

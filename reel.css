@@ -15,7 +15,10 @@ html:not([data-mode="fun"]) .reel-stage { min-height: min(440px, 52vw); }
   position: absolute; left: 50%; top: 0; translate: -50% 0;
   height: 100%; width: auto; aspect-ratio: 9 / 16;
   border: 0; pointer-events: none;
+  /* Hidden until it is playing, so the player's black first paint never flashes over the poster. */
+  opacity: 0; transition: opacity .5s ease;
 }
+.reel-video iframe.is-playing { opacity: 1; }
 /* A little shade so the title and play button stay readable over the picture. */
 .reel-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0, 0, 0, .45), rgba(0, 0, 0, .08) 45%, rgba(0, 0, 0, .4)); }
 .reel-stage > .reel-title, .reel-stage > .reel-play, .reel-stage > .reel-note { position: relative; z-index: 1; }

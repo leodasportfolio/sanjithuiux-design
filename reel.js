@@ -168,14 +168,23 @@
     if (!clip) return;
     const built = !(card && card.offsetParent) || reel.classList.contains('is-open');
     const want = clipSeen && built;
-    if (want && !clip.src) clip.src = clip.dataset.src;
-    else if (!want && clip.src) clip.removeAttribute('src');
+    if (want && !clip.src) {
+      clip.src = clip.dataset.src;
+      // (Shown a beat after it has loaded, by which time the clip is running.)
+      clip.addEventListener('load', () => { clipTimer = window.setTimeout(() => clip.classList.add('is-playing'), 900); }, { once: true });
+    } else if (!want && clip.src) {
+      window.clearTimeout(clipTimer);
+      clip.classList.remove('is-playing');
+      clip.removeAttribute('src');
+    }
   };
+  let clipTimer = 0;
   if (clip && 'IntersectionObserver' in window) {
     new IntersectionObserver((entries) => { clipSeen = entries.some((e) => e.isIntersecting); syncClip(); }, { rootMargin: '400px 0px' }).observe(video);
     new MutationObserver(syncClip).observe(reel, { attributes: true, attributeFilter: ['class'] });
   } else if (clip) {
     clip.src = clip.dataset.src;
+    clip.classList.add('is-playing');
   }
   [card, plain].forEach((el) => {
     if (!el) return;
