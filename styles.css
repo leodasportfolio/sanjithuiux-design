@@ -215,6 +215,11 @@ button { font: inherit; }
   gap: 40px;
 }
 
+/* Normal mode shows Drexel Works, GLOWM, Brandroom; the page lists them in Fun mode's order. */
+.project-card[href="/drexel-works/"] { order: 1; }
+.project-card[href="/glowm/"] { order: 2; }
+.project-card[href="/brandroom/"] { order: 3; }
+.reel { order: 4; }
 .project-card {
   min-width: 0;
   display: block;
