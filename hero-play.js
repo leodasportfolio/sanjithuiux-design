@@ -2842,7 +2842,7 @@
     // (A short, smooth catch-up: wheel events come in bursts, and this evens them into
     // one steady motion instead of a run of small steps.)
     const want = left * (1 - Math.exp(-dt / 0.025)); // (a short catch-up: close to the hand, still even)
-    const most = MAX_SCROLL * dt;
+    const most = (left < 0 ? MAX_SCROLL * 1.3 : MAX_SCROLL) * dt; // (scrolling up runs a little faster)
     wheel.at += Math.max(-most, Math.min(most, want));
     window.scrollTo({ top: wheel.at, behavior: 'instant' });
     // Drawn now, in the same frame the page moves: waiting for the scroll event would put

@@ -37,7 +37,6 @@ document.addEventListener('keydown', (event) => {
 
 // The header slides away on the way down the page and returns on the way up.
 const siteHeader = document.querySelector('.site-header');
-let lastScrollY = window.scrollY;
 
 // One dark pill marks the section on screen and slides between links.
 const sectionLinks = [...siteNav.querySelectorAll('a[href^="#"]')]
@@ -164,24 +163,13 @@ function updateSelected() {
   placeIndicator();
 }
 
-function updateHeader() {
-  const y = window.scrollY;
-  const menuOpen = menuButton.getAttribute('aria-expanded') === 'true';
-  if (Math.abs(y - lastScrollY) > 6) {
-    const goingDown = y > lastScrollY && y > 120;
-    siteHeader.classList.toggle('is-hidden', goingDown && !menuOpen && !siteHeader.contains(document.activeElement));
-    lastScrollY = y;
-  }
-}
-
 // The pill follows along while the page scrolls.
 let headerQueued = false;
 window.addEventListener('scroll', () => {
   if (headerQueued) return;
   headerQueued = true;
-  window.requestAnimationFrame(() => { headerQueued = false; updateHeader(); updateSelected(); });
+  window.requestAnimationFrame(() => { headerQueued = false; updateSelected(); });
 }, { passive: true });
-siteHeader.addEventListener('focusin', () => siteHeader.classList.remove('is-hidden'));
 window.addEventListener('resize', placeIndicator);
 menuButton.addEventListener('click', placeIndicator);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeIndicator);
@@ -235,4 +223,12 @@ if (reduceMotion || !('IntersectionObserver' in window)) {
   }, { threshold: 0.12, rootMargin: '0px 0px -40px' });
 
   revealItems.forEach((item) => observer.observe(item));
+}
+
+// Philadelphia's clock in the footer, kept to the minute.
+const localTime = document.getElementById('local-time');
+if (localTime) {
+  const tick = () => { localTime.textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }); };
+  tick();
+  setInterval(tick, 15000);
 }
