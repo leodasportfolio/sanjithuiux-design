@@ -1032,11 +1032,17 @@
     if (body.measured) return;
     const heroRect = hero.getBoundingClientRect();
     const rect = body.el.getBoundingClientRect();
-    body.homeX = rect.left + rect.width / 2 - heroRect.left;
-    body.homeY = rect.top + rect.height / 2 - heroRect.top;
+    // A sticker's home comes from its layout box (offsetLeft/Top ignore its translate), so
+    // it can be re-measured while out on its loop; its transitions are paused for the read,
+    // or a layout change still gliding its left/top/width would be measured mid-way.
+    const paused = body.kind === 'sticker' ? body.el.style.transition : null;
+    if (paused !== null) { body.el.style.transition = 'none'; void body.el.offsetWidth; }
+    body.homeX = body.kind === 'sticker' ? body.el.offsetLeft : rect.left + rect.width / 2 - heroRect.left;
+    body.homeY = body.kind === 'sticker' ? body.el.offsetTop : rect.top + rect.height / 2 - heroRect.top;
     body.hw = (body.kind === 'sticker' ? body.el.offsetWidth : rect.width) / 2;
     body.hh = (body.kind === 'sticker' ? body.el.offsetHeight : rect.height) / 2;
     body.baseAngle = body.kind === 'sticker' ? parseFloat(body.el.style.getPropertyValue('--r')) || 0 : 0;
+    if (paused !== null) body.el.style.transition = paused;
     body.measured = true;
     if (body.state === 'home') { body.x = body.homeX; body.y = body.homeY; }
   };
@@ -1762,7 +1768,14 @@
 
   measureBox();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBox);
-  window.addEventListener('resize', () => { measureBox(); if (!playing()) { sendTileHome(); sendAllHome(); } bodies.forEach((body) => { if (body.state === 'home') body.measured = false; }); });
+  window.addEventListener('resize', () => {
+    measureBox();
+    if (!playing()) { sendTileHome(); sendAllHome(); }
+    // Resting pieces and loose stickers both take the new layout; a loose word keeps its
+    // old home (it is only out for a moment).
+    bodies.forEach((body) => { if (body.state === 'home' || body.kind === 'sticker') body.measured = false; });
+    if (playing()) runWorld(); // (the window grew back past the Fun-mode width: set off again)
+  });
 
   // ---------- Fun mode below the hero ----------
   // The dotted canvas runs down the whole page (hero-play.css). Two small things follow
