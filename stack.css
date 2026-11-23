@@ -73,6 +73,9 @@ html:not([data-mode="fun"]) .reel-plain.reveal { opacity: 1; transform: none; tr
   html[data-mode="fun"] .project-grid .project-card:nth-child(3) { --s: 2; --f: linear-gradient(180deg, #ffdb62, #f6bc1c); --ink: #2a2000; }
   /* The picture sits on the folder's right; the words keep the left. */
   html[data-mode="fun"] .project-grid .project-card .project-image { position: absolute; right: 32px; top: 32px; bottom: 32px; width: 36%; height: auto; border-radius: 20px; }
+  /* In the Mission Control row (--m), the picture moves from the right to a wide strip under the title, and back on the way up. */
+  html[data-mode="fun"] .is-on .project-card .project-image { right: calc(32px + 16px * var(--m)); top: calc(32px + 180px * var(--m)); width: calc(36% * (1 - var(--m)) + (100% - 96px) * var(--m)); }
+  html[data-mode="fun"] .is-on .project-card .project-copy { width: calc(58% + 42% * var(--m)); } /* (the words take the whole width there: the title stays short above the picture) */
   html[data-mode="fun"] .project-grid .project-card .project-copy { width: 58%; }
   html[data-mode="fun"] .project-grid .project-card .project-copy { padding: 0; }
   html[data-mode="fun"] .project-grid .project-card .project-type { color: inherit; opacity: .8; font-size: 14px; }
