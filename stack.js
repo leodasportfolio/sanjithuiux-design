@@ -125,7 +125,7 @@
   let titleOff = 90; // the title's top below the section's, before it sticks
   // The pour runs on a clock, not the scroll (the original's pace): tk is how far along the
   // whole pour is, open says which way it is going, dockUp chases what the scroll asks for.
-  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, last: 0, frame: 0 };
+  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, flat: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, last: 0, frame: 0 };
   // One flick, one stage: the hero, the stack out and settled, the Mission Control row with the
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
@@ -150,6 +150,11 @@
     const p = step.p, list = stops(), last = list[list.length - 1];
     if (p > last + 40) return; // past Motion Graphics: the page is free
     event.preventDefault(); // (hero-play.js leaves a prevented wheel alone)
+    // Turning round mid-way: scrolled back while the folders pour out, they stop where they are
+    // and go back in from there (the pointer turns back to click); scrolled down again while
+    // they go in, they pour back out from there. Either way, nothing restarts.
+    if (event.deltaY < 0 && clock.open && clock.tk < 1 && !step.shut) { step.shut = true; go(0, now, 3400, 'inout'); queue(); return; }
+    if (event.deltaY > 0 && clock.home) { clock.home = false; clock.back = false; step.shut = step.toHero = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } go(window.scrollY + list[0] - p, now); queue(); return; }
     if (step.busy || now < step.until || !fresh) return;
     if (event.deltaY > 0) {
       const next = list.find((at) => at > p + 40);
@@ -172,8 +177,8 @@
     // for it), off once the folders are out; riding home, the same trip backwards.
     if (clock.home) { if (!clock.open) { clock.trip = Math.max(clock.tk > 0 ? clock.click : 80, clock.trip - dt * TRIP_RATE); if (clock.trip <= clock.click && clock.dockUp >= 1 && clock.pressAt < 0) clock.pressAt = now; } } // (the click once the Dock is up; it waits on the folder while the files go in)
     else if (clock.q > 0) clock.trip = Math.min(clock.open ? clock.click + AWAY : clock.click, clock.trip + dt * TRIP_RATE);
-    if (clock.open) clock.tk = Math.min(1, clock.tk + dt / SPAN);
-    else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in: the Dock up first, the click, then the whole stack as one folder)
+    if (clock.open) clock.tk = Math.min(1, clock.tk + dt / (clock.flat ? MINIMISE_MS : SPAN));
+    else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / (clock.flat ? MINIMISE_MS : SPAN)); // (in: the Dock up first, the click, then the whole stack as one folder)
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
     const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
@@ -225,9 +230,9 @@
     if (gliding) clock.speed = clock.upRun = 0;
     const early = !gliding && clock.tk >= 1 && clock.upRun >= TURN_BACK && (p + vh - 230) / Math.max(1, clock.speed) < (PRESS + MINIMISE_MS) / 1000 + 0.06;
     if (!clock.seen) { clock.seen = true; if (q >= CLICK) { clock.open = true; clock.tk = 1; clock.trip = CLICK + AWAY; } }
-    if (!clock.open && q >= CLICK && clock.trip >= CLICK && (!clock.back || clock.downRun >= 40)) { clock.open = true; clock.back = false; clock.pressAt = now; } // (once shut, the next click needs a scroll back down, as the original)
-    else if (clock.open && (q < S + CLOSE_PAST || early || step.shut) && !settling) {
-      clock.open = false; clock.back = true; clock.wantBack = true; step.shut = false; clock.downRun = 0; clock.home = gliding; if (gliding) { clock.trip = CLICK + AWAY; clock.pressAt = -1e9; } else if (clock.dockUp >= 1) clock.pressAt = now; clock.tk = unit(clock.tk * SPAN / POUR_MS); // (downRun: the next click needs a fresh scroll down, not the one that brought them here)
+    if (!clock.open && q >= CLICK && clock.trip >= CLICK && (!clock.back || clock.downRun >= 40)) { clock.open = true; clock.back = false; clock.pressAt = now; if (clock.tk <= 0) clock.flat = false; } // (once shut, the next click needs a scroll back down, as the original)
+    else if (clock.open && ((q < S + CLOSE_PAST && !gliding) || early || step.shut) && !settling) {
+      clock.open = false; clock.back = true; clock.wantBack = true; step.shut = false; clock.downRun = 0; clock.home = gliding; clock.flat = clock.tk >= 1; if (gliding) { clock.trip = Math.max(clock.trip, CLICK); clock.pressAt = -1e9; } else if (clock.dockUp >= 1) clock.pressAt = now; // (downRun: the next click needs a fresh scroll down, not the one that brought them here)
       // The rest of the runway is dead scroll now (the stage is pinned, so this shows nothing):
       // skip it, and the hero is next once they are in. hero-play.js moves the page.
       if (p > 0 && !gliding) { window.dispatchEvent(new CustomEvent('stackjump', { detail: -p })); clock.lastY = window.scrollY; }
@@ -242,7 +247,7 @@
     // the screen, a folder finishes going in over the last stretch rather than vanishing.
     let allOut = true, mid = false;
     cards.forEach((card, i) => {
-      let k = clock.open ? unit((clock.tk * SPAN - i * STAG_MS) / POUR_MS) : unit(clock.tk); // (out one after the other; in together, as the original's one folder)
+      let k = clock.flat ? unit(clock.tk) : unit((clock.tk * SPAN - i * STAG_MS) / POUR_MS); // (out one after the other; in together, as the original's one folder)
       card.dataset.k = k;
       if (k < 1) allOut = false;
       if (k > 0 && k < 1) mid = true;
