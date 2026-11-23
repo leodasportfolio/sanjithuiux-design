@@ -2,9 +2,18 @@ const menuButton = document.querySelector('.menu-button');
 const siteNav = document.querySelector('.site-nav');
 
 // A fresh opening starts with the introduction, not a restored section position.
-// In-page navigation still works normally after the page has opened.
-window.addEventListener('pageshow', () => {
-  const sectionHashes = ['', '#home', '#case-studies', '#about-me'];
+// Coming back from a case study keeps its place (the browser's restored page, or the
+// #case-studies link on those pages). In-page navigation still works normally after the page has opened.
+window.addEventListener('pageshow', (event) => {
+  document.documentElement.style.visibility = ''; // (hidden by index.html on the way back from a case study)
+  if (event.persisted) return;
+  let fromCaseStudy = /\/(brandroom|glowm|drexel-works)\//.test(document.referrer);
+  try { fromCaseStudy = fromCaseStudy || !!window.sessionStorage.getItem('stack-from'); } catch (error) { /* storage is optional */ } // (the browser's back button: stack.js's note, since the referrer is stale)
+  if (!window.location.hash && fromCaseStudy) {
+    document.getElementById('case-studies').scrollIntoView({ behavior: 'instant' }); // (the browser's own jump is lost under the opening)
+    return;
+  }
+  const sectionHashes = ['', '#home', '#about-me'];
   if (!sectionHashes.includes(window.location.hash)) return;
   if (window.location.hash) {
     window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
@@ -206,7 +215,7 @@ updateSelected();
 // The staged pieces keep moving for a moment after the wheel stops, so the pill is also
 // checked a few times a second; it costs four measurements.
 window.setInterval(() => { if (!document.hidden) updateSelected(); }, 120);
-window.requestAnimationFrame(() => navIndicator.classList.add('is-ready'));
+window.requestAnimationFrame(() => window.requestAnimationFrame(() => navIndicator.classList.add('is-ready'))); // (a frame later: a page opened on the stack places the pill at once, no slide from Home)
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const revealItems = document.querySelectorAll('.reveal');

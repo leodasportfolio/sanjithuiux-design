@@ -9,7 +9,8 @@
   <title>Sanjith | Product Designer</title>
   <script>
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); }); // (back from a case study: start from the top, not where the page was left)
+    // Back from a case study: nothing shows until stack.js (or script.js) has put the page on the stack.
+    try { if (window.sessionStorage.getItem('stack-from') || /\/(brandroom|glowm|drexel-works)\//.test(document.referrer)) document.documentElement.style.visibility = 'hidden'; } catch (error) { /* storage is optional */ }
     // Pick fun or normal mode before the page paints. Normal is the default; a saved
     // choice wins.
     (function () {
@@ -23,10 +24,10 @@
   </script>
   <link rel="preload" href="assets/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css?v=20261114-order">
-  <link rel="stylesheet" href="hero-play.css?v=20261120-stack132">
+  <link rel="stylesheet" href="hero-play.css?v=20261120-stack139">
   <link rel="stylesheet" href="reel.css?v=20261110-still">
   <link rel="stylesheet" href="wide.css?v=20261119-hero">
-  <link rel="stylesheet" href="stack.css?v=20261120-stack132">
+  <link rel="stylesheet" href="stack.css?v=20261120-stack139">
   <link rel="stylesheet" href="/assets/site-analytics.css?v=20261028-cookieless">
   <script src="/assets/site-analytics.js?v=20261029-resume" defer></script>
 </head>
@@ -260,9 +261,9 @@
     </div>
   </div>
 
-  <script src="script.js?v=20261114-foot"></script>
-  <script src="hero-play.js?v=20261120-stack132"></script>
+  <script src="script.js?v=20261123-back5"></script>
+  <script src="hero-play.js?v=20261120-stack139"></script>
   <script src="reel.js?v=20261110-still"></script>
-  <script src="stack.js?v=20261120-stack132"></script>
+  <script src="stack.js?v=20261120-stack139"></script>
 </body>
 </html>

@@ -125,6 +125,7 @@
   let titleOff = 90; // the title's top below the section's, before it sticks
   // The pour runs on a clock, not the scroll (the original's pace): tk is how far along the
   // whole pour is, open says which way it is going, dockUp chases what the scroll asks for.
+  let landing = false;
   const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, flat: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, t: 0, tWant: 0, outAt: 0, settledAt: -1, skip: 0, last: 0, frame: 0 };
   // One flick, one stage: the hero, the stack out and settled, the Mission Control row with the
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
@@ -198,6 +199,7 @@
 
   const tick = (now) => {
     clock.frame = 0;
+    if (landing) return; // (back from a case study, the page still loading: its layout is not final, and a tick would read the stack as scrolled away)
     const dt = Math.min(100, now - clock.last);
     clock.last = now;
     // The pointer's trip runs on the clock: in and along the icons to the folder (the click waits
@@ -284,7 +286,7 @@
     // The Dock: up over 300px of scroll from the title, down once the folders are out.
     const press = now < clock.pressAt + PRESS ? Math.sin(Math.PI * (now - clock.pressAt) / PRESS) : 0; // (the click, by the clock: the original's PRESS)
     const settled = clock.open && allOut;
-    if (!settled) clock.settledAt = -1; else if (clock.settledAt < 0) clock.settledAt = now;
+    if (!settled) clock.settledAt = -1; else if (clock.settledAt === -1) clock.settledAt = now; // (-1 only: a landing sets it long past, which in the page's first seconds is still negative)
     const park = settled ? easeOut(unit((now - clock.settledAt - 300) / 300)) : 0; // (half a second after the files settle the Dock slides away)
     // The page waits for the stack: while they go in, while they pour out, and whenever a fast
     // scroll runs ahead of Mission Control (scrolled at any speed, nothing overtakes the show).
@@ -380,7 +382,8 @@
   };
 
   cards.forEach((card) => card.addEventListener('click', (event) => {
-    if (!active() || event.target.closest('.project-link')) return; // (the button goes inside)
+    if (event.target.closest('.project-link')) { try { window.sessionStorage.setItem('stack-from', card.getAttribute('href')); } catch (error) { /* storage is optional */ } return; } // (the button goes inside; remembered for the way back)
+    if (!active()) return;
     event.preventDefault(); // (the folder itself never goes inside, the front one included: only its button does)
     if (card === cards[2]) return; // (the front folder is open already: nothing to lift)
     if (!grid.classList.contains('is-rest')) return;
@@ -401,4 +404,31 @@
   window.addEventListener('resize', queue);
   new MutationObserver(queue).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
   paint();
+
+  // Back from a case study: the page opens on the stack, out and settled, with that folder
+  // lifted, as it was left (a fresh opening of the site still starts at the hero: script.js).
+  // Done before the first paint, and again at pageshow after script.js's own hash jump.
+  const visited = () => {
+    let want = document.referrer;
+    try { want = window.sessionStorage.getItem('stack-from') || want; window.sessionStorage.removeItem('stack-from'); } catch (error) { /* storage is optional */ }
+    return cards.find((card) => want.includes(card.getAttribute('href')));
+  };
+  let from = visited();
+  landing = !!from && active() && document.readyState !== 'complete'; // (the clock waits for the load-time landing)
+  const land = () => {
+    if (!active() || !from) return;
+    cards.forEach((card) => card.classList.remove('is-up', 'is-down', 'is-settling'));
+    if (document.readyState === 'complete') { landing = false; run(); }
+    const s = section.getBoundingClientRect(); // (measured, not painted: a paint here, with script.js's own jump still in place, would lower the folders)
+    window.scrollTo({ top: window.scrollY + stops()[0] - (window.innerHeight + RUN() - s.top - s.height), behavior: 'instant' });
+    clock.seen = clock.open = true; clock.tk = 1; clock.flat = false; clock.trip = clock.click + AWAY; clock.pressAt = -1e9; clock.back = clock.wantBack = clock.home = false; clock.settledAt = performance.now() - 1e4; clock.dockUp = clock.dockWant = 0;
+    cards.forEach((card) => { card.style.transition = 'none'; }); // (the lift is in place at once, not eased: the page is as it was left)
+    if (from !== cards[2]) { from.classList.add('is-up'); cards.slice(cards.indexOf(from) + 1).forEach((c) => c.classList.add('is-down')); }
+    void grid.offsetWidth;
+    cards.forEach((card) => { card.style.transition = ''; });
+    paint();
+    if (!landing) root.style.visibility = ''; // (index.html hid the page until now)
+  };
+  land();
+  window.addEventListener('pageshow', (event) => { if (event.persisted) from = visited(); land(); }); // (restored from the back-forward cache: the page is as it was left, but the folder visited may differ)
 })();
