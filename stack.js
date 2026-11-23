@@ -336,7 +336,7 @@
     const rest = settled && p >= DROP && m <= 0;  // the stack at rest: a folder may be lifted
     grid.classList.toggle('is-rest', rest);
     grid.classList.toggle('is-on', m > 0);
-    grid.classList.toggle('is-free', p > RUN()); // (the stage riding off with the page: Motion Graphics' Stage Manager tile stays on screen over About Me, as the original)
+    grid.classList.toggle('is-free', p > RUN()); // (the stage riding off with the page: Motion Graphics' Stage Manager tile stays on screen, as the original)
     grid.classList.toggle('is-shutting', closing); // (the stage may be riding off with the page: the folders must not be cut at its edge)
     if (!rest) lower();
     // Keep the clock going while anything is still moving.

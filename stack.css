@@ -153,7 +153,7 @@ html:not([data-mode="fun"]) .reel-plain.reveal { opacity: 1; transform: none; tr
   html[data-mode="fun"] .sgenie { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
   html[data-mode="fun"] .sgenie .project-card { box-shadow: none; }
   html[data-mode="fun"] .project-grid.is-shutting { overflow: visible; }
-  html[data-mode="fun"] .project-grid.is-free { overflow: visible; z-index: 4; } /* (the stage riding off: the Stage Manager tile is neither cut at its edge nor under the About Me panel (z 3); the notification (z 2) has gone by then) */
+  html[data-mode="fun"] .project-grid.is-free { overflow: visible; } /* (the stage riding off: the Stage Manager tile is not cut at its edge) */
   html[data-mode="fun"] .case-studies:has(.is-shutting) .section-title { z-index: 0; } /* (the folders pass over it on their way in) */
 
   /* Mission Control: the folders fade out; Motion Graphics rises. */
