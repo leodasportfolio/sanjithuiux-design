@@ -130,7 +130,7 @@
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
   // waits until it lands. p is read off the last paint.
-  const step = { p: -1e9, shut: false, to: null, until: 0, busy: false, toHero: false, lastAt: 0, lastDelta: 0 };
+  const step = { p: -1e9, shut: false, to: null, until: 0, busy: false, toHero: false, lastAt: 0, lastDelta: 0, lastDir: 0 };
   const stops = () => [DROP + 60, MC() + MC_LEN, TOP() + TOP_LEN];
   const go = (top, now, ms, out) => {
     ms = ms || Math.max(700, Math.min(1000, 400 + Math.abs(top - window.scrollY) * 0.4)); // a steady, unhurried step: never a dash, never a crawl
@@ -138,13 +138,17 @@
     step.until = now + ms + 160;
     window.dispatchEvent(new CustomEvent('stackglide', { detail: { top, ms, out } }));
   };
+  // Back from the stack, however fast the flick and wherever the pour is: the page holds
+  // still while the pointer comes back, clicks, and the folders go in; only then does it
+  // ride to the hero (paint sends it, on toHero). The same one way every time.
+  const shutAndHome = (now) => { step.shut = step.busy = step.toHero = true; step.until = now; queue(); };
   window.addEventListener('wheel', (event) => {
     if (!active() || event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
     const now = performance.now();
     // A new flick, not the tail of the last one: a pause, a stronger push, or anything at all
     // once the last step has been over for a while (a trackpad never pauses).
-    const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || now > step.until + 1500; // (1.5s: longer than a trackpad's momentum tail)
-    step.lastAt = now; step.lastDelta = Math.abs(event.deltaY);
+    const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || now > step.until + 1500 || Math.sign(event.deltaY) !== step.lastDir; // (1.5s: longer than a trackpad's momentum tail; a change of direction is always the hand, never the tail)
+    step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY);
     if (step.busy && now > step.until + 4000) step.busy = step.toHero = step.shut = false; // (never stuck: whatever happened, the wheel is theirs again)
     if (step.p < -1e8) paint(); // (a wheel before the first paint: measure first)
     const p = step.p, list = stops(), last = list[list.length - 1];
@@ -153,16 +157,15 @@
     // Turning round mid-way: scrolled back while the folders pour out, they stop where they are
     // and go back in from there (the pointer turns back to click); scrolled down again while
     // they go in, they pour back out from there. Either way, nothing restarts.
-    if (event.deltaY < 0 && clock.open && clock.tk < 1 && !step.shut) { step.shut = true; go(0, now, 2200, 'inout'); queue(); return; } // (a shorter ride than from the settled stack: fewer folders to put back)
-    if (event.deltaY > 0 && clock.home) { clock.home = false; clock.back = false; step.shut = step.toHero = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } go(window.scrollY + list[0] - p, now); queue(); return; }
+    if (event.deltaY < 0 && clock.open && clock.tk < 1 && !step.shut) { shutAndHome(now); return; }
+    if (event.deltaY > 0 && clock.home) { clock.home = false; clock.back = false; step.busy = step.shut = step.toHero = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } go(window.scrollY + list[0] - p, now); queue(); return; }
     if (step.busy || now < step.until || !fresh) return;
     if (event.deltaY > 0) {
       const next = list.find((at) => at > p + 40);
       if (next !== undefined) go(window.scrollY + next - p, now);
     } else if (p > list[0] - 40 && p < list[1] - 40) {
       // Back from the stack: the page rides to the hero while the folders are clicked shut.
-      step.shut = true; go(0, now, 3400, 'inout');
-      queue();
+      shutAndHome(now);
     } else {
       const prev = list.filter((at) => at < p - 40).pop();
       go(prev === undefined ? 0 : window.scrollY + prev - p, now);
@@ -178,7 +181,7 @@
     if (clock.home) { if (!clock.open) { clock.trip = Math.max(clock.tk > 0 ? clock.click : 80, clock.trip - dt * TRIP_RATE); if (clock.trip <= clock.click && clock.dockUp >= 1 && clock.pressAt < 0) clock.pressAt = now; } } // (the click once the Dock is up; it waits on the folder while the files go in)
     else if (clock.q > 0) clock.trip = Math.min(clock.open ? clock.click + AWAY : clock.click, clock.trip + dt * TRIP_RATE);
     if (clock.open) clock.tk = Math.min(1, clock.tk + dt / (clock.flat ? MINIMISE_MS : SPAN));
-    else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / (clock.flat ? MINIMISE_MS : SPAN)); // (in: the Dock up first, the click, then the whole stack as one folder)
+    else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in, at the one pace whatever the pour was doing: the Dock up first, the click, then the whole stack as one folder)
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
     const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
@@ -241,7 +244,7 @@
     if (q <= 0 && clock.tk <= 0) { clock.back = clock.wantBack = false; if (!clock.home) clock.trip = 0; } // back above it all: the next visit starts fresh
     const closing = !clock.open && clock.tk > 0;
     if (clock.home && (!gliding || moved > 0)) clock.home = false; // (riding home: the Dock is on its own clock, down once the folders are in)
-    if (step.toHero && !clock.open && clock.tk <= 0 && now >= step.until) { step.busy = step.toHero = false; go(0, now, 1400, true); }
+    if (step.toHero && !clock.open && clock.tk <= 0 && now >= step.until) { step.busy = step.toHero = false; go(0, now, 1400, 'inout'); }
     // Each folder's k, from its own slice of the clock; scrolled up so far the stage has left
     // the screen, a folder finishes going in over the last stretch rather than vanishing.
     let allOut = true, mid = false;
