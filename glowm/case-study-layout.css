@@ -8,7 +8,7 @@
   --navy: #102b63;
   --blue: var(--navy);
   --line: #d9d9d2;
-  --chapter-gap: 112px;
+  --chapter-gap: 152px; /* (more room between the phases: mentor review) */
   --subsection-gap: 64px;
   --content-gap: 40px;
   --sans: "Nunito Sans", "Avenir Next", "Helvetica Neue", Arial, sans-serif;

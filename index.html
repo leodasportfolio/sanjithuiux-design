@@ -9,6 +9,7 @@
   <title>Sanjith | Product Designer</title>
   <script>
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); }); // (back from a case study: start from the top, not where the page was left)
     // Pick fun or normal mode before the page paints. Normal is the default; a saved
     // choice wins.
     (function () {

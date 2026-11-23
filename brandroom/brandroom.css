@@ -28,7 +28,7 @@ ul, ol { padding: 0; list-style: none; }
 .skip-link:focus { top: 16px; }
 
 /* Page column: 896 wide, 186 from the left at 1280 (Figma padding 56 / 198 / 71 / 186) */
-.page { width: min(896px, calc(100vw - 384px)); margin-left: max(186px, calc(50% - 454px)); padding: 56px 0 71px; display: flex; flex-direction: column; gap: 67px; }
+.page { width: min(896px, calc(100vw - 384px)); margin-left: max(186px, calc(50% - 454px)); padding: 56px 0 71px; display: flex; flex-direction: column; gap: 104px; /* (more room between the phases: mentor review) */ }
 .block { display: flex; flex-direction: column; gap: 20px; }
 
 /* Overview */
