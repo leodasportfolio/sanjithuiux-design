@@ -182,7 +182,6 @@
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
     const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
-    if (clock.home && clock.tk <= 0) { const vh = window.innerHeight / 726; clock.dockUp = Math.min(was, unit((window.scrollY - 80 * vh) / (250 * vh))); } // (riding home with the folders in: the Dock stays up until the title sits under the hero, then goes down with the page, as on the original site)
     if (!clock.open && !clock.home && clock.tk > 0 && was < 1 && clock.dockUp >= 1) clock.pressAt = now; // the click, once the Dock is up
     const e = dt / MC_CATCH_MS;
     clock.mc = clock.mc < clock.mcWant ? Math.min(clock.mcWant, clock.mc + e) : Math.max(clock.mcWant, clock.mc - e);
@@ -279,8 +278,9 @@
       const w = unit((qq - CLICK - 40) / (AWAY - 40));
       const away = 2 * w * w - w * w * w;
       const x = -469 + 625 * arrive + 280 * away;
-      const y = vh + 40 - 135 * arrive - vh / 2 + 220 * away - (1 - up) * 180;
-      pointer.style.opacity = arrive > 0 && away < 1 && up > 0 ? '1' : '0';
+      const lift = clock.home && clock.tk <= 0 ? 0 : (1 - up) * 180; // (riding home with the folders in, the pointer leaves on its own straight line: the Dock dropping under it must not pull it about)
+      const y = vh + 40 - 135 * arrive - vh / 2 + 220 * away - lift;
+      pointer.style.opacity = arrive > 0 && away < 1 && (up > 0 || lift === 0) ? '1' : '0'; // (riding home, it finishes leaving while the Dock drops)
       pointer.style.transform = 'translate(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px) scale(' + (1 - 0.14 * press).toFixed(3) + ')';
       pointer.classList.toggle('is-hand', arrive > 0.93 && away < 0.2);
       // Each icon swells as the pointer passes over it and pushes its neighbours aside, as on
@@ -339,8 +339,8 @@
 
   cards.forEach((card) => card.addEventListener('click', (event) => {
     if (!active() || event.target.closest('.project-link')) return; // (the button goes inside)
-    if (card === cards[2]) return; // (the front folder is open already: a click goes inside)
-    event.preventDefault();
+    event.preventDefault(); // (the folder itself never goes inside, the front one included: only its button does)
+    if (card === cards[2]) return; // (the front folder is open already: nothing to lift)
     if (!grid.classList.contains('is-rest')) return;
     const wasUp = card.classList.contains('is-up');
     lower();
