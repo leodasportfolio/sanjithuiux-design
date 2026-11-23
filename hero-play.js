@@ -2064,8 +2064,10 @@
     const noticeRight = parseFloat(noticeStyle.right) || 0;
     // (It arrives 400px of scrolling before the pointer sets off, so it sits there a while on its own first.)
     const slide = smooth(unit((viewTall + 1040 - homeY) / 260)); // (it slides in over 260px of scrolling)
-    const noticeGone = (1 - slide) + away;
-    notice.style.visibility = slide > 0 && noticeGone < 1 ? 'visible' : 'hidden';
+    const noticeGone = 1 - slide; // (clicked, it stays put: the window opens out of it while it fades)
+    const noticeFade = smooth(unit(pop.k / 0.3));
+    notice.style.opacity = noticeFade > 0 ? (1 - noticeFade).toFixed(3) : '';
+    notice.style.visibility = slide > 0 && noticeGone < 1 && noticeFade < 1 ? 'visible' : 'hidden';
     notice.style.transform = 'translate3d(' + (Math.min(1, noticeGone) * (noticeWide + noticeRight + 30)).toFixed(2) + 'px, 0, 0) scale(' + (1 - 0.04 * press).toFixed(4) + ')';
     // Once the window starts to open, the picture has left the notification: it is the
     // window's own photo from here on, so the notification's copy is put away.
