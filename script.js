@@ -136,13 +136,26 @@ sectionLinks.forEach((item) => {
   item.link.addEventListener('click', (event) => {
     pillHeldFor = item;
     pillHeldUntil = performance.now() + 2000;
+    // Normal mode: a nav ride outruns the fade-ins, so everything shows at once for the ride.
+    if (document.documentElement.dataset.mode !== 'fun') {
+      document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-visible'));
+      window.setTimeout(hideGone, 2050);
+    }
     updateSelected();
     // A mouse click leaves the link focused, which would keep the bar from sliding away on
     // the next scroll down; the focus is let go. (Keyboard users keep theirs.)
     if (event.detail > 0) item.link.blur();
   });
 });
-['wheel', 'touchstart', 'keydown'].forEach((type) => window.addEventListener(type, () => { pillHeldUntil = 0; }, { passive: true }));
+['wheel', 'touchstart', 'keydown'].forEach((type) => window.addEventListener(type, () => { if (pillHeldUntil > performance.now()) { pillHeldUntil = 0; hideGone(); } pillHeldUntil = 0; }, { passive: true }));
+// After a ride, whatever ended up wholly off screen goes back to waiting for its fade-in.
+function hideGone() {
+  if (document.documentElement.dataset.mode === 'fun' || performance.now() < pillHeldUntil) return;
+  document.querySelectorAll('.reveal').forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (!el.closest('.hero') && (r.bottom <= 0 || r.top >= window.innerHeight)) el.classList.remove('is-visible');
+  });
+}
 
 // The selected section is the one filling most of the screen.
 function updateSelected() {
@@ -255,7 +268,7 @@ if (reduceMotion || !('IntersectionObserver' in window)) {
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px' });
   const gone = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => { if (!entry.isIntersecting && again(entry.target)) entry.target.classList.remove('is-visible'); });
+    entries.forEach((entry) => { if (!entry.isIntersecting && again(entry.target) && performance.now() > pillHeldUntil) entry.target.classList.remove('is-visible'); });
   }, { threshold: 0 });
   revealItems.forEach((item) => { if (!item.closest('.hero')) gone.observe(item); });
 
