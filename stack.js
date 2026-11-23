@@ -105,7 +105,7 @@
   const DROP = CLICK_PAST + 110 + 130;    // p: the Dock is down (past the click, the rest is scroll-driven)
   const MC = () => DROP + 130 + window.innerHeight * 0.8;  // (a near-full screen of rest to click around in) // Mission Control, after a rest
   const MC_LEN = 900;                     // (a slow hand-off: it reads too fast at 450)
-  const MC_CATCH_MS = 900;                // and the row eases there, never snaps
+  const MC_CATCH_MS = 450;                // and the row eases there, never snaps (both ways at this pace: 900 read slow)
   const TOP = () => MC() + MC_LEN + 100;  // Motion Graphics takes the screen
   const TOP_LEN = 700;
   const SPAN = POUR_MS + 2 * STAG_MS;     // the whole pour, first folder to last
@@ -125,7 +125,7 @@
   let titleOff = 90; // the title's top below the section's, before it sticks
   // The pour runs on a clock, not the scroll (the original's pace): tk is how far along the
   // whole pour is, open says which way it is going, dockUp chases what the scroll asks for.
-  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, flat: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, last: 0, frame: 0 };
+  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, flat: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, t: 0, tWant: 0, outAt: 0, last: 0, frame: 0 };
   // One flick, one stage: the hero, the stack out and settled, the Mission Control row with the
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
@@ -147,7 +147,7 @@
     const now = performance.now();
     // A new flick, not the tail of the last one: a pause, a stronger push, or anything at all
     // once the last step has been over for a while (a trackpad never pauses).
-    const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || now > step.until + 1500 || Math.sign(event.deltaY) !== step.lastDir; // (1.5s: longer than a trackpad's momentum tail; a change of direction is always the hand, never the tail)
+    const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || now > Math.max(step.until, clock.outAt) + 1500 || Math.sign(event.deltaY) !== step.lastDir; // (1.5s: longer than a trackpad's momentum tail; a change of direction is always the hand, never the tail)
     step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY);
     if (step.busy && now > step.until + 4000) step.busy = step.toHero = step.shut = false; // (never stuck: whatever happened, the wheel is theirs again)
     if (step.p < -1e8) paint(); // (a wheel before the first paint: measure first)
@@ -161,6 +161,7 @@
     if (event.deltaY > 0 && clock.home) { clock.home = false; clock.back = false; step.busy = step.shut = step.toHero = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } go(window.scrollY + list[0] - p, now); queue(); return; }
     if (step.busy || now < step.until || !fresh) return;
     if (event.deltaY > 0) {
+      if (clock.open && clock.tk < 1) return; // (the folders are still pouring out: the page stays until they are, then a fresh flick moves on)
       const next = list.find((at) => at > p + 40);
       if (next !== undefined) go(window.scrollY + next - p, now);
     } else if (p > list[0] - 40 && p < list[1] - 40) {
@@ -180,7 +181,7 @@
     // for it), off once the folders are out; riding home, the same trip backwards.
     if (clock.home) { if (!clock.open) { clock.trip = Math.max(clock.tk > 0 ? clock.click : 80, clock.trip - dt * TRIP_RATE); if (clock.trip <= clock.click && clock.dockUp >= 1 && clock.pressAt < 0) clock.pressAt = now; } } // (the click once the Dock is up; it waits on the folder while the files go in)
     else if (clock.q > 0) clock.trip = Math.min(clock.open ? clock.click + AWAY : clock.click, clock.trip + dt * TRIP_RATE);
-    if (clock.open) clock.tk = Math.min(1, clock.tk + dt / (clock.flat ? MINIMISE_MS : SPAN));
+    if (clock.open) { const was = clock.tk; clock.tk = Math.min(1, clock.tk + dt / (clock.flat ? MINIMISE_MS : SPAN)); if (was < 1 && clock.tk >= 1) clock.outAt = now; }
     else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in, at the one pace whatever the pour was doing: the Dock up first, the click, then the whole stack as one folder)
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
     const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
@@ -188,6 +189,7 @@
     if (!clock.open && !clock.home && clock.tk > 0 && was < 1 && clock.dockUp >= 1) clock.pressAt = now; // the click, once the Dock is up
     const e = dt / MC_CATCH_MS;
     clock.mc = clock.mc < clock.mcWant ? Math.min(clock.mcWant, clock.mc + e) : Math.max(clock.mcWant, clock.mc - e);
+    clock.t = clock.t < clock.tWant ? Math.min(clock.tWant, clock.t + e) : Math.max(clock.tWant, clock.t - e); // (Motion Graphics grows on the same clock: a fast scroll never snaps it)
     paint();
   };
   const run = () => { if (!clock.frame) { clock.last = performance.now(); clock.frame = window.requestAnimationFrame(tick); } };
@@ -260,7 +262,7 @@
     const settled = clock.open && allOut;
     // The page waits for the stack: while they go in, while they pour out, and whenever a fast
     // scroll runs ahead of Mission Control (scrolled at any speed, nothing overtakes the show).
-    const ahead = (clock.open && !allOut && p > 360) || (settled && clock.mc < clock.mcWant - 0.15);
+    const ahead = (clock.open && !allOut && p > 360) || (settled && (clock.mc < clock.mcWant - 0.15 || clock.t < clock.tWant - 0.15));
     hold(closing || ahead);
     clock.dockWant = clock.home ? (closing ? 1 : 0) : settled ? 1 - unit((q - CLICK - 110) / 130) ** 3 : clock.back && !closing ? (clock.wantBack ? 1 : 0) : 1;
     const up = clock.home ? clock.dockUp : Math.min(easeOut(unit(q / 300)), clock.dockUp);
@@ -311,7 +313,8 @@
     // chases the scroll on the clock so it never snaps.
     clock.mcWant = settled ? smooth(unit((p - MC()) / MC_LEN)) : 0;
     const m = clock.mc;
-    const t = m >= 1 ? smooth(unit((p - TOP()) / TOP_LEN)) : 0;
+    clock.tWant = m >= 1 ? smooth(unit((p - TOP()) / TOP_LEN)) : 0;
+    const t = clock.t;
     cards.forEach((card) => { card.style.opacity = +card.dataset.k >= 1 ? (1 - unit(t * 3)).toFixed(3) : '0'; });  // the row is gone before Motion Graphics reaches it
     if (mid && !boxes) boxes = cards.map(buildStrips);
     if (!mid && boxes) { boxes.forEach((b) => b.remove()); boxes = null; }
@@ -337,7 +340,7 @@
     if (!rest) lower();
     // Keep the clock going while anything is still moving.
     const want = clock.open ? 1 : 0;
-    if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || now < clock.pressAt + PRESS || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
+    if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || clock.t !== clock.tWant || now < clock.pressAt + PRESS || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
   };
 
   cards.forEach((card) => card.addEventListener('click', (event) => {
