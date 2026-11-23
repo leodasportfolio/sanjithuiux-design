@@ -179,11 +179,27 @@ window.addEventListener('scroll', () => {
   headerQueued = true;
   window.requestAnimationFrame(() => { headerQueued = false; updateSelected(); });
 }, { passive: true });
-window.addEventListener('resize', () => { // (resizing the window: the pill keeps to its link at once, no stretching after it)
+// Resizing the window: the pill keeps to its link in the same frame (a ResizeObserver runs
+// after layout, before paint), with no slide or stretch trailing behind it.
+const snapIndicator = () => {
   navIndicator.classList.add('is-jumping');
   placeIndicator();
   void navIndicator.offsetWidth;
   navIndicator.classList.remove('is-jumping');
+};
+let lastWide = window.innerWidth;
+if ('ResizeObserver' in window) {
+  const resized = new ResizeObserver(() => { if (window.innerWidth !== lastWide) { lastWide = window.innerWidth; snapIndicator(); } });
+  [siteNav, ...siteNav.querySelectorAll('a')].forEach((el) => resized.observe(el));
+}
+// While the window is being resized the nav does not animate at all: no menu sliding in or out
+// as it crosses the phone width, no pill easing after its link.
+let resizingTimer = 0;
+window.addEventListener('resize', () => {
+  document.documentElement.classList.add('is-resizing');
+  window.clearTimeout(resizingTimer);
+  resizingTimer = window.setTimeout(() => document.documentElement.classList.remove('is-resizing'), 250);
+  snapIndicator();
 });
 menuButton.addEventListener('click', placeIndicator);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeIndicator);
