@@ -202,7 +202,7 @@
   const tick = (now) => {
     clock.frame = 0;
     if (landing) return; // (back from a case study, the page still loading: its layout is not final, and a tick would read the stack as scrolled away)
-    const dt = Math.min(100, now - clock.last);
+    const dt = Math.max(0, Math.min(100, now - clock.last)); // (a frame stamped before run() set last: never a step backwards)
     clock.last = now;
     // The pointer's trip runs on the clock: in and along the icons to the folder (the click waits
     // for it), off once the folders are out; riding home, the same trip backwards.

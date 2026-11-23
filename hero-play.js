@@ -2831,7 +2831,7 @@
   const wheelStep = (now) => {
     wheel.frame = 0;
     if (wheel.target === null) return;
-    const dt = Math.min(50, now - wheel.last) / 1000;
+    const dt = Math.max(0, Math.min(50, now - wheel.last)) / 1000; // (a frame stamped before the wheel event: never a step backwards)
     wheel.last = now;
     // stack.js holding the page (the folders going in or pouring out): a slow crawl, not a dead
     // stop, and no backlog to rush off with afterwards.
