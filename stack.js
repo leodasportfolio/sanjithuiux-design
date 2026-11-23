@@ -113,8 +113,9 @@
   // Lowering eases the folders back (is-settling carries the transition, since the stack's
   // own transforms must not ease).
   let settle = 0, settling = false;
+  const lifted = () => cards.some((card) => card.classList.contains('is-up') || card.classList.contains('is-down'));
   const lower = () => {
-    if (!cards.some((card) => card.classList.contains('is-up') || card.classList.contains('is-down'))) return;
+    if (!lifted()) return;
     cards.forEach((card) => { card.classList.remove('is-up', 'is-down'); card.classList.add('is-settling'); });
     settling = true;
     window.clearTimeout(settle);
@@ -166,6 +167,7 @@
     if (event.deltaY > 0) {
       if (clock.open && clock.tk < 1) return; // (the folders are still pouring out: the page stays until they are, then a fresh flick moves on)
       const next = list.find((at) => at > p + 40);
+      if (next !== undefined && lifted()) { lower(); step.chain = list.indexOf(next); step.until = now + 600; return; } // (a folder lifted: it goes back down first, all three at rest, then the page moves on: the chain)
       if (next !== undefined) go(window.scrollY + next - p, now);
     } else if (p > list[0] - 40 && p < list[1] - 40) {
       // Back from the stack: the page rides to the hero while the folders are clicked shut.
@@ -195,6 +197,7 @@
     step.busy = step.shut = step.toHero = false;
     step.chain = idx;
     const prev = list.filter((at) => at < p - 40).pop();
+    if (p < list[idx] && lifted()) { lower(); step.until = now + 600; return; } // (a folder lifted: back down first, then the chain rides on)
     const at = p < list[idx] ? (p < list[0] - 40 ? list[0] : list[idx]) : Math.max(prev === undefined ? list[idx] : prev, list[idx]); // (down: the pour first if the folders are not out yet, then one unbroken ride)
     go(window.scrollY + at - p, now, at === list[0] || idx === 0 ? 600 : 900);
   }, true));
