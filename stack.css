@@ -4,12 +4,10 @@
    lifts a folder to the top (the order never changes) to show what it is; only its button
    opens the case study. Scrolling on is a Mission Control hand-off: the stack shrinks to a
    folders fade out and Motion Graphics rises in their place. stack.js sets the classes.
-   Phones and tablets are untouched. Normal mode is the plain grid, static: the cards are
-   simply there, with no one-by-one reveal. */
+   Phones and tablets are untouched. Normal mode is the plain grid: the title is there and
+   the cards fade in as they scroll into view (script.js .reveal). */
 
 .wdock, .wpointer { display: none; }
-html:not([data-mode="fun"]) .project-card.reveal,
-html:not([data-mode="fun"]) .reel-plain.reveal { opacity: 1; transform: none; transition: none; }
 
 @media (min-width: 1101px) {
   html[data-mode="fun"] .case-studies { padding-bottom: 0; }
