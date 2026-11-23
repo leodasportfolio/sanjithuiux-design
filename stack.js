@@ -153,7 +153,7 @@
     // Turning round mid-way: scrolled back while the folders pour out, they stop where they are
     // and go back in from there (the pointer turns back to click); scrolled down again while
     // they go in, they pour back out from there. Either way, nothing restarts.
-    if (event.deltaY < 0 && clock.open && clock.tk < 1 && !step.shut) { step.shut = true; go(0, now, 3400, 'inout'); queue(); return; }
+    if (event.deltaY < 0 && clock.open && clock.tk < 1 && !step.shut) { step.shut = true; go(0, now, 2200, 'inout'); queue(); return; } // (a shorter ride than from the settled stack: fewer folders to put back)
     if (event.deltaY > 0 && clock.home) { clock.home = false; clock.back = false; step.shut = step.toHero = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } go(window.scrollY + list[0] - p, now); queue(); return; }
     if (step.busy || now < step.until || !fresh) return;
     if (event.deltaY > 0) {
