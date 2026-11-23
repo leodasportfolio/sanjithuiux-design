@@ -132,7 +132,7 @@
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
   // waits until it lands. p is read off the last paint.
-  const step = { p: -1e9, chain: null, homeAfter: false, then: undefined, shut: false, to: null, until: 0, busy: false, toHero: false, lastAt: 0, lastDelta: 0, lastDir: 0 };
+  const step = { p: -1e9, chain: null, homeAfter: false, aboutAfter: false, aboutAt: 0, then: undefined, shut: false, to: null, until: 0, busy: false, toHero: false, lastAt: 0, lastDelta: 0, lastDir: 0 };
   const stops = () => [DROP + 60, MC() + MC_LEN, TOP() + TOP_LEN];
   const go = (top, now, ms, out) => {
     ms = ms || Math.max(700, Math.min(1000, 400 + Math.abs(top - window.scrollY) * 0.4)); // a steady, unhurried step: never a dash, never a crawl
@@ -161,7 +161,7 @@
     // A new flick, not the tail of the last one: a pause, a stronger push, or anything at all
     // once the last step has been over for a while (a trackpad never pauses).
     const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || (now > Math.max(step.until, clock.outAt) + 600 && Math.abs(event.deltaY) >= 12) || Math.sign(event.deltaY) !== step.lastDir; // (0.6s and a real push: a momentum tail is tiny by then; a change of direction is always the hand, never the tail)
-    step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY); step.chain = null; step.homeAfter = false; clock.skip = 0;
+    step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY); step.chain = null; step.homeAfter = step.aboutAfter = false; step.aboutAt = 0; clock.skip = 0;
     if (step.busy && now > step.until + 4000) step.busy = step.toHero = step.shut = false; // (never stuck: whatever happened, the wheel is theirs again)
     if (step.p < -1e8) paint(); // (a wheel before the first paint: measure first)
     const p = step.p, list = stops(), last = list[list.length - 1];
@@ -192,22 +192,26 @@
   // Home goes the wheel's way back. hero-play.js's landings are for the plain page.
   document.querySelectorAll('.site-header a[href^="#"]').forEach((link) => link.addEventListener('click', (event) => {
     if (!active()) return;
-    const hash = link.getAttribute('href'), idx = { '#case-studies': 0, '#motion-graphics': 2, '#home': -1, '#about-me': 3 }[hash];
+    const hash = link.getAttribute('href');
+    let idx = { '#case-studies': 0, '#motion-graphics': 2, '#home': -1, '#about-me': 3 }[hash];
     if (idx === undefined) return;
     const now = performance.now();
     if (step.p < -1e8) paint();
     const p = step.p, list = stops();
-    if (idx === 3) { if (p < list[2]) { clock.skip = now + 2500; step.busy = step.shut = step.toHero = false; step.chain = null; } return; } // About Me: the stage is over and done with while hero-play.js rides there
+    if (idx === 3 && p > list[2] - 40) return; // (About Me from Motion Graphics or past it: hero-play.js's own ride)
     if (idx < 0 && p < list[0] - 40 && !clock.open) return; // (above the stack: hero-play.js's own ride home)
     event.preventDefault(); event.stopImmediatePropagation();
     if (idx < 0) { rideHome(now); return; }
     if (clock.home) { clock.home = false; clock.back = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } }
     step.busy = step.shut = step.toHero = false;
+    step.aboutAfter = idx === 3; step.aboutAt = 0; // (About Me: the stage played through to Motion Graphics, then on to About Me)
+    if (idx === 3) idx = 2;
     step.chain = idx; step.homeAfter = false;
     const prev = list.filter((at) => at < p - 40).pop();
     if (p < list[idx] && lifted()) { lower(); step.until = now + 600; return; } // (a folder lifted: back down first, then the chain rides on)
-    const at = p < list[idx] ? (p < list[0] - 40 ? list[0] : list[idx]) : Math.max(prev === undefined ? list[idx] : prev, list[idx]); // (down: the pour first if the folders are not out yet, then one unbroken ride)
-    go(window.scrollY + at - p, now, at === list[0] || idx === 0 ? 600 : 900);
+    const at = p < list[idx] ? (p < list[0] - 40 ? list[0] : list.find((at) => at > p + 40)) : Math.max(prev === undefined ? list[idx] : prev, list[idx]); // (down: the pour first if the folders are not out yet, then one unbroken ride)
+    if (at === list[0] && p < list[0] - 40) go(window.scrollY + at - p, now, 1100, 'inout'); // (each leg paced as the ride home, mirrored: the hero to the stack,
+    else go(window.scrollY + at - p, now, p < list[idx] ? 520 : 900); // stop to stop down; back up, the first leg as the ride home's)
   }, true));
 
   const tick = (now) => {
@@ -385,12 +389,13 @@
     const want = clock.open ? 1 : 0;
     if (step.chain !== null) { // (a nav link's ride, stop by stop)
       const list = stops(), want = list[step.chain];
-      if (Math.abs(p - want) < 40) { step.chain = null; if (step.homeAfter) { step.homeAfter = false; shutAndHome(now); } } // (homeAfter: the mode switch's ride goes on to the hero)
+      if (Math.abs(p - want) < 40) { step.chain = null; if (step.homeAfter) { step.homeAfter = false; shutAndHome(now); } if (step.aboutAfter) { step.aboutAfter = false; step.aboutAt = Math.max(now, step.until) + 250; run(); } } // (homeAfter: on to the hero; aboutAfter: a beat on Motion Graphics, then About Me)
       else if (!step.busy && now >= step.until) { // (brisk, both ways: on as soon as the folders are mostly out)
-        if (p < want) { if (settled) go(window.scrollY + want - p, now, 900); } // (down, once the folders have landed: straight through, Mission Control riding the scroll, no stop in between)
+        if (p < want) { if (settled) go(window.scrollY + list.find((at) => at > p + 40) - p, now, 520); } // (down, once the folders have landed: stop by stop, the ride home's pace)
         else { const prev = list.filter((at) => at < p - 40).pop(); go(window.scrollY + Math.max(prev === undefined ? want : prev, want) - p, now, 520); }
       } else run(); // (waiting out the last step with nothing else moving: keep looking, or the ride stalls on this stop)
     }
+    if (step.aboutAt) { if (now >= step.aboutAt) { step.aboutAt = 0; window.dispatchEvent(new CustomEvent('stackabout')); } else run(); } // (hero-play.js: the notification, the click, About Me)
     if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || clock.t !== clock.tWant || now < clock.pressAt + PRESS || (settled && now < clock.settledAt + 1200) || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
   };
 

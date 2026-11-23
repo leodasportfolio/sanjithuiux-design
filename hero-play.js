@@ -2860,6 +2860,7 @@
     wheel.frame = window.requestAnimationFrame(wheelStep);
   };
   // stack.js skipping the dead end of its runway: the page jumps with it, and so does the wheel.
+  window.addEventListener('stackabout', () => glideTo(landings['#about-me'](), true)); // (stack.js has played the stage through: on to About Me)
   window.addEventListener('stackglide', (event) => glideTo(event.detail.top, false, event.detail.then || null, event.detail.ms, event.detail.out)); // (stack.js: one flick, one stage)
   window.addEventListener('stackjump', (event) => {
     if (wheel.target !== null) { wheel.at += event.detail; wheel.target += event.detail; }
