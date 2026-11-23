@@ -529,8 +529,8 @@ button { font: inherit; }
     margin: 24px auto 0;
     max-width: 338px;
     text-align: center;
-    font-size: 20px;
-    line-height: 1.8;
+    font-size: 18px;
+    line-height: 1.7;
   }
 
   .case-studies {
@@ -610,3 +610,21 @@ button { font: inherit; }
 .site-nav.is-swapping .nav-indicator { opacity: 0; transition: opacity .24s ease; }
 .site-nav .nav-indicator.is-jumping { transition: none; }
 html.is-resizing .site-nav, html.is-resizing .site-nav a, html.is-resizing .site-nav .nav-indicator { transition: none !important; }
+
+/* Phones: the case studies and Motion Graphics as a 2 × 2 grid of compact cards, like the
+   web version's four panels: the picture, a small label and a short title. */
+@media (max-width: 700px) {
+  .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 12px; width: min(100% - 36px, 360px); margin-inline: auto; }
+  .project-card { width: auto; margin-inline: 0; }
+  .project-image { height: 214px; border-radius: 18px; }
+  .project-image--drexel, .project-image--brandroom { padding: 14px; }
+  .project-image--glowm { padding: 16px 8px; gap: 4px; }
+  .project-image--glowm img { width: calc((100% - 8px) / 3); height: auto; flex: 0 1 auto; border-radius: 6px; }
+  .project-copy { padding-top: 10px; }
+  .project-type { font-size: 10px; line-height: 1.35; letter-spacing: .06em; }
+  .project-copy h3 { font-size: 18px; line-height: 1.25; }
+  .project-copy h3 span { display: none; }
+  .project-card[href="/glowm/"] h3 { font-size: 0; }
+  .project-card[href="/glowm/"] h3::before { content: "GLOWM"; font-size: 18px; }
+  .project-description, .project-link { display: none; }
+}
