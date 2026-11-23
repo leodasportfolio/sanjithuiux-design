@@ -105,7 +105,7 @@
   const DROP = CLICK_PAST + 110 + 130;    // p: the Dock is down (past the click, the rest is scroll-driven)
   const MC = () => DROP + 130 + window.innerHeight * 0.8;  // (a near-full screen of rest to click around in) // Mission Control, after a rest
   const MC_LEN = 900;                     // (a slow hand-off: it reads too fast at 450)
-  const MC_CATCH_MS = 450;                // and the row eases there, never snaps (both ways at this pace: 900 read slow)
+  const MC_CATCH_MS = 150;                // and the row eases there (a follower: it settles in about three of these), never snaps
   const TOP = () => MC() + MC_LEN + 100;  // Motion Graphics takes the screen
   const TOP_LEN = 700;
   const SPAN = POUR_MS + 2 * STAG_MS;     // the whole pour, first folder to last
@@ -147,7 +147,7 @@
     const now = performance.now();
     // A new flick, not the tail of the last one: a pause, a stronger push, or anything at all
     // once the last step has been over for a while (a trackpad never pauses).
-    const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || now > Math.max(step.until, clock.outAt) + 1500 || Math.sign(event.deltaY) !== step.lastDir; // (1.5s: longer than a trackpad's momentum tail; a change of direction is always the hand, never the tail)
+    const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || (now > Math.max(step.until, clock.outAt) + 600 && Math.abs(event.deltaY) >= 12) || Math.sign(event.deltaY) !== step.lastDir; // (0.6s and a real push: a momentum tail is tiny by then; a change of direction is always the hand, never the tail)
     step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY);
     if (step.busy && now > step.until + 4000) step.busy = step.toHero = step.shut = false; // (never stuck: whatever happened, the wheel is theirs again)
     if (step.p < -1e8) paint(); // (a wheel before the first paint: measure first)
@@ -187,9 +187,9 @@
     const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
     if (!clock.open && !clock.home && clock.tk > 0 && was < 1 && clock.dockUp >= 1) clock.pressAt = now; // the click, once the Dock is up
-    const e = dt / MC_CATCH_MS;
-    clock.mc = clock.mc < clock.mcWant ? Math.min(clock.mcWant, clock.mc + e) : Math.max(clock.mcWant, clock.mc - e);
-    clock.t = clock.t < clock.tWant ? Math.min(clock.tWant, clock.t + e) : Math.max(clock.tWant, clock.t - e); // (Motion Graphics grows on the same clock: a fast scroll never snaps it)
+    const follow = (at, want) => Math.abs(want - at) < 0.002 ? want : at + (want - at) * (1 - Math.exp(-dt / MC_CATCH_MS)); // (eases in and out of every move: no hard stop)
+    clock.mc = follow(clock.mc, clock.mcWant);
+    clock.t = follow(clock.t, clock.tWant); // (Motion Graphics grows on the same clock: a fast scroll never snaps it)
     paint();
   };
   const run = () => { if (!clock.frame) { clock.last = performance.now(); clock.frame = window.requestAnimationFrame(tick); } };
