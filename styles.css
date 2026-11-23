@@ -432,10 +432,19 @@ button { font: inherit; }
 
 :focus-visible { outline: 2px solid #366b74; outline-offset: 4px; }
 
+/* Between phone and wide screens: no link breaks onto two lines, and resizing the window
+   changes the bar gradually, with no jumps (it meets the wide screens' 940px bar at 1100px
+   and the tighter links below at 900px). */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .site-header { left: max(20px, min(80px, calc((100vw - 780px) / 2))); right: max(20px, min(80px, calc((100vw - 780px) / 2))); }
+  .site-nav { gap: clamp(0px, calc(2vw - 18px), 4px); margin-inline: auto; } /* (centred in the room beside the name, near where they sit beside the switch on wide screens) */
+  .site-nav a { white-space: nowrap; padding-inline: clamp(10px, calc(3vw - 17px), 16px); }
+}
+
 @media (max-width: 900px) {
   .site-header { padding-inline: 20px; }
   .site-nav { gap: 0; }
-  .site-nav a { padding-inline: 10px; }
+  .site-nav a { padding-inline: clamp(6px, calc(2vw - 6.4px), 10px); } /* (tighter bit by bit below 820px, so the links never crowd the name) */
   .hero h1 { gap: 12px; }
   .project-grid { gap: 64px 28px; }
   .about-intro { grid-template-columns: 1fr 250px; }

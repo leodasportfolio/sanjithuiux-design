@@ -179,7 +179,12 @@ window.addEventListener('scroll', () => {
   headerQueued = true;
   window.requestAnimationFrame(() => { headerQueued = false; updateSelected(); });
 }, { passive: true });
-window.addEventListener('resize', placeIndicator);
+window.addEventListener('resize', () => { // (resizing the window: the pill keeps to its link at once, no stretching after it)
+  navIndicator.classList.add('is-jumping');
+  placeIndicator();
+  void navIndicator.offsetWidth;
+  navIndicator.classList.remove('is-jumping');
+});
 menuButton.addEventListener('click', placeIndicator);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeIndicator);
 // In Normal mode the Motion Graphics videos sit inside the case-study grid, so the nav shows
