@@ -1694,9 +1694,6 @@
     if (!announce) return;
     try { window.localStorage.setItem('hero-mode', mode); } catch (error) { /* storage is optional */ }
     root.classList.remove('is-fresh');
-    copy.classList.remove('is-switching');
-    void copy.offsetWidth;
-    copy.classList.add('is-switching');
   };
 
   // Reset: he glides home looking relieved and is his calm self again, the stickers
@@ -1736,9 +1733,6 @@
       return;
     }
     setMode(next, true);
-  });
-  copy.addEventListener('animationend', (event) => {
-    if (event.animationName === 'copy-sharpen' && event.target.tagName === 'P') copy.classList.remove('is-switching');
   });
 
   setMode(root.dataset.mode === 'fun' ? 'fun' : 'normal', false);
