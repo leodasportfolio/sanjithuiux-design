@@ -2717,7 +2717,7 @@
     glide.until = began + took + 160; // (the wheel is ignored until just after it lands)
     const step = (now) => {
       const t = Math.min(1, (now - began) / took);
-      const eased = out ? 1 - (1 - t) * (1 - t) : t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // (out: stack.js's ride to the hero eases out only)
+      const eased = out && out !== 'inout' ? 1 - (1 - t) * (1 - t) : t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // (out: stack.js's steps ease out only; 'inout': its ride home starts slow, so the folders are in before the page gets going)
       window.scrollTo({ top: from + (to - from) * eased, behavior: 'instant' });
       if (out) window.dispatchEvent(new CustomEvent('stackride')); // (stack.js redraws the genie on the moved page, this frame)
       if (toAbout) {

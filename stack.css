@@ -121,13 +121,21 @@ html:not([data-mode="fun"]) .reel-plain.reveal { opacity: 1; transform: none; tr
     gap: 32px;
     align-items: flex-end;
     padding: 14px 28px;
-    border-radius: 30px;
-    background: rgba(255, 255, 255, .94);
-    box-shadow: 0 0 0 1px rgba(25, 29, 33, .1), 0 20px 40px -16px rgba(20, 24, 30, .5);
     transform: translateX(-50%);
     pointer-events: none;
   }
-  html[data-mode="fun"] .wdock span { display: block; width: 76px; height: 76px; transform-origin: 50% 100%; }
+  /* The bar is its own layer so it can stretch (--bar) when an icon swells, as the original's. */
+  html[data-mode="fun"] .wdock::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 0 0 1px rgba(25, 29, 33, .1), 0 20px 40px -16px rgba(20, 24, 30, .5);
+    transform: scaleX(var(--bar, 1));
+  }
+  html[data-mode="fun"] .wdock span { display: block; flex: none; width: 76px; height: 76px; transform-origin: 50% 100%; will-change: transform; }
   html[data-mode="fun"] .wdock svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 5px rgba(20, 24, 30, .25)); }
   html[data-mode="fun"] .wpointer {
     display: block;
