@@ -97,9 +97,9 @@
   const CLICK_PAST = 300;                 // the click comes this far after the stage sticks
   const CLOSE_PAST = 200;                 // scrolling back up, the folders are clicked shut here
   const PRESS = 40;                       // how long the press shows, in px
-  const POUR_MS = 1240, MINIMISE_MS = 560; // the folders pouring out, and going back in (the original's timing)
+  const POUR_MS = 1000, MINIMISE_MS = 560; // the folders pouring out, and going back in (the original's timing)
   const TURN_BACK = 24;                   // scrolled back up this far and fast enough, they go in early, so they are in before they leave the screen (the original)
-  const STAG_MS = 300;                    // each folder starts this long after the one under it
+  const STAG_MS = 250;                    // each folder starts this long after the one under it
   const DOCK_CATCH_MS = 700;              // the Dock's own rise or fall: unhurried, both ways
   const TRIP_RATE = 1.0, AWAY = 400;                 // px of the pointer's trip per ms: one steady pace both ways, whatever the scroll does
   const DROP = CLICK_PAST + 110 + 130;    // p: the Dock is down (past the click, the rest is scroll-driven)
@@ -125,7 +125,7 @@
   let titleOff = 90; // the title's top below the section's, before it sticks
   // The pour runs on a clock, not the scroll (the original's pace): tk is how far along the
   // whole pour is, open says which way it is going, dockUp chases what the scroll asks for.
-  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, flat: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, t: 0, tWant: 0, outAt: 0, last: 0, frame: 0 };
+  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, flat: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, t: 0, tWant: 0, outAt: 0, settledAt: -1, last: 0, frame: 0 };
   // One flick, one stage: the hero, the stack out and settled, the Mission Control row with the
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
@@ -184,7 +184,7 @@
     if (clock.open) { const was = clock.tk; clock.tk = Math.min(1, clock.tk + dt / (clock.flat ? MINIMISE_MS : SPAN)); if (was < 1 && clock.tk >= 1) clock.outAt = now; }
     else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in, at the one pace whatever the pour was doing: the Dock up first, the click, then the whole stack as one folder)
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
-    const d = dt / (clock.home ? DOCK_CATCH_MS / 2 : DOCK_CATCH_MS), was = clock.dockUp; // (on the way home the Dock is quick up and quick down)
+    const d = dt / (clock.home || clock.settledAt >= 0 ? DOCK_CATCH_MS / 2.5 : DOCK_CATCH_MS), was = clock.dockUp; // (on the way home the Dock is quick up and quick down)
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
     if (!clock.open && !clock.home && clock.tk > 0 && was < 1 && clock.dockUp >= 1) clock.pressAt = now; // the click, once the Dock is up
     const follow = (at, want, ms) => Math.abs(want - at) < 0.002 ? want : at + (want - at) * (1 - Math.exp(-dt / ms)); // (eases in and out of every move: no hard stop)
@@ -260,14 +260,16 @@
     // The Dock: up over 300px of scroll from the title, down once the folders are out.
     const press = now < clock.pressAt + PRESS ? Math.sin(Math.PI * (now - clock.pressAt) / PRESS) : 0; // (the click, by the clock: the original's PRESS)
     const settled = clock.open && allOut;
+    if (!settled) clock.settledAt = -1; else if (clock.settledAt < 0) clock.settledAt = now;
+    const park = settled ? easeOut(unit((now - clock.settledAt - 300) / 300)) : 0; // (half a second after the files settle the Dock slides away)
     // The page waits for the stack: while they go in, while they pour out, and whenever a fast
     // scroll runs ahead of Mission Control (scrolled at any speed, nothing overtakes the show).
     const ahead = (clock.open && !allOut && p > 360) || (settled && (clock.mc < clock.mcWant - 0.15 || clock.t < clock.tWant - 0.15));
     hold(closing || ahead);
-    clock.dockWant = clock.home ? (closing ? 1 : 0) : settled ? 1 - unit((q - CLICK - 110) / 130) ** 3 : clock.back && !closing ? (clock.wantBack ? 1 : 0) : 1;
+    clock.dockWant = clock.home ? (closing ? 1 : 0) : settled ? (1 - park) * (1 - clock.mc) : clock.back && !closing ? (clock.wantBack ? 1 : 0) : 1;
     const up = clock.home ? clock.dockUp : Math.min(easeOut(unit(q / 300)), clock.dockUp);
     if (dock) {
-      dock.style.bottom = (-140 + 180 * up).toFixed(1) + 'px';
+      dock.style.bottom = (-140 + 228 * up).toFixed(1) + 'px';
       dock.style.visibility = up > 0 ? '' : 'hidden';
     }
     // The pointer: in from the lower left, along the icons to the folder, the click, then
@@ -341,7 +343,7 @@
     if (!rest) lower();
     // Keep the clock going while anything is still moving.
     const want = clock.open ? 1 : 0;
-    if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || clock.t !== clock.tWant || now < clock.pressAt + PRESS || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
+    if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || clock.t !== clock.tWant || now < clock.pressAt + PRESS || (settled && now < clock.settledAt + 1200) || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
   };
 
   cards.forEach((card) => card.addEventListener('click', (event) => {
