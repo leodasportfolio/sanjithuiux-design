@@ -23,15 +23,15 @@
 
   /* The hero. */
   .hero { padding-left: calc(32px * var(--big)); padding-right: calc(32px * var(--big)); }
-  html[data-mode="fun"] .hero { padding-top: calc(196px * var(--big)); padding-bottom: calc(150px * var(--big)); }
+  html[data-hero="fun"] .hero { padding-top: calc(196px * var(--big)); padding-bottom: calc(150px * var(--big)); }
   .hero-copy { max-width: calc(850px * var(--big)); }
   .hero h1 { font-size: clamp(64px, 6.35vw, calc(96px * var(--big))); }
   .hero h1 img, .hero-portrait .wave-clip { width: calc(96px * var(--big)); height: calc(96px * var(--big)); }
   .hero h1 img { flex-basis: calc(96px * var(--big)); }
   .hero-copy > p { max-width: calc(760px * var(--big)); font-size: calc(20px * var(--big)); }
   .hero-bubble { font-size: calc(15px * var(--big)); }
-  html[data-mode="fun"] .sticker { width: calc(var(--w) * var(--big)); }
-  html[data-mode="fun"] .hero-copy > p { margin-top: calc(34px * var(--big)); }
+  html[data-hero="fun"] .sticker { width: calc(var(--w) * var(--big)); }
+  html[data-hero="fun"] .hero-copy > p { margin-top: calc(34px * var(--big)); }
 
   /* Case studies: the title, the folders and what is on them. */
   .section-title { font-size: calc(48px * var(--big)); }

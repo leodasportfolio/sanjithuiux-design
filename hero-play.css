@@ -1,8 +1,8 @@
 /* Hero playground.
-   Normal mode (the default, and the only mode on small screens): the clean hero with
-   the six stickers lined up small and grey under the paragraph.
-   Fun mode (html[data-mode="fun"], wide screens): stickers scattered around the headline,
-   dotted canvas, loose wires and the orange selection box. */
+   The hero is always the playground on wide screens (html[data-hero="fun"], set in index.html):
+   stickers scattered around the headline, dotted canvas, loose wires and the orange selection box.
+   On small screens: the clean hero with the six stickers lined up small and grey under the paragraph.
+   Fun mode (html[data-mode="fun"]) only changes what comes below the hero. */
 
 .hero {
   position: relative;
@@ -265,7 +265,7 @@ html.is-out .hero-portrait img { visibility: hidden; }
   visibility: hidden; pointer-events: none; background: #fff;
 }
 .hero-portrait .wave-clip.is-on { visibility: visible; }
-html.is-out .hero-portrait .wave-clip, html:not([data-mode="fun"]) .hero-portrait .wave-clip { visibility: hidden; }
+html.is-out .hero-portrait .wave-clip, html:not([data-hero="fun"]) .hero-portrait .wave-clip { visibility: hidden; }
 html.is-out .hero-portrait { cursor: default !important; }
 html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px) scale(1) !important; transition-delay: 0s !important; }
 
@@ -431,7 +431,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   html:not([data-mode="fun"]) .mode-switch.is-pending [data-mode-label="normal"] { color: #8a8f94; }
   html[data-mode="fun"] .mode-switch [data-mode-label="normal"] { color: rgba(25, 29, 33, .62); }
 
-  html[data-mode="fun"] .hero {
+  html[data-hero="fun"] .hero {
     padding-top: 196px;
     padding-bottom: 150px;
     background-image: radial-gradient(circle, rgba(25, 29, 33, .17) 1px, transparent 1.4px);
@@ -439,9 +439,9 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     background-position: 12px 12px;
   }
 
-  html[data-mode="fun"] .hero-copy > p { margin-top: 34px; }
+  html[data-hero="fun"] .hero-copy > p { margin-top: 34px; }
 
-  html[data-mode="fun"] .sticker {
+  html[data-hero="fun"] .sticker {
     left: var(--x);
     top: var(--y);
     width: var(--w);
@@ -454,13 +454,13 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     touch-action: none;
   }
 
-  html[data-mode="fun"] .sticker:hover {
+  html[data-hero="fun"] .sticker:hover {
     filter: grayscale(0) drop-shadow(0 10px 16px rgba(25, 29, 33, .2));
     scale: 1.04;
   }
 
-  html[data-mode="fun"] .sticker:active,
-  html[data-mode="fun"] .sticker.is-held {
+  html[data-hero="fun"] .sticker:active,
+  html[data-hero="fun"] .sticker.is-held {
     cursor: grabbing;
     scale: 1.2;
     filter: grayscale(0) drop-shadow(0 14px 20px rgba(25, 29, 33, .22));
@@ -469,53 +469,53 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
 
   /* While he or a sticker is being carried, the other stickers ignore the cursor:
      they stay grey and do not pop, even if the cursor ends up over them. */
-  html[data-mode="fun"].is-dragging .sticker:not(.is-held) { pointer-events: none; }
+  html[data-hero="fun"].is-dragging .sticker:not(.is-held) { pointer-events: none; }
 
   /* One settle-in wiggle per sticker when the page first opens. */
-  html[data-mode="fun"].is-fresh .sticker {
+  html[data-hero="fun"].is-fresh .sticker {
     animation: sticker-wiggle .7s ease-in-out calc(1s + var(--i) * 150ms) 1;
   }
 
-  html[data-mode="fun"] .pen-path { opacity: 1; }
-  html[data-mode="fun"] .pen-path .wire { stroke-dashoffset: 0; transition-delay: .35s; }
+  html[data-hero="fun"] .pen-path { opacity: 1; }
+  html[data-hero="fun"] .pen-path .wire { stroke-dashoffset: 0; transition-delay: .35s; }
   /* The wire's handle is no longer a slingshot and the Reset button is gone: he is slung
      from wherever he is grabbed, and everything finds its own way back. */
-  html[data-mode="fun"] .pen-path .sling, .reset-dock { display: none; }
-  html[data-mode="fun"] .sticker { cursor: default; }
-  html[data-mode="fun"] .sticker:hover { scale: 1; }
+  html[data-hero="fun"] .pen-path .sling, .reset-dock { display: none; }
+  html[data-hero="fun"] .sticker { cursor: default; }
+  html[data-hero="fun"] .sticker:hover { scale: 1; }
   /* The band from the slingshot's post to him while he is pulled back. */
   /* The aimer: a dotted line (small squares) the way he will fly, from the spot he was grabbed. */
-  html[data-mode="fun"] .sling-band { position: absolute; left: 0; top: 0; height: 6px; margin-top: -3px; background: repeating-linear-gradient(to right, transparent 0 10px, #ff5a1f 10px 16px, transparent 16px 20px); transform-origin: 0 50%; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .15s ease; }
-  html[data-mode="fun"] .hit-burst { z-index: 6; }
-  html[data-mode="fun"] .sticker.is-live { transition: opacity .4s ease, filter .7s ease, scale .2s ease; }
-  html[data-mode="fun"] .sticker.is-hit { filter: grayscale(0) saturate(1.25) drop-shadow(0 10px 16px rgba(25, 29, 33, .2)); transition: filter .12s ease; }
-  html[data-mode="fun"] .sling-band::before { content: ""; position: absolute; left: -5px; top: -2px; width: 10px; height: 10px; background: #fff; box-shadow: 0 0 0 1.5px var(--ink); }
+  html[data-hero="fun"] .sling-band { position: absolute; left: 0; top: 0; height: 6px; margin-top: -3px; background: repeating-linear-gradient(to right, transparent 0 10px, #ff5a1f 10px 16px, transparent 16px 20px); transform-origin: 0 50%; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .15s ease; }
+  html[data-hero="fun"] .hit-burst { z-index: 6; }
+  html[data-hero="fun"] .sticker.is-live { transition: opacity .4s ease, filter .7s ease, scale .2s ease; }
+  html[data-hero="fun"] .sticker.is-hit { filter: grayscale(0) saturate(1.25) drop-shadow(0 10px 16px rgba(25, 29, 33, .2)); transition: filter .12s ease; }
+  html[data-hero="fun"] .sling-band::before { content: ""; position: absolute; left: -5px; top: -2px; width: 10px; height: 10px; background: #fff; box-shadow: 0 0 0 1.5px var(--ink); }
 
-  html[data-mode="fun"] .spark {
+  html[data-hero="fun"] .spark {
     scale: 1;
     opacity: 1;
     transition-delay: calc(.45s + var(--i) * 70ms);
     animation: spark-twinkle var(--t, 3s) ease-in-out calc(1.4s + var(--i) * .37s) infinite alternate;
   }
 
-  html[data-mode="fun"] .name-box { opacity: 1; transform: scale(1); transition-delay: .55s; }
+  html[data-hero="fun"] .name-box { opacity: 1; transform: scale(1); transition-delay: .55s; }
 
   /* The box can be moved by the word and resized by its handles; hero-play.js springs it back. */
-  html[data-mode="fun"] .name-select { z-index: 4; cursor: default; user-select: none; -webkit-user-select: none; touch-action: none; }
-  html[data-mode="fun"] .name-box i { pointer-events: auto; touch-action: none; }
-  html[data-mode="fun"] .name-box .tl, html[data-mode="fun"] .name-box .br { cursor: nwse-resize; }
-  html[data-mode="fun"] .name-box .tr, html[data-mode="fun"] .name-box .bl { cursor: nesw-resize; }
-  html[data-mode="fun"] .name-box .tc, html[data-mode="fun"] .name-box .bc { cursor: ns-resize; }
-  html[data-mode="fun"] .name-box .ml, html[data-mode="fun"] .name-box .mr { cursor: ew-resize; }
+  html[data-hero="fun"] .name-select { z-index: 4; cursor: default; user-select: none; -webkit-user-select: none; touch-action: none; }
+  html[data-hero="fun"] .name-box i { pointer-events: auto; touch-action: none; }
+  html[data-hero="fun"] .name-box .tl, html[data-hero="fun"] .name-box .br { cursor: nwse-resize; }
+  html[data-hero="fun"] .name-box .tr, html[data-hero="fun"] .name-box .bl { cursor: nesw-resize; }
+  html[data-hero="fun"] .name-box .tc, html[data-hero="fun"] .name-box .bc { cursor: ns-resize; }
+  html[data-hero="fun"] .name-box .ml, html[data-hero="fun"] .name-box .mr { cursor: ew-resize; }
 
-  html[data-mode="fun"] .hero-portrait { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  html[data-hero="fun"] .hero-portrait { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 
-  html[data-mode="fun"] .hero-bubble {
+  html[data-hero="fun"] .hero-bubble {
     opacity: 1;
     transform: translate(-62%, 0) scale(1);
     transition-delay: .35s;
   }
-  html[data-mode="fun"].is-back .hero-bubble { transition-delay: 0s; }
+  html[data-hero="fun"].is-back .hero-bubble { transition-delay: 0s; }
 }
 
 @keyframes sticker-wiggle {
@@ -602,8 +602,8 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   /* The hero's frame sits a little down from the top of the window, and starts just above
      the nav bar, so the bar sits inside the frame rather than across its top line. The
      bar comes down with it by the same amount. */
-  html[data-mode="fun"] .site-header { top: 16px; }
-  html[data-mode="fun"] .hero { margin-top: 8px; }
+  html[data-hero="fun"] .site-header { top: 16px; }
+  html[data-hero="fun"] .hero { margin-top: 8px; }
   /* Hidden while scrolling down, the bar goes right off the top, shadow and all. */
 
   /* The hero's dotted canvas carries on down the whole page and scrolls with it. */
@@ -616,11 +616,11 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   /* The hero stays a box, a frame sitting on that canvas: the dots run straight through
      it, and one plain thin line with rounded corners marks the edges things bounce off.
      No shadow: it is a drawn rectangle on the page, not a card lifted off it. */
-  html[data-mode="fun"] .hero {
+  html[data-hero="fun"] .hero {
     background-color: transparent;
-    background-image: none;
     box-shadow: 0 0 0 1.5px rgba(25, 29, 33, .78);
   }
+  html[data-mode="fun"] .hero { background-image: none; } /* (the body's dots run through instead) */
 
   /* The dots softly brighten around the cursor. It only ever responds to the pointer:
      nothing loops or drifts by itself. */
@@ -650,12 +650,15 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   }
   html[data-mode="fun"] .dot-glow.is-on { opacity: 1; }
 
+  /* (Retired: the old folder stack, the old Motion Graphics runway, the travelling heading and
+     the settling title are kept below under data-mode="fun-old", which nothing sets. The case
+     studies now arrive as stack.css / stack.js have it.) */
   /* Case studies as a stack of Mac-style folders: rounded, a soft gradient rather than
      flat colour, a darker back panel carrying the tab with a lighter front panel over
      it, and gentle shadows. Every folder sticks at the same place, so scrolling brings
      the next one up over the one before. The tabs step along side by side, so the earlier
      folders stay in view. */
-  html[data-mode="fun"] .project-grid {
+  html[data-mode="fun-old"] .project-grid {
     --tab-h: 56px;
     --tab-w: 328px;
     --tab-step: 284px;
@@ -671,7 +674,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
 
   /* The card itself is the back panel; its ::after is the front panel lying over it,
      leaving a lip of the back showing along the top. */
-  html[data-mode="fun"] .project-card {
+  html[data-mode="fun-old"] .project-card {
     position: sticky;
     top: calc(var(--stack-top) + var(--tab-h));
     height: var(--card-h);
@@ -684,16 +687,16 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     color: var(--ink-on);
     box-shadow: 0 -14px 34px -16px rgba(20, 24, 30, .34), 0 30px 50px -34px rgba(20, 24, 30, .4);
   }
-  html[data-mode="fun"] .project-card + .project-card { margin-top: calc(var(--tab-h) + 44px); }
+  html[data-mode="fun-old"] .project-card + .project-card { margin-top: calc(var(--tab-h) + 44px); }
   /* The second folder waits. After the first has stuck, the page scrolls on while it is
      clicked 300px later and pours out of the Dock, then it sits alone
      for half a screen; only then does the second folder begin to come in (which it does
      when its tab is 85% of the way down the screen). */
-  html[data-mode="fun"] .project-card:nth-child(2) { margin-top: max(calc(var(--tab-h) + 44px), calc(300px + 185vh - var(--stack-top) - var(--card-h))); }
+  html[data-mode="fun-old"] .project-card:nth-child(2) { margin-top: max(calc(var(--tab-h) + 44px), calc(300px + 185vh - var(--stack-top) - var(--card-h))); }
   /* The third folder waits the same way: the second sits alone for a screen before the
      third begins to come in. */
-  html[data-mode="fun"] .project-card:nth-child(3) { margin-top: max(calc(var(--tab-h) + 44px), calc(185vh - var(--stack-top) - var(--card-h))); }
-  html[data-mode="fun"] .project-card::after {
+  html[data-mode="fun-old"] .project-card:nth-child(3) { margin-top: max(calc(var(--tab-h) + 44px), calc(185vh - var(--stack-top) - var(--card-h))); }
+  html[data-mode="fun-old"] .project-card::after {
     content: "";
     position: absolute;
     z-index: -1;
@@ -703,13 +706,13 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .42), 0 -4px 10px rgba(0, 0, 0, .14);
     pointer-events: none;
   }
-  html[data-mode="fun"] .project-card:nth-child(1) { --back: #123f96; --front-1: #2a72e0; --front-2: #164fb8; --ink-on: #fff; --tab-ink: #fff; --tab-i: 0; }
-  html[data-mode="fun"] .project-card:nth-child(2) { --back: #1b1d21; --front-1: #4a4e56; --front-2: #2c2f35; --ink-on: #fff; --tab-ink: #fff; --tab-i: 1; }
-  html[data-mode="fun"] .project-card:nth-child(3) { --back: #e3a800; --front-1: #ffdb62; --front-2: #f6bc1c; --ink-on: #2a2000; --tab-ink: #2a2000; --tab-i: 2; }
-  html[data-mode="fun"] .project-card:nth-child(4) { --back: #e0437d; --front-1: #ff97b9; --front-2: #f4608f; --ink-on: #35091b; --tab-ink: #2b0613; --tab-i: 3; }
+  html[data-mode="fun-old"] .project-card:nth-child(1) { --back: #123f96; --front-1: #2a72e0; --front-2: #164fb8; --ink-on: #fff; --tab-ink: #fff; --tab-i: 0; }
+  html[data-mode="fun-old"] .project-card:nth-child(2) { --back: #1b1d21; --front-1: #4a4e56; --front-2: #2c2f35; --ink-on: #fff; --tab-ink: #fff; --tab-i: 1; }
+  html[data-mode="fun-old"] .project-card:nth-child(3) { --back: #e3a800; --front-1: #ffdb62; --front-2: #f6bc1c; --ink-on: #2a2000; --tab-ink: #2a2000; --tab-i: 2; }
+  html[data-mode="fun-old"] .project-card:nth-child(4) { --back: #e0437d; --front-1: #ff97b9; --front-2: #f4608f; --ink-on: #35091b; --tab-ink: #2b0613; --tab-i: 3; }
 
   /* The tab: part of the back panel, with the soft curve of a Mac folder. */
-  html[data-mode="fun"] .project-card::before {
+  html[data-mode="fun-old"] .project-card::before {
     content: attr(data-tab);
     position: absolute;
     box-sizing: border-box;
@@ -731,8 +734,8 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     white-space: nowrap;
   }
   /* A tab at the far left runs straight down the folder's edge. */
-  html[data-mode="fun"] .project-card:nth-child(1) { border-top-left-radius: 0; }
-  html[data-mode="fun"] .project-card:nth-child(1)::before {
+  html[data-mode="fun-old"] .project-card:nth-child(1) { border-top-left-radius: 0; }
+  html[data-mode="fun-old"] .project-card:nth-child(1)::before {
     left: 0;
     padding: 4px 58px 0 30px;
     justify-content: flex-start;
@@ -741,7 +744,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   }
 
   /* Inside: the words on the left, the picture on the right. */
-  html[data-mode="fun"] .project-copy {
+  html[data-mode="fun-old"] .project-copy {
     grid-column: 1;
     grid-row: 1;
     padding: 4px 0 0;
@@ -749,15 +752,15 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     flex-direction: column;
     align-items: flex-start;
   }
-  html[data-mode="fun"] .project-type { margin: 0 0 16px; color: inherit; opacity: .78; font-size: 13px; letter-spacing: .12em; }
-  html[data-mode="fun"] .project-copy h3 {
+  html[data-mode="fun-old"] .project-type { margin: 0 0 16px; color: inherit; opacity: .78; font-size: 13px; letter-spacing: .12em; }
+  html[data-mode="fun-old"] .project-copy h3 {
     font-size: clamp(46px, 4.7vw, 72px);
     font-weight: 700;
     line-height: 1.03;
     letter-spacing: -.025em;
   }
   /* A long name keeps its first word big and sets the rest beneath it, smaller. */
-  html[data-mode="fun"] .project-copy h3 span {
+  html[data-mode="fun-old"] .project-copy h3 span {
     display: block;
     margin-top: 12px;
     font-size: .46em;
@@ -765,7 +768,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     line-height: 1.15;
     letter-spacing: -.01em;
   }
-  html[data-mode="fun"] .project-description {
+  html[data-mode="fun-old"] .project-description {
     max-width: 500px;
     margin-top: 20px;
     color: inherit;
@@ -773,7 +776,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     font-size: 19px;
     line-height: 1.55;
   }
-  html[data-mode="fun"] .project-link {
+  html[data-mode="fun-old"] .project-link {
     margin-top: 30px;
     padding: 13px 22px;
     border-radius: 999px;
@@ -785,12 +788,12 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     text-decoration: none;
     transition: background-color .2s ease;
   }
-  html[data-mode="fun"] .project-link::after { content: "\2002\2192"; }
-  html[data-mode="fun"] .project-card[href]:hover .project-link,
-  html[data-mode="fun"] .project-card[href]:focus-visible .project-link { background: color-mix(in srgb, currentColor 24%, transparent); }
+  html[data-mode="fun-old"] .project-link::after { content: "\2002\2192"; }
+  html[data-mode="fun-old"] .project-card[href]:hover .project-link,
+  html[data-mode="fun-old"] .project-card[href]:focus-visible .project-link { background: color-mix(in srgb, currentColor 24%, transparent); }
 
   /* The picture: clean and rounded, sitting on the front of the folder. */
-  html[data-mode="fun"] .project-image {
+  html[data-mode="fun-old"] .project-image {
     position: relative;
     grid-column: 2;
     grid-row: 1;
@@ -801,15 +804,15 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   }
   /* The single Drexel screen, and the Brandroom library picture, are fitted inside their
      panels whatever the folder's height. */
-  html[data-mode="fun"] .project-image--brandroom img,
-  html[data-mode="fun"] .project-image--drexel img {
+  html[data-mode="fun-old"] .project-image--brandroom img,
+  html[data-mode="fun-old"] .project-image--drexel img {
     position: absolute;
     inset: 34px;
     width: calc(100% - 68px);
     height: calc(100% - 68px);
     object-fit: contain;
   }
-  html[data-mode="fun"] .project-card:focus-visible { outline: 3px solid #ff5a1f; outline-offset: 4px; }
+  html[data-mode="fun-old"] .project-card:focus-visible { outline: 3px solid #ff5a1f; outline-offset: 4px; }
 
   /* Motion Graphics is not a folder. It is a dark screening card, like a video player,
      and it arrives differently: once the folders are stacked, scrolling on builds the
@@ -817,7 +820,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
      form the whole card; then its title decodes from scrambled characters. hero-play.js
      draws the blocks into an SVG clip (#reel-clip) from the scroll position. Nothing
      moves by itself except the short title decode. */
-  html[data-mode="fun"] .reel {
+  html[data-mode="fun-old"] .reel {
     display: block;
     position: relative;
     z-index: 1;
@@ -831,15 +834,15 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     height: calc(var(--tab-h) + var(--card-h) + 64vh + 1920px);
     pointer-events: none;
   }
-  html[data-mode="fun"] .reel-card {
+  html[data-mode="fun-old"] .reel-card {
     position: sticky;
     top: var(--stack-top);
     height: calc(var(--tab-h) + var(--card-h));
     visibility: hidden;
     filter: drop-shadow(0 -10px 22px rgba(10, 12, 16, .3));
   }
-  html[data-mode="fun"] .reel.is-out .reel-card { visibility: visible; }
-  html[data-mode="fun"] .reel.is-open { pointer-events: auto; }
+  html[data-mode="fun-old"] .reel.is-out .reel-card { visibility: visible; }
+  html[data-mode="fun-old"] .reel.is-open { pointer-events: auto; }
   html[data-mode="fun"] .reel-screen {
     height: 100%;
     display: flex;
@@ -956,7 +959,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
      card is clipped to the card, so it cannot leave it); hero-play.js moves it and hands
      over between the two. It is white where it is still over the dark card and ink where
      it is over the page, split exactly along the card's top edge (--edge). */
-  html[data-mode="fun"] .reel-heading {
+  html[data-mode="fun-old"] .reel-heading {
     display: block;
     position: fixed;
     z-index: 2;
@@ -1028,7 +1031,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
      first the "Case Studies" heading, then the folders one by one, each as it arrives.
      hero-play.js sets --in (0 = not here yet, 1 = fully in) from where each piece is on
      screen, so scrolling back up takes them away again in the same order. */
-  html[data-mode="fun"] .case-studies .project-card.reveal {
+  html[data-mode="fun-old"] .case-studies .project-card.reveal {
     opacity: var(--in, 1);
     /* (--late: a folder that had to wait for the first one slides up from below.) */
     transform: translate3d(0, calc((1 - var(--in, 1)) * 70px + var(--late, 0px)), 0);
@@ -1037,14 +1040,14 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   /* The "Case Studies" title stays: it settles just below where the nav bar sits (so the
      nav never covers it), a little smaller, and the folders stack beneath it. It fades
      out while the Motion Graphics card builds (--out), since that card has its own title. */
-  html[data-mode="fun"] .case-studies .section-title {
+  html[data-mode="fun-old"] .case-studies .section-title {
     position: sticky;
     top: 80px;
     z-index: 2;
     transform-origin: 50% 0;
     pointer-events: none;
   }
-  html[data-mode="fun"] .case-studies .section-title.reveal {
+  html[data-mode="fun-old"] .case-studies .section-title.reveal {
     opacity: calc(var(--in, 1) * (1 - var(--out, 0)));
     transform: translate3d(0, calc((1 - var(--in, 1)) * 70px + var(--late, 0px)), 0) scale(var(--sc, 1));
     transition: none;

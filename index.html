@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-hero="fun">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,10 +9,10 @@
   <title>Sanjith | Product Designer</title>
   <script>
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    // Pick fun or normal mode before the page paints. Fun is the default; a saved
-    // choice wins; reduced-motion visitors start in normal.
+    // Pick fun or normal mode before the page paints. Normal is the default; a saved
+    // choice wins.
     (function () {
-      var mode = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'normal' : 'fun';
+      var mode = 'normal';
       try {
         var saved = window.localStorage.getItem('hero-mode');
         if (saved === 'fun' || saved === 'normal') mode = saved;
@@ -22,9 +22,10 @@
   </script>
   <link rel="preload" href="assets/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css?v=20261114-order">
-  <link rel="stylesheet" href="hero-play.css?v=20261114-foot">
+  <link rel="stylesheet" href="hero-play.css?v=20261120-stack76">
   <link rel="stylesheet" href="reel.css?v=20261110-still">
-  <link rel="stylesheet" href="wide.css?v=20261111-shadow3">
+  <link rel="stylesheet" href="wide.css?v=20261119-hero">
+  <link rel="stylesheet" href="stack.css?v=20261120-stack76">
   <link rel="stylesheet" href="/assets/site-analytics.css?v=20261028-cookieless">
   <script src="/assets/site-analytics.js?v=20261029-resume" defer></script>
 </head>
@@ -259,7 +260,8 @@
   </div>
 
   <script src="script.js?v=20261114-foot"></script>
-  <script src="hero-play.js?v=20261116-resize"></script>
+  <script src="hero-play.js?v=20261120-stack76"></script>
   <script src="reel.js?v=20261110-still"></script>
+  <script src="stack.js?v=20261120-stack76"></script>
 </body>
 </html>

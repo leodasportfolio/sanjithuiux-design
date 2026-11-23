@@ -13,6 +13,7 @@
 
   const wide = window.matchMedia('(min-width: 1101px)');
   const playing = () => root.dataset.mode === 'fun' && wide.matches;
+  const heroPlaying = () => wide.matches; // (the hero is the playground in both modes)
 
   // ---------- Orange selection box ----------
   // The box around the name can be moved by the word and resized by its eight handles.
@@ -75,7 +76,7 @@
   };
 
   nameSelect.addEventListener('pointerdown', (event) => {
-    if (!playing() || event.button !== 0) return;
+    if (!heroPlaying() || event.button !== 0) return;
     // "Sanjith!" stays where it is: only its handles do anything, and they only stretch it.
     if (!event.target.closest('.name-box i')) return;
     event.preventDefault();
@@ -527,7 +528,7 @@
   // he was pulled. Where he was grabbed is the slingshot's post, and a band stretches
   // from it to him while he is held. A pull too short to count just lets him go home.
   function grabTile(event) {
-    if (!playing() || event.button !== 0 || tile.held) return;
+    if (!heroPlaying() || event.button !== 0 || tile.held) return;
     event.preventDefault();
     if (!tile.el) makeTile();
     window.clearTimeout(mood.homeTimer);
@@ -894,7 +895,7 @@
   let shakeGuard = 0;
   function stopShake() { shaking = false; shakeClip.classList.remove('is-on'); shakeClip.pause(); }
   function shakeItOff() {
-    if (!playing() || calm.matches || tile.el || !shakeClip.src) return;
+    if (!heroPlaying() || calm.matches || tile.el || !shakeClip.src) return;
     waveClip.classList.remove('is-on');
     waveClip.pause();
     shaking = true;
@@ -918,7 +919,7 @@
     window.setTimeout(() => shakeClip.classList.remove('is-on'), 80);
   });
   const startWave = () => {
-    if (!playing() || calm.matches || tile.el || tile.held || !waveClip.src || shaking) return;
+    if (!heroPlaying() || calm.matches || tile.el || tile.held || !waveClip.src || shaking) return;
     const running = waveClip.classList.contains('is-on') && !waveClip.paused && !waveClip.ended;
     if (running && waveClip.currentTime < WAVE_DOWN) return; // already waving, hand up
     // Not waving, or caught lowering his hand: either way he answers at once. Caught
@@ -934,7 +935,7 @@
   // He waves every time the pointer comes onto him: once per visit, however long it stays.
   let waveOver = false;
   let waveAgain = 0;
-  waveClip.addEventListener('playing', () => { if (!tile.el && playing()) waveClip.classList.add('is-on'); else stopWave(); });
+  waveClip.addEventListener('playing', () => { if (!tile.el && heroPlaying()) waveClip.classList.add('is-on'); else stopWave(); });
   const waveDone = () => {
     if (!waveClip.classList.contains('is-on')) return;
     stopWave(); // one wave per visit: he waves again only when the pointer leaves and comes back
@@ -1541,7 +1542,7 @@
 
   const worldLoop = (now) => {
     worldFrame = 0;
-    if (tile.frame || !heroVisible || !playing()) return;
+    if (tile.frame || !heroVisible || !heroPlaying()) return;
     const dt = Math.min(0.032, Math.max(0.001, (now - worldLast) / 1000));
     worldLast = now;
     worldTick(dt);
@@ -1556,7 +1557,7 @@
   }
 
   const grabSticker = (event) => {
-    if (!playing() || event.button !== 0) return;
+    if (!heroPlaying() || event.button !== 0) return;
     const body = bodies.find((item) => item.el === event.currentTarget);
     event.preventDefault();
     wake(body);
@@ -1649,30 +1650,6 @@
     new IntersectionObserver(([entry]) => { heroVisible = entry.isIntersecting; syncReset(); if (heroVisible) runWorld(); }).observe(hero);
   }
 
-  // Tiny keyframes spray out from where the sticker row sat when Fun mode switches on.
-  const burst = () => {
-    if (calm.matches || !playLayer.animate) return;
-    const box = hero.getBoundingClientRect();
-    const originX = box.width / 2;
-    const originY = box.height - 62;
-    for (let i = 0; i < 18; i += 1) {
-      const piece = document.createElement('span');
-      piece.className = 'burst';
-      piece.style.left = originX + 'px';
-      piece.style.top = originY + 'px';
-      playLayer.append(piece);
-      const angle = -Math.PI * (0.08 + Math.random() * 0.84);
-      const reach = 140 + Math.random() * 300;
-      const x = Math.cos(angle) * reach;
-      const y = Math.sin(angle) * reach;
-      piece.animate([
-        { transform: 'translate(-50%, -50%) rotate(45deg) scale(.4)', opacity: 1 },
-        { transform: 'translate(calc(-50% + ' + x + 'px), calc(-50% + ' + y + 'px)) rotate(' + (180 + Math.random() * 360) + 'deg) scale(1)', opacity: 1, offset: 0.6 },
-        { transform: 'translate(calc(-50% + ' + x * 1.08 + 'px), calc(-50% + ' + (y + 46) + 'px)) rotate(' + (360 + Math.random() * 360) + 'deg) scale(.2)', opacity: 0 },
-      ], { duration: 900 + Math.random() * 500, easing: 'cubic-bezier(.2, .8, .3, 1)' }).onfinish = () => piece.remove();
-    }
-  };
-
   // Switching modes, the stickers travel in one smooth move between the row along the
   // bottom (Normal) and their places round the headline (Fun). Each is put straight into
   // its new place and then carried there from where it was, by transform alone, easing
@@ -1708,12 +1685,11 @@
     if (carry) root.classList.add('is-switching-mode'); // (the stylesheet's own moves stand down)
     // Release everything loose while the page is still in its current layout, so each
     // piece starts its glide from exactly where it is.
-    if (mode !== 'fun') { sendTileHome(undefined, true); sendAllHome(); }
     root.dataset.mode = mode;
     syncReset();
-    if (mode === 'fun' && carry && !tile.frame) worldTick(0.001); // (each sticker takes its place on the loop now)
+    if (carry && !tile.frame) worldTick(0.001); // (each sticker takes its place on the loop now)
     if (carry) carryStickers(before);
-    if (mode === 'fun') runWorld(); // (the stickers set off on their loop)
+    runWorld(); // (the stickers set off on their loop)
     modeSwitch.setAttribute('aria-checked', String(mode === 'fun'));
     if (!announce) return;
     try { window.localStorage.setItem('hero-mode', mode); } catch (error) { /* storage is optional */ }
@@ -1721,14 +1697,13 @@
     copy.classList.remove('is-switching');
     void copy.offsetWidth;
     copy.classList.add('is-switching');
-    if (mode === 'fun') burst();
   };
 
   // Reset: he glides home looking relieved and is his calm self again, the stickers
   // return to their places, and the opening bubble comes back.
   if (resetButton) {
     resetButton.addEventListener('click', () => {
-      if (!playing()) return;
+      if (!heroPlaying()) return;
       sendTileHome('relieved');
       sendAllHome();
       if (!box.held) springBox();
@@ -1761,7 +1736,7 @@
   });
 
   setMode(root.dataset.mode === 'fun' ? 'fun' : 'normal', false);
-  if (root.dataset.mode === 'fun' && !calm.matches) {
+  if (!calm.matches) {
     root.classList.add('is-fresh');
     window.setTimeout(() => root.classList.remove('is-fresh'), 3200);
   }
@@ -1770,11 +1745,11 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBox);
   window.addEventListener('resize', () => {
     measureBox();
-    if (!playing()) { sendTileHome(); sendAllHome(); }
+    if (!heroPlaying()) { sendTileHome(); sendAllHome(); }
     // Resting pieces and loose stickers both take the new layout; a loose word keeps its
     // old home (it is only out for a moment).
     bodies.forEach((body) => { if (body.state === 'home' || body.kind === 'sticker') body.measured = false; });
-    if (playing()) runWorld(); // (the window grew back past the Fun-mode width: set off again)
+    if (heroPlaying()) runWorld(); // (the window grew back past the Fun-mode width: set off again)
   });
 
   // ---------- Fun mode below the hero ----------
@@ -1847,9 +1822,12 @@
   };
 
   let reelBuild = 0;
+  // The old folder scene (arrivals, Dock pour, block-built card, travelling heading, card set
+  // aside for About Me) is retired: stack.js runs the case studies now. Its painters only tidy.
+  const OLD_FOLDERS = false;
   const paintReel = () => {
     if (!reel) return;
-    if (!playing()) {
+    if (!playing() || !OLD_FOLDERS) {
       reel.classList.remove('is-out', 'is-open');
       if (reelDecoded < reelWords.length) { window.clearInterval(reelTimer); reelTimer = 0; reelDecoded = reelWords.length; writeReelTitle(); }
       return;
@@ -1913,7 +1891,7 @@
     if (caseTitle) pieces.push([caseTitle, 0.96, 0.72, 0]);
     // A folder is measured from the top of its tab, and starts once the heading is in.
     for (const folder of caseFolders) pieces.push([folder, 0.85, 0.48, 56]);
-    if (!playing()) {
+    if (!playing() || !OLD_FOLDERS) {
       for (const [piece] of pieces) { piece.style.removeProperty('--in'); piece.style.removeProperty('--late'); }
       if (caseTitle) { caseTitle.style.removeProperty('--sc'); caseTitle.style.removeProperty('--out'); }
       return;
@@ -2226,7 +2204,7 @@
     if (reelTitle) reelTitle.style.visibility = '';
     // "Case Studies" has fully faded when the build is five eighths done (see paintReel).
     // The card starts moving at that moment and is in the middle as the build completes.
-    const lift = playing() && aboutWindow ? smooth(Math.max(0, Math.min(1, (reelBuild - 0.625) / 0.375))) : 0;
+    const lift = playing() && OLD_FOLDERS && aboutWindow ? smooth(Math.max(0, Math.min(1, (reelBuild - 0.625) / 0.375))) : 0;
     const stick = parseFloat(window.getComputedStyle(reelCard).top) || 134;
     const middle = Math.max(24, (window.innerHeight - reelCard.offsetHeight) / 2);
     reelCentre = Math.min(0, middle - stick) * lift;
@@ -2357,7 +2335,7 @@
   let folderHome = null;    // where the first folder sits in its grid when it is not stuck
   function paintDock() {
     if (!dock) return;
-    if (!playing()) {
+    if (!playing() || !OLD_FOLDERS) {
       dock.style.visibility = dockPointer.style.visibility = 'hidden';
       genieBox.classList.remove('is-on');
       firstFolder.style.visibility = '';
@@ -2640,7 +2618,7 @@
   };
   function paintStage() {
     if (!reelCard || !aboutWindow) return;
-    if (!playing()) { stage.k = 0; stageClear(); return; }
+    if (!playing()) { stage.k = 0; stageClear(); return; } // (stack.js's card is set aside the same way)
     if (stage.k !== (pop.on ? 1 : 0)) runStage();
     // Setting it aside, it starts briskly and settles gently: that clears the way at once,
     // so About Me can start growing beside it straight away. Coming back, a gentle start and stop.
@@ -2721,14 +2699,14 @@
   // browser, so it is short, it cannot be dragged off course by trackpad momentum left over
   // from before the click, and the staged pieces stay "in place" until it has arrived.
   const glide = { frame: 0, until: 0, began: 0 };
-  const glideTo = (top, toAbout, then) => {
+  const glideTo = (top, toAbout, then, ms, out) => {
     const end = document.documentElement.scrollHeight - window.innerHeight;
     const to = Math.round(Math.max(0, Math.min(end, top)));
     const from = window.scrollY;
     const far = Math.abs(to - from);
-    const took = then ? Math.max(1500, Math.min(2300, 1100 + far * 0.2)) // ms: the trip up to switch modes is a calm, unhurried ride
+    const took = ms || (then ? Math.max(1500, Math.min(2300, 1100 + far * 0.2)) // ms: the trip up to switch modes is a calm, unhurried ride
       : toAbout ? Math.max(1100, Math.min(1500, 900 + far * 0.08)) // ms: About Me unfolds on the way, so it gets more time
-      : Math.max(650, Math.min(1100, 520 + far * 0.08)); // ms: unhurried, and longer for a longer trip
+      : Math.max(650, Math.min(1100, 520 + far * 0.08))); // ms: unhurried, and longer for a longer trip (ms: stack.js asks for its own)
     const began = performance.now();
     window.cancelAnimationFrame(glide.frame);
     wheel.target = null;
@@ -2739,8 +2717,9 @@
     glide.until = began + took + 160; // (the wheel is ignored until just after it lands)
     const step = (now) => {
       const t = Math.min(1, (now - began) / took);
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const eased = out ? 1 - (1 - t) * (1 - t) : t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // (out: stack.js's ride to the hero eases out only)
       window.scrollTo({ top: from + (to - from) * eased, behavior: 'instant' });
+      if (out) window.dispatchEvent(new CustomEvent('stackride')); // (stack.js redraws the genie on the moved page, this frame)
       if (toAbout) {
         // About Me opens out and the Motion Graphics card steps aside in the second half of
         // the glide, in step with it, so the page arrives with everything already settled.
@@ -2788,10 +2767,14 @@
   const landings = {
     '#home': () => 0,
     '#case-studies': () => {
-      const section = document.querySelector('#case-studies');
-      const fallback = section ? section.getBoundingClientRect().top + window.scrollY + 0.95 * window.innerHeight : 0;
-      // (The second folder is still just below the bottom edge here, so the first has the screen.)
-      return secondFolderTop ? secondFolderTop - 1.02 * window.innerHeight : fallback;
+      // The stage (stack.css): landing with it stuck starts the Dock and the folders.
+      const grid = document.querySelector('#case-studies .project-grid');
+      return grid ? grid.getBoundingClientRect().top + window.scrollY : 0;
+    },
+    '#motion-graphics': () => {
+      // Half a screen into the stage: Mission Control has handed over to the card.
+      const grid = document.querySelector('#case-studies .project-grid');
+      return grid ? grid.getBoundingClientRect().top + window.scrollY + 0.5 * window.innerHeight : 0;
     },
     '#about-me': () => {
       const section = document.querySelector('#about-me');
@@ -2838,12 +2821,16 @@
   // need and the site never has to race to keep up. Below the limit it follows the hand
   // as usual. (Keyboard, the scrollbar and the nav links are left alone.)
   const MAX_SCROLL = 1200; // px a second
-  const wheel = { target: null, at: 0, frame: 0, last: 0, input: 0 };
+  const wheel = { target: null, at: 0, frame: 0, last: 0, input: 0, cap: 1200 };
   const wheelStep = (now) => {
     wheel.frame = 0;
     if (wheel.target === null) return;
     const dt = Math.min(50, now - wheel.last) / 1000;
     wheel.last = now;
+    // stack.js holding the page (the folders going in or pouring out): a slow crawl, not a dead
+    // stop, and no backlog to rush off with afterwards.
+    const held = root.classList.contains('is-held');
+    if (held) wheel.target = wheel.at + Math.max(-60, Math.min(60, wheel.target - wheel.at));
     // Once the hand has stopped, whatever is still queued drains away smoothly (an ease-out
     // over a fraction of a second) instead of running on at full speed and then stopping dead.
     if (now - wheel.input > 90) wheel.target = wheel.at + (wheel.target - wheel.at) * Math.exp(-dt / 0.16);
@@ -2855,7 +2842,9 @@
     // (A short, smooth catch-up: wheel events come in bursts, and this evens them into
     // one steady motion instead of a run of small steps.)
     const want = left * (1 - Math.exp(-dt / 0.025)); // (a short catch-up: close to the hand, still even)
-    const most = (left < 0 ? MAX_SCROLL * 1.3 : MAX_SCROLL) * dt; // (scrolling up runs a little faster)
+    // (the limit eases between the two, so the hold never kicks in or lets go with a jolt)
+    wheel.cap += ((held ? 110 : left < 0 ? MAX_SCROLL * 1.3 : MAX_SCROLL) - wheel.cap) * (1 - Math.exp(-dt / 0.12));
+    const most = wheel.cap * dt;
     wheel.at += Math.max(-most, Math.min(most, want));
     window.scrollTo({ top: wheel.at, behavior: 'instant' });
     // Drawn now, in the same frame the page moves: waiting for the scroll event would put
@@ -2864,6 +2853,12 @@
     paintPage();
     wheel.frame = window.requestAnimationFrame(wheelStep);
   };
+  // stack.js skipping the dead end of its runway: the page jumps with it, and so does the wheel.
+  window.addEventListener('stackglide', (event) => glideTo(event.detail.top, false, null, event.detail.ms, event.detail.out)); // (stack.js: one flick, one stage)
+  window.addEventListener('stackjump', (event) => {
+    if (wheel.target !== null) { wheel.at += event.detail; wheel.target += event.detail; }
+    window.scrollTo({ top: window.scrollY + event.detail, behavior: 'instant' });
+  });
   window.addEventListener('wheel', (event) => {
     if (!playing() || event.ctrlKey || event.metaKey || event.defaultPrevented) return;
     if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
