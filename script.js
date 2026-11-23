@@ -244,15 +244,20 @@ const revealItems = document.querySelectorAll('.reveal');
 if (reduceMotion || !('IntersectionObserver' in window)) {
   revealItems.forEach((item) => item.classList.add('is-visible'));
 } else {
+  // Normal mode: whatever has gone wholly off screen fades out, and fades back in on return.
+  // Anything still partly on screen stays. The hero always stays put.
+  const again = (item) => document.documentElement.dataset.mode !== 'fun' && !item.closest('.hero');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      // Normal mode: whatever scrolls off screen fades out and fades back in on return (the hero stays put).
-      const again = document.documentElement.dataset.mode !== 'fun' && !entry.target.closest('.hero');
-      if (entry.isIntersecting) entry.target.classList.add('is-visible');
-      else if (again) entry.target.classList.remove('is-visible');
-      if (entry.isIntersecting && !again) observer.unobserve(entry.target);
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      if (!again(entry.target)) observer.unobserve(entry.target);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px' });
+  const gone = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => { if (!entry.isIntersecting && again(entry.target)) entry.target.classList.remove('is-visible'); });
+  }, { threshold: 0 });
+  revealItems.forEach((item) => { if (!item.closest('.hero')) gone.observe(item); });
 
   revealItems.forEach((item) => observer.observe(item));
 }
