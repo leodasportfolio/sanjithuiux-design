@@ -225,9 +225,11 @@ if (reduceMotion || !('IntersectionObserver' in window)) {
 } else {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('is-visible');
-      observer.unobserve(entry.target);
+      // Normal mode: whatever scrolls off screen fades out and fades back in on return (the hero stays put).
+      const again = document.documentElement.dataset.mode !== 'fun' && !entry.target.closest('.hero');
+      if (entry.isIntersecting) entry.target.classList.add('is-visible');
+      else if (again) entry.target.classList.remove('is-visible');
+      if (entry.isIntersecting && !again) observer.unobserve(entry.target);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px' });
 
