@@ -1722,11 +1722,17 @@
       switchPending = true;
       modeSwitch.classList.add('is-pending'); // (the switch shows the new mode at once)
       modeSwitch.setAttribute('aria-checked', String(next === 'fun'));
-      glideTo(0, false, () => {
+      const done = () => {
+        if (!switchPending) return;
         switchPending = false;
         modeSwitch.classList.remove('is-pending');
         setMode(next, true);
-      });
+      };
+      if (!window.dispatchEvent(new CustomEvent('stackhome', { cancelable: true, detail: { then: done } }))) { // (stack.js rides home its own way, the stage in reverse, and calls done at the hero)
+        window.setTimeout(() => { if (switchPending) glideTo(0, false, done); }, 15000); // (never stuck: well past the longest ride home)
+        return;
+      }
+      glideTo(0, false, done);
       return;
     }
     setMode(next, true);
@@ -2854,7 +2860,7 @@
     wheel.frame = window.requestAnimationFrame(wheelStep);
   };
   // stack.js skipping the dead end of its runway: the page jumps with it, and so does the wheel.
-  window.addEventListener('stackglide', (event) => glideTo(event.detail.top, false, null, event.detail.ms, event.detail.out)); // (stack.js: one flick, one stage)
+  window.addEventListener('stackglide', (event) => glideTo(event.detail.top, false, event.detail.then || null, event.detail.ms, event.detail.out)); // (stack.js: one flick, one stage)
   window.addEventListener('stackjump', (event) => {
     if (wheel.target !== null) { wheel.at += event.detail; wheel.target += event.detail; }
     window.scrollTo({ top: window.scrollY + event.detail, behavior: 'instant' });
@@ -2866,7 +2872,7 @@
     // A nav link carrying the page: for its first moment the wheel is dropped (momentum left
     // over from before the click); after that the visitor's own scrolling takes over at once.
     if (performance.now() < glide.began + 250) return;
-    if (glide.frame && switchPending) return; // (on its way to the top to switch modes: not interrupted)
+    if (switchPending) return; // (on its way to the top to switch modes, stack.js's pauses included: not interrupted)
     if (glide.frame) {
       window.cancelAnimationFrame(glide.frame);
       glide.frame = 0;

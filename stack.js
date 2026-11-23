@@ -131,13 +131,14 @@
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
   // waits until it lands. p is read off the last paint.
-  const step = { p: -1e9, chain: null, shut: false, to: null, until: 0, busy: false, toHero: false, lastAt: 0, lastDelta: 0, lastDir: 0 };
+  const step = { p: -1e9, chain: null, homeAfter: false, then: undefined, shut: false, to: null, until: 0, busy: false, toHero: false, lastAt: 0, lastDelta: 0, lastDir: 0 };
   const stops = () => [DROP + 60, MC() + MC_LEN, TOP() + TOP_LEN];
   const go = (top, now, ms, out) => {
     ms = ms || Math.max(700, Math.min(1000, 400 + Math.abs(top - window.scrollY) * 0.4)); // a steady, unhurried step: never a dash, never a crawl
     step.to = Math.round(top);
     step.until = now + ms + 160;
-    window.dispatchEvent(new CustomEvent('stackglide', { detail: { top, ms, out } }));
+    const f = step.then, then = top === 0 && f ? () => { step.then = undefined; f(); } : undefined; // (the mode switch waits for the hero; the wheel stays off until it is there)
+    window.dispatchEvent(new CustomEvent('stackglide', { detail: { top, ms, out, then } }));
   };
   // Back from the stack, however fast the flick and wherever the pour is: the page holds
   // still while the pointer comes back, clicks, and the folders go in; only then does it
@@ -146,6 +147,7 @@
   window.addEventListener('wheel', (event) => {
     if (!active() || event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
     const now = performance.now();
+    if (step.then) { event.preventDefault(); return; } // (riding home to switch modes: the wheel, a trackpad's tail included, must not cut the ride short)
     // A new flick, not the tail of the last one: a pause, a stronger push, or anything at all
     // once the last step has been over for a while (a trackpad never pauses).
     const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || (now > Math.max(step.until, clock.outAt) + 600 && Math.abs(event.deltaY) >= 12) || Math.sign(event.deltaY) !== step.lastDir; // (0.6s and a real push: a momentum tail is tiny by then; a change of direction is always the hand, never the tail)
@@ -372,11 +374,11 @@
     const want = clock.open ? 1 : 0;
     if (step.chain !== null) { // (a nav link's ride, stop by stop)
       const list = stops(), want = list[step.chain];
-      if (Math.abs(p - want) < 40) step.chain = null;
+      if (Math.abs(p - want) < 40) { step.chain = null; if (step.homeAfter) { step.homeAfter = false; shutAndHome(now); } } // (homeAfter: the mode switch's ride goes on to the hero)
       else if (!step.busy && now >= step.until) { // (brisk, both ways: on as soon as the folders are mostly out)
         if (p < want) { if (settled) go(window.scrollY + want - p, now, 900); } // (down, once the folders have landed: straight through, Mission Control riding the scroll, no stop in between)
         else { const prev = list.filter((at) => at < p - 40).pop(); go(window.scrollY + Math.max(prev === undefined ? want : prev, want) - p, now, 520); }
-      }
+      } else run(); // (waiting out the last step with nothing else moving: keep looking, or the ride stalls on this stop)
     }
     if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || clock.t !== clock.tWant || now < clock.pressAt + PRESS || (settled && now < clock.settledAt + 1200) || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
   };
@@ -400,6 +402,18 @@
   let frame = 0;
   const queue = () => { if (!frame) frame = window.requestAnimationFrame(() => { frame = 0; paint(); }); };
   window.addEventListener('scroll', queue, { passive: true });
+  // The mode switch, from anywhere on the stage or past it: the page rides home the way
+  // the Case Studies link then the wheel would, stop by stop back to the stack, the folders
+  // clicked in, and the hero; the switch itself (detail.then) once it is there.
+  window.addEventListener('stackhome', (event) => {
+    if (!active() || step.p < -1e8) return;
+    event.preventDefault(); // (hero-play.js: this ride is ours)
+    const now = performance.now(), p = step.p, list = stops();
+    step.then = event.detail.then; clock.skip = 0;
+    if (p > list[0] + 40) { step.busy = step.shut = step.toHero = false; step.chain = 0; step.homeAfter = true; const prev = list.filter((at) => at < p - 40).pop(); go(window.scrollY + Math.max(prev === undefined ? list[0] : prev, list[0]) - p, now, 900); }
+    else if (clock.open && clock.tk > 0) shutAndHome(now);
+    else { step.busy = step.shut = step.toHero = false; go(0, now, 1100, 'inout'); }
+  });
   window.addEventListener('stackride', paint); // (the ride home moves the page inside a frame: draw after it, not a frame late)
   window.addEventListener('resize', queue);
   new MutationObserver(queue).observe(root, { attributes: true, attributeFilter: ['data-mode'] });
