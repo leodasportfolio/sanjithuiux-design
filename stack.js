@@ -101,7 +101,7 @@
   const TURN_BACK = 24;                   // scrolled back up this far and fast enough, they go in early, so they are in before they leave the screen (the original)
   const STAG_MS = 300;                    // each folder starts this long after the one under it
   const DOCK_CATCH_MS = 700;              // the Dock's own rise or fall: unhurried, both ways
-  const HOME_RATE = 0.5;                  // px of the pointer's trip per ms on the ride home (its scroll-down trip, reversed, by the clock)
+  const TRIP_RATE = 1.0, AWAY = 400;                 // px of the pointer's trip per ms: one steady pace both ways, whatever the scroll does
   const DROP = CLICK_PAST + 110 + 130;    // p: the Dock is down (past the click, the rest is scroll-driven)
   const MC = () => DROP + 130 + window.innerHeight * 0.8;  // (a near-full screen of rest to click around in) // Mission Control, after a rest
   const MC_LEN = 900;                     // (a slow hand-off: it reads too fast at 450)
@@ -125,7 +125,7 @@
   let titleOff = 90; // the title's top below the section's, before it sticks
   // The pour runs on a clock, not the scroll (the original's pace): tk is how far along the
   // whole pour is, open says which way it is going, dockUp chases what the scroll asks for.
-  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, qh: 0, mc: 0, mcWant: 0, last: 0, frame: 0 };
+  const clock = { tk: 0, open: false, seen: false, back: false, wantBack: false, pressAt: -1e9, lastY: 0, upRun: 0, downRun: 0, speed: 0, movedAt: 0, dockUp: 0, dockWant: 0, home: false, trip: 0, q: 0, click: 0, mc: 0, mcWant: 0, last: 0, frame: 0 };
   // One flick, one stage: the hero, the stack out and settled, the Mission Control row with the
   // Motion Graphics title, Motion Graphics full; from there the page scrolls freely. A flick
   // sends the page there on hero-play.js's own glide (the nav links' ride), and the wheel
@@ -168,9 +168,12 @@
     clock.frame = 0;
     const dt = Math.min(100, now - clock.last);
     clock.last = now;
-    if (clock.home && !clock.open) { const w = clock.qh; clock.qh -= dt * HOME_RATE; if (w > 0 && clock.qh <= 0) clock.pressAt = now; } // (riding home: the pointer comes back, clicks the folder, and only then do the folders go in)
+    // The pointer's trip runs on the clock: in and along the icons to the folder (the click waits
+    // for it), off once the folders are out; riding home, the same trip backwards.
+    if (clock.home) { if (!clock.open) { clock.trip = Math.max(clock.tk > 0 ? clock.click : 80, clock.trip - dt * TRIP_RATE); if (clock.trip <= clock.click && clock.dockUp >= 1 && clock.pressAt < 0) clock.pressAt = now; } } // (the click once the Dock is up; it waits on the folder while the files go in)
+    else if (clock.q > 0) clock.trip = Math.min(clock.open ? clock.click + AWAY : clock.click, clock.trip + dt * TRIP_RATE);
     if (clock.open) clock.tk = Math.min(1, clock.tk + dt / SPAN);
-    else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.qh <= 0)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in: the Dock up first, the click, then the whole stack as one folder)
+    else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in: the Dock up first, the click, then the whole stack as one folder)
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
     const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
@@ -207,6 +210,7 @@
     const S = Math.max(260, Math.min(560, s.height - RUN() - vh * 0.28 - titleOff + 40));
     const q = p + S;
     const CLICK = S + CLICK_PAST;
+    clock.q = q; clock.click = CLICK;
 
     // The click, and the folders clicked shut on the way back up.
     const now = performance.now();
@@ -220,17 +224,17 @@
     const gliding = step.busy || now < step.until + 300 || step.to !== null; // (a step is carrying the page: its speed means nothing)
     if (gliding) clock.speed = clock.upRun = 0;
     const early = !gliding && clock.tk >= 1 && clock.upRun >= TURN_BACK && (p + vh - 230) / Math.max(1, clock.speed) < (PRESS + MINIMISE_MS) / 1000 + 0.06;
-    if (!clock.seen) { clock.seen = true; if (q >= CLICK) { clock.open = true; clock.tk = 1; } }
-    if (!clock.open && q >= CLICK && (!clock.back || clock.downRun >= 40)) { clock.open = true; clock.back = false; clock.pressAt = now; } // (once shut, the next click needs a scroll back down, as the original)
+    if (!clock.seen) { clock.seen = true; if (q >= CLICK) { clock.open = true; clock.tk = 1; clock.trip = CLICK + AWAY; } }
+    if (!clock.open && q >= CLICK && clock.trip >= CLICK && (!clock.back || clock.downRun >= 40)) { clock.open = true; clock.back = false; clock.pressAt = now; } // (once shut, the next click needs a scroll back down, as the original)
     else if (clock.open && (q < S + CLOSE_PAST || early || step.shut) && !settling) {
-      clock.open = false; clock.back = true; clock.wantBack = true; step.shut = false; clock.downRun = 0; clock.home = gliding; if (gliding) { clock.qh = 240; clock.pressAt = -1e9; } else if (clock.dockUp >= 1) clock.pressAt = now; clock.tk = unit(clock.tk * SPAN / POUR_MS); // (downRun: the next click needs a fresh scroll down, not the one that brought them here)
+      clock.open = false; clock.back = true; clock.wantBack = true; step.shut = false; clock.downRun = 0; clock.home = gliding; if (gliding) { clock.trip = CLICK + AWAY; clock.pressAt = -1e9; } else if (clock.dockUp >= 1) clock.pressAt = now; clock.tk = unit(clock.tk * SPAN / POUR_MS); // (downRun: the next click needs a fresh scroll down, not the one that brought them here)
       // The rest of the runway is dead scroll now (the stage is pinned, so this shows nothing):
       // skip it, and the hero is next once they are in. hero-play.js moves the page.
       if (p > 0 && !gliding) { window.dispatchEvent(new CustomEvent('stackjump', { detail: -p })); clock.lastY = window.scrollY; }
     }  // (settled first, then clicked shut)
     // Once they are in, the Dock is gone until the page is scrolled down towards the click again (as the original).
     if (clock.back && clock.tk <= 0) { if (moved < 0) clock.wantBack = false; else if (moved > 0 && q >= CLICK - 260) clock.wantBack = true; } // (the Dock stays up while a step carries the page to the hero)
-    if (q <= 0 && clock.tk <= 0) clock.back = clock.wantBack = false; // back above it all: the next visit starts fresh
+    if (q <= 0 && clock.tk <= 0) { clock.back = clock.wantBack = false; if (!clock.home) clock.trip = 0; } // back above it all: the next visit starts fresh
     const closing = !clock.open && clock.tk > 0;
     if (clock.home && (!gliding || moved > 0)) clock.home = false; // (riding home: the Dock is on its own clock, down once the folders are in)
     if (step.toHero && !clock.open && clock.tk <= 0 && now >= step.until) { step.busy = step.toHero = false; go(0, now, 1400, true); }
@@ -245,8 +249,7 @@
     });
 
     // The Dock: up over 300px of scroll from the title, down once the folders are out.
-    const press = q > CLICK && q < CLICK + PRESS ? Math.sin(Math.PI * (q - CLICK) / PRESS)
-      : now < clock.pressAt + PRESS ? Math.sin(Math.PI * (now - clock.pressAt) / PRESS) : 0; // (the click, by the clock: the original's PRESS)
+    const press = now < clock.pressAt + PRESS ? Math.sin(Math.PI * (now - clock.pressAt) / PRESS) : 0; // (the click, by the clock: the original's PRESS)
     const settled = clock.open && allOut;
     // The page waits for the stack: while they go in, while they pour out, and whenever a fast
     // scroll runs ahead of Mission Control (scrolled at any speed, nothing overtakes the show).
@@ -261,15 +264,20 @@
     // The pointer: in from the lower left, along the icons to the folder, the click, then
     // off to the lower right while the folders come out.
     if (pointer) {
-      const qq = clock.home ? CLICK + clock.qh : q; // (on the ride home the trip runs back by the clock, not the scroll)
-      const arrive = smooth(unit((qq - 80) / 150));
-      const across = smooth(unit((qq - 230) / (CLICK - 230)));
-      const away = smooth(unit((qq - CLICK - 40) / 200));
-      const x = (arrive < 1 ? -469 + 300 * arrive : -169 + 325 * across) + 280 * away;
-      const y = (arrive < 1 ? vh + 40 + (vh - 95 - vh - 40) * arrive : vh - 95) - vh / 2 + 220 * away - (1 - up) * 180;
+      const qq = clock.trip;
+      // One straight line at one speed, in from the lower left to the folder, then straight
+      // off to the lower right once the folders are out.
+      // (the last fifth of the way in slows to a stop on the folder, and the way out starts
+      // from rest: no jolt at the click, either direction)
+      const u = unit((qq - 80) / (CLICK - 80)), v = unit((u - 0.8) / 0.2);
+      const arrive = u < 0.8 ? u : 0.8 + 0.2 * (v + v * v - v * v * v);
+      const w = unit((qq - CLICK - 40) / (AWAY - 40));
+      const away = 2 * w * w - w * w * w;
+      const x = -469 + 625 * arrive + 280 * away;
+      const y = vh + 40 - 135 * arrive - vh / 2 + 220 * away - (1 - up) * 180;
       pointer.style.opacity = arrive > 0 && away < 1 && up > 0 ? '1' : '0';
       pointer.style.transform = 'translate(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px) scale(' + (1 - 0.14 * press).toFixed(3) + ')';
-      pointer.classList.toggle('is-hand', across > 0.9 && away < 0.2);
+      pointer.classList.toggle('is-hand', arrive > 0.93 && away < 0.2);
       // Each icon swells as the pointer passes over it and pushes its neighbours aside, as on
       // the original site's Dock (hero-play.js's maths; the folder also takes the press).
       if (dock) {
@@ -321,7 +329,7 @@
     if (!rest) lower();
     // Keep the clock going while anything is still moving.
     const want = clock.open ? 1 : 0;
-    if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || now < clock.pressAt + PRESS || (clock.home && CLICK + clock.qh > 80)) run();
+    if (clock.tk !== want || clock.dockUp !== clock.dockWant || clock.mc !== clock.mcWant || now < clock.pressAt + PRESS || (clock.home ? clock.trip > 80 : q > 0 && clock.trip < (clock.open ? CLICK + AWAY : CLICK))) run();
   };
 
   cards.forEach((card) => card.addEventListener('click', (event) => {
