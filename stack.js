@@ -145,6 +145,15 @@
   // still while the pointer comes back, clicks, and the folders go in; only then does it
   // ride to the hero (paint sends it, on toHero). The same one way every time.
   const shutAndHome = (now) => { step.shut = step.busy = step.toHero = true; step.until = now; queue(); };
+  // Home from anywhere on the stage or past it (the Home link, the mode switch): stop by stop
+  // back to the stack, the stage in reverse, the folders clicked in, then the hero.
+  const rideHome = (now) => {
+    const p = step.p, list = stops();
+    clock.skip = 0;
+    if (p > list[0] + 40) { step.busy = step.shut = step.toHero = false; step.chain = 0; step.homeAfter = true; const prev = list.filter((at) => at < p - 40).pop(); go(window.scrollY + Math.max(prev === undefined ? list[0] : prev, list[0]) - p, now, 900); }
+    else if (clock.open && clock.tk > 0) shutAndHome(now);
+    else { step.busy = step.shut = step.toHero = false; go(0, now, 1100, 'inout'); }
+  };
   window.addEventListener('wheel', (event) => {
     if (!active() || event.ctrlKey || event.metaKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
     const now = performance.now();
@@ -152,7 +161,7 @@
     // A new flick, not the tail of the last one: a pause, a stronger push, or anything at all
     // once the last step has been over for a while (a trackpad never pauses).
     const fresh = now - step.lastAt > 150 || Math.abs(event.deltaY) > step.lastDelta * 1.5 || (now > Math.max(step.until, clock.outAt) + 600 && Math.abs(event.deltaY) >= 12) || Math.sign(event.deltaY) !== step.lastDir; // (0.6s and a real push: a momentum tail is tiny by then; a change of direction is always the hand, never the tail)
-    step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY); step.chain = null; clock.skip = 0;
+    step.lastAt = now; step.lastDelta = Math.abs(event.deltaY); step.lastDir = Math.sign(event.deltaY); step.chain = null; step.homeAfter = false; clock.skip = 0;
     if (step.busy && now > step.until + 4000) step.busy = step.toHero = step.shut = false; // (never stuck: whatever happened, the wheel is theirs again)
     if (step.p < -1e8) paint(); // (a wheel before the first paint: measure first)
     const p = step.p, list = stops(), last = list[list.length - 1];
@@ -189,13 +198,12 @@
     if (step.p < -1e8) paint();
     const p = step.p, list = stops();
     if (idx === 3) { if (p < list[2]) { clock.skip = now + 2500; step.busy = step.shut = step.toHero = false; step.chain = null; } return; } // About Me: the stage is over and done with while hero-play.js rides there
-    if (idx < 0 && p > list[2] + 40) { clock.open = clock.back = clock.wantBack = false; clock.home = true; clock.tk = clock.trip = clock.mc = clock.mcWant = clock.t = clock.tWant = 0; clock.skip = 0; step.busy = step.shut = step.toHero = false; step.chain = null; event.preventDefault(); event.stopImmediatePropagation(); go(0, now, 1100, 'inout'); return; } // (home from past the stage: nothing to shut, the Dock stays down)
     if (idx < 0 && p < list[0] - 40 && !clock.open) return; // (above the stack: hero-play.js's own ride home)
     event.preventDefault(); event.stopImmediatePropagation();
-    if (idx < 0) { if (clock.open && clock.tk > 0) shutAndHome(now); else { step.busy = step.shut = step.toHero = false; go(0, now, 1100, 'inout'); } return; }
+    if (idx < 0) { rideHome(now); return; }
     if (clock.home) { clock.home = false; clock.back = false; if (clock.tk > 0) { clock.open = true; if (clock.trip <= clock.click) clock.pressAt = now; } }
     step.busy = step.shut = step.toHero = false;
-    step.chain = idx;
+    step.chain = idx; step.homeAfter = false;
     const prev = list.filter((at) => at < p - 40).pop();
     if (p < list[idx] && lifted()) { lower(); step.until = now + 600; return; } // (a folder lifted: back down first, then the chain rides on)
     const at = p < list[idx] ? (p < list[0] - 40 ? list[0] : list[idx]) : Math.max(prev === undefined ? list[idx] : prev, list[idx]); // (down: the pour first if the folders are not out yet, then one unbroken ride)
@@ -411,11 +419,8 @@
   window.addEventListener('stackhome', (event) => {
     if (!active() || step.p < -1e8) return;
     event.preventDefault(); // (hero-play.js: this ride is ours)
-    const now = performance.now(), p = step.p, list = stops();
-    step.then = event.detail.then; clock.skip = 0;
-    if (p > list[0] + 40) { step.busy = step.shut = step.toHero = false; step.chain = 0; step.homeAfter = true; const prev = list.filter((at) => at < p - 40).pop(); go(window.scrollY + Math.max(prev === undefined ? list[0] : prev, list[0]) - p, now, 900); }
-    else if (clock.open && clock.tk > 0) shutAndHome(now);
-    else { step.busy = step.shut = step.toHero = false; go(0, now, 1100, 'inout'); }
+    step.then = event.detail.then;
+    rideHome(performance.now());
   });
   window.addEventListener('stackride', paint); // (the ride home moves the page inside a frame: draw after it, not a frame late)
   window.addEventListener('resize', queue);
