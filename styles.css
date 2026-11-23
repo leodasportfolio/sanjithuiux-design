@@ -528,7 +528,7 @@ button { font: inherit; }
   .hero-copy > p {
     margin: 24px auto 0;
     max-width: 338px;
-    text-align: left;
+    text-align: center;
     font-size: 20px;
     line-height: 1.8;
   }
