@@ -230,7 +230,7 @@
     document.documentElement.classList.toggle('is-held', on); // (hero-play.js drops the wheel while this is on)
   };
   const paint = () => {
-    if (!active()) { if (boxes) { boxes.forEach((b) => b.remove()); boxes = null; } hold(false); return; }
+    if (!active()) { if (boxes) { boxes.forEach((b) => b.remove()); boxes = null; } hold(false); cards.forEach((card) => { card.style.opacity = ''; card.classList.remove('is-up', 'is-down', 'is-settling'); }); return; } // (Normal mode shows the cards as they are: nothing of the stack's own paint stays on them)
     const vh = window.innerHeight;
     // How far the page has scrolled on since the stage stuck (negative: not yet). The stage
     // is sticky, so it is measured from the section's end: the runway and the stage come last.
