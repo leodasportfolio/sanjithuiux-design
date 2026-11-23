@@ -152,7 +152,7 @@
     if (step.busy && now > step.until + 4000) step.busy = step.toHero = step.shut = false; // (never stuck: whatever happened, the wheel is theirs again)
     if (step.p < -1e8) paint(); // (a wheel before the first paint: measure first)
     const p = step.p, list = stops(), last = list[list.length - 1];
-    if (p > last + 40) return; // past Motion Graphics: the page is free
+    if (p > last + 40 || (event.deltaY > 0 && p > last - 40 && !step.busy && now >= step.until)) return; // past Motion Graphics (or at it, scrolling on): the page is free
     event.preventDefault(); // (hero-play.js leaves a prevented wheel alone)
     // Turning round mid-way: scrolled back while the folders pour out, they stop where they are
     // and go back in from there (the pointer turns back to click); scrolled down again while
@@ -336,6 +336,7 @@
     const rest = settled && p >= DROP && m <= 0;  // the stack at rest: a folder may be lifted
     grid.classList.toggle('is-rest', rest);
     grid.classList.toggle('is-on', m > 0);
+    grid.classList.toggle('is-free', p > RUN()); // (the stage riding off with the page: Motion Graphics' Stage Manager tile stays on screen over About Me, as the original)
     grid.classList.toggle('is-shutting', closing); // (the stage may be riding off with the page: the folders must not be cut at its edge)
     if (!rest) lower();
     // Keep the clock going while anything is still moving.
