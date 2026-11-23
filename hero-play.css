@@ -1220,6 +1220,7 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
     pointer-events: none;
     opacity: 1;
     transition: opacity .3s ease;
+    animation: scroll-cue-in .7s cubic-bezier(.16, 1, .3, 1) .25s backwards; /* (a soft rise each time fun mode comes on; backwards only, so is-scrolled can still hide it) */
   }
   /* (The cue is given no height of its own, so its parts must not be squashed to fit.) */
   html[data-mode="fun"] .scroll-cue > * { flex: none; }
@@ -1245,10 +1246,13 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
   }
   html[data-mode="fun"].is-scrolled .scroll-cue { opacity: 0; }
 }
+@keyframes scroll-cue-in {
+  from { opacity: 0; transform: translateY(14px); }
+}
 @keyframes scroll-cue-bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(6px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scroll-cue b { animation: none !important; }
+  .scroll-cue, .scroll-cue b { animation: none !important; }
 }
