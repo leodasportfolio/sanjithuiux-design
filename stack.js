@@ -97,7 +97,7 @@
   const CLICK_PAST = 300;                 // the click comes this far after the stage sticks
   const CLOSE_PAST = 200;                 // scrolling back up, the folders are clicked shut here
   const PRESS = 40;                       // how long the press shows, in px
-  const POUR_MS = 1240, MINIMISE_MS = 800; // the folders pouring out, and going back in (the original's timing)
+  const POUR_MS = 1240, MINIMISE_MS = 560; // the folders pouring out, and going back in (the original's timing)
   const TURN_BACK = 24;                   // scrolled back up this far and fast enough, they go in early, so they are in before they leave the screen (the original)
   const STAG_MS = 300;                    // each folder starts this long after the one under it
   const DOCK_CATCH_MS = 700;              // the Dock's own rise or fall: unhurried, both ways
@@ -105,7 +105,7 @@
   const DROP = CLICK_PAST + 110 + 130;    // p: the Dock is down (past the click, the rest is scroll-driven)
   const MC = () => DROP + 130 + window.innerHeight * 0.8;  // (a near-full screen of rest to click around in) // Mission Control, after a rest
   const MC_LEN = 900;                     // (a slow hand-off: it reads too fast at 450)
-  const MC_CATCH_MS = 150;                // and the row eases there (a follower: it settles in about three of these), never snaps
+  const MC_CATCH_MS = 90, T_CATCH_MS = 150; // and the row eases there (a follower: it settles in about three of these), never snaps; Motion Graphics grows a little more unhurried
   const TOP = () => MC() + MC_LEN + 100;  // Motion Graphics takes the screen
   const TOP_LEN = 700;
   const SPAN = POUR_MS + 2 * STAG_MS;     // the whole pour, first folder to last
@@ -184,12 +184,12 @@
     if (clock.open) { const was = clock.tk; clock.tk = Math.min(1, clock.tk + dt / (clock.flat ? MINIMISE_MS : SPAN)); if (was < 1 && clock.tk >= 1) clock.outAt = now; }
     else if (clock.dockUp >= 1 && now >= clock.pressAt + PRESS && (!clock.home || clock.trip <= clock.click)) clock.tk = Math.max(0, clock.tk - dt / MINIMISE_MS); // (in, at the one pace whatever the pour was doing: the Dock up first, the click, then the whole stack as one folder)
     if (calm.matches) clock.tk = clock.open ? 1 : 0;
-    const d = dt / DOCK_CATCH_MS, was = clock.dockUp;
+    const d = dt / (clock.home ? DOCK_CATCH_MS / 2 : DOCK_CATCH_MS), was = clock.dockUp; // (on the way home the Dock is quick up and quick down)
     clock.dockUp = clock.dockUp < clock.dockWant ? Math.min(clock.dockWant, clock.dockUp + d) : Math.max(clock.dockWant, clock.dockUp - d);
     if (!clock.open && !clock.home && clock.tk > 0 && was < 1 && clock.dockUp >= 1) clock.pressAt = now; // the click, once the Dock is up
-    const follow = (at, want) => Math.abs(want - at) < 0.002 ? want : at + (want - at) * (1 - Math.exp(-dt / MC_CATCH_MS)); // (eases in and out of every move: no hard stop)
-    clock.mc = follow(clock.mc, clock.mcWant);
-    clock.t = follow(clock.t, clock.tWant); // (Motion Graphics grows on the same clock: a fast scroll never snaps it)
+    const follow = (at, want, ms) => Math.abs(want - at) < 0.002 ? want : at + (want - at) * (1 - Math.exp(-dt / ms)); // (eases in and out of every move: no hard stop)
+    clock.mc = follow(clock.mc, clock.mcWant, MC_CATCH_MS);
+    clock.t = follow(clock.t, clock.tWant, T_CATCH_MS); // (Motion Graphics grows on the same clock: a fast scroll never snaps it)
     paint();
   };
   const run = () => { if (!clock.frame) { clock.last = performance.now(); clock.frame = window.requestAnimationFrame(tick); } };
@@ -246,7 +246,7 @@
     if (q <= 0 && clock.tk <= 0) { clock.back = clock.wantBack = false; if (!clock.home) clock.trip = 0; } // back above it all: the next visit starts fresh
     const closing = !clock.open && clock.tk > 0;
     if (clock.home && (!gliding || moved > 0)) clock.home = false; // (riding home: the Dock is on its own clock, down once the folders are in)
-    if (step.toHero && !clock.open && clock.tk <= 0 && now >= step.until) { step.busy = step.toHero = false; go(0, now, 1400, 'inout'); }
+    if (step.toHero && !clock.open && clock.tk <= 0 && now >= step.until) { step.busy = step.toHero = false; go(0, now, 1100, 'inout'); }
     // Each folder's k, from its own slice of the clock; scrolled up so far the stage has left
     // the screen, a folder finishes going in over the last stretch rather than vanishing.
     let allOut = true, mid = false;
@@ -330,7 +330,7 @@
     grid.style.setProperty('--tr', smooth(unit((t - 0.34) / 0.66)).toFixed(4));  // Motion Graphics moves up only after the row is gone
     // The "Case Studies" title fades and rises in as the section comes up the screen (from
     // 0.96vh to 0.72vh, as on the original site), and goes with Mission Control.
-    const tin = smooth(unit((vh * 0.96 - s.top - titleOff) / (vh * 0.24)));
+    const tin = smooth(unit((vh * 0.96 - s.top - titleOff) / (vh * 0.24))) * smooth(unit(window.scrollY / 200)); // (and never at the hero itself: on a tall screen the section rests within 0.96vh of the top)
     section.style.setProperty('--ti', (tin * (1 - m)).toFixed(3));
     section.style.setProperty('--ty', ((1 - tin) * 70).toFixed(1) + 'px');
     const rest = settled && p >= DROP && m <= 0;  // the stack at rest: a folder may be lifted
