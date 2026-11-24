@@ -20,7 +20,7 @@ h1 { font-size: 40px; line-height: 1.2; font-weight: 400; }
 .contact-details a { color: #004fc4; overflow-wrap: anywhere; }
 .contact-details a + a { border-left: 1px solid #444; padding-left: 8px; margin-left: 8px; }
 .contact-details .phone { color: #111; text-decoration: none; }
-h2 { margin-bottom: 24px; border-bottom: 1px solid #777; padding-bottom: 10px; font-size: 24px; font-weight: 400; line-height: 1.2; text-transform: uppercase; }
+h2 { margin-bottom: 16px; border-bottom: 1px solid #777; padding-bottom: 10px; font-size: 24px; font-weight: 400; line-height: 1.2; text-transform: uppercase; }
 h3 { font-size: inherit; font-weight: 700; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; }
 .organization { font-weight: 400; }
@@ -30,12 +30,12 @@ h3 { font-size: inherit; font-weight: 700; }
 .project-points li { padding-left: 6px; }
 strong { font-weight: 700; }
 .experience + .experience { margin-top: 24px; }
-.education { margin-top: 56px; }
-.work-experience { margin-top: 56px; }
+.education { margin-top: 36px; }
+.work-experience { margin-top: 36px; }
 .summary { font-style: italic; }
 .education-row + .education-row { margin-top: 18px; }
-.additional-experience, .skills { margin-top: 56px; }
-.additional-experience p + p, .skills p + p { margin-top: 20px; }
+.additional-experience, .skills { margin-top: 36px; }
+.additional-experience p + p, .skills p + p { margin-top: 8px; }
 .resume-footer { max-width: 1020px; margin: 0 auto; padding: 4px 24px 24px; }
 @media (max-width: 1050px) {
   .section-heading { flex-wrap: wrap; gap: 8px 16px; }
@@ -56,7 +56,7 @@ strong { font-weight: 700; }
   .project-points { padding-left: 22px; }
   .project-points li { padding-left: 2px; margin-top: 12px; }
   .experience + .experience { margin-top: 28px; }
-  .education, .additional-experience, .skills, .work-experience { margin-top: 32px; }
+  .education, .additional-experience, .skills, .work-experience { margin-top: 28px; }
   .education-row + .education-row { margin-top: 20px; }
 }
 @media print {
