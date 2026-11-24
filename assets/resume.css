@@ -30,7 +30,9 @@ h3 { font-size: inherit; font-weight: 700; }
 .project-points li { padding-left: 6px; }
 strong { font-weight: 700; }
 .experience + .experience { margin-top: 24px; }
-.education { margin-top: 24px; }
+.education { margin-top: 56px; }
+.work-experience { margin-top: 56px; }
+.summary { font-style: italic; }
 .education-row + .education-row { margin-top: 18px; }
 .additional-experience, .skills { margin-top: 56px; }
 .additional-experience p + p, .skills p + p { margin-top: 20px; }
@@ -54,7 +56,7 @@ strong { font-weight: 700; }
   .project-points { padding-left: 22px; }
   .project-points li { padding-left: 2px; margin-top: 12px; }
   .experience + .experience { margin-top: 28px; }
-  .education, .additional-experience, .skills { margin-top: 32px; }
+  .education, .additional-experience, .skills, .work-experience { margin-top: 32px; }
   .education-row + .education-row { margin-top: 20px; }
 }
 @media print {
@@ -73,6 +75,6 @@ strong { font-weight: 700; }
   .project-points li { padding-left: 3pt; margin-top: 0; }
   .experience + .experience, .education { margin-top: 14pt; }
   .education-row + .education-row { margin-top: 10pt; }
-  .additional-experience, .skills { margin-top: 28pt; }
+  .additional-experience, .skills, .work-experience, .education { margin-top: 28pt; }
   .additional-experience p + p, .skills p + p { margin-top: 12pt; }
 }
