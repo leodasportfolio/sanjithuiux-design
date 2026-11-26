@@ -344,7 +344,7 @@ button { font: inherit; }
   display: grid;
   grid-template-columns: minmax(0, 524px) 300px;
   gap: 38px;
-  align-items: start;
+  align-items: center;
 }
 
 .about h2 {
@@ -564,6 +564,7 @@ html:not([data-mode="fun"]) .reveal { opacity: 1; transform: none; transition: n
     display: flex;
     flex-direction: column-reverse;
     gap: 53px;
+    align-items: stretch;
   }
 
   .about-photo {
