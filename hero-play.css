@@ -1183,11 +1183,12 @@ html.is-out .hero-bubble { opacity: 0 !important; transform: translate(-62%, 6px
       radial-gradient(circle at 64px 23px, #28c840 0 6px, transparent 6.6px),
       linear-gradient(180deg, #f6f6f7, #ececee);
   }
-  html[data-mode="fun"] .about-intro { grid-template-columns: minmax(0, 1fr) 300px; gap: 48px; }
+  html[data-mode="fun"] .about-photo { margin-left: 48px; }
   html[data-mode="fun"] .about-intro.reveal,
   html[data-mode="fun"] .about-more.reveal { opacity: 1; transform: none; transition: none; }
   html[data-mode="fun"] .about-photo {
     margin-top: 4px;
+    margin-bottom: 24px;
     border: 0;
     /* Both are eased by hero-play.js while the window unfolds from the notification's
        picture, so this photo starts out as that picture exactly: upright, same corners. */

@@ -340,12 +340,8 @@ button { font: inherit; }
 
 .about-inner { width: min(100%, 852px); margin-inline: auto; }
 
-.about-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 524px) 300px;
-  gap: 38px;
-  align-items: center;
-}
+/* The photo floats right, so the copy below wraps around it: no empty gap under the intro. */
+.about-intro { display: block; }
 
 .about h2 {
   margin: 0 0 14px;
@@ -364,7 +360,8 @@ button { font: inherit; }
 .about-photo {
   width: 300px;
   height: 300px;
-  margin-top: -8px;
+  float: right;
+  margin: -8px 0 24px 38px;
   display: block;
   overflow: hidden;
   border: 2px solid rgba(255,255,255,.9);
@@ -562,7 +559,7 @@ html:not([data-mode="fun"]) .reveal { opacity: 1; transform: none; transition: n
 
   .about-intro {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 53px;
     align-items: stretch;
   }
@@ -570,6 +567,7 @@ html:not([data-mode="fun"]) .reveal { opacity: 1; transform: none; transition: n
   .about-photo {
     width: 256px;
     height: 256px;
+    float: none;
     margin: -20px auto 0;
     transform: rotate(-4deg);
   }
